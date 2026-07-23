@@ -2,9 +2,11 @@
 
 ## 상태
 
-- Status: Ready
+- Status: Complete
 - Owner: Codex
 - Reviewer: ChatGPT
+- Implementation Commit:
+  `b2f75ba5f62434ec00239e2773c64a3777922a41`
 - Architecture:
   `docs/architecture/TypeScript-Domain-Contract.md`
 
@@ -265,21 +267,21 @@ npm run typecheck
 
 다음 조건을 모두 충족해야 Sprint-02가 완료된다.
 
-- [ ] `src/domain/common.ts` 구현
-- [ ] `src/domain/source.ts` 구현
-- [ ] `src/domain/article.ts` 구현
-- [ ] `src/domain/entity.ts` 구현
-- [ ] `src/domain/topic.ts` 구현
-- [ ] `src/domain/event.ts` 구현
-- [ ] `src/domain/analysis.ts` 구현
-- [ ] `src/domain/index.ts` 구현
-- [ ] Architecture 문서와 모든 필드가 일치
-- [ ] 문자열 리터럴 유니언 타입이 모두 구현됨
-- [ ] 모든 객체 관계가 ID 참조로 구현됨
-- [ ] TypeScript strict typecheck 통과
-- [ ] `any` 미사용
-- [ ] 범위 밖 기능 미구현
-- [ ] 완료 보고서 작성
+- [x] `src/domain/common.ts` 구현
+- [x] `src/domain/source.ts` 구현
+- [x] `src/domain/article.ts` 구현
+- [x] `src/domain/entity.ts` 구현
+- [x] `src/domain/topic.ts` 구현
+- [x] `src/domain/event.ts` 구현
+- [x] `src/domain/analysis.ts` 구현
+- [x] `src/domain/index.ts` 구현
+- [x] Architecture 문서와 모든 필드가 일치
+- [x] 문자열 리터럴 유니언 타입이 모두 구현됨
+- [x] 모든 객체 관계가 ID 참조로 구현됨
+- [x] TypeScript strict typecheck 통과
+- [x] `any` 미사용
+- [x] 범위 밖 기능 미구현
+- [x] 완료 보고서 작성
 
 ---
 

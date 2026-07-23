@@ -8,17 +8,17 @@ World News AI
 
 ---
 
-## Current Sprint
+## Current Phase
 
-Sprint-02
+Sprint-03 Planning
 
-Status: In Progress
+Status: Planning
 
 ---
 
 ## Current Objective
 
-프로젝트의 핵심 도메인 모델(TypeScript Domain Contract)을 구현하기 위한 기반을 구축한다.
+Sprint-03을 정의한다.
 
 ---
 
@@ -37,6 +37,8 @@ Status: In Progress
 ### Sprint
 
 - Sprint-02 생성
+- Sprint-02 완료
+- Implementation commit: `b2f75ba5f62434ec00239e2773c64a3777922a41`
 
 ### Architecture
 
@@ -44,19 +46,15 @@ Status: In Progress
 
 ---
 
-## In Progress
+## Current
 
-Sprint-02 준비
+Sprint-03 Planning
 
 ---
 
 ## Next Tasks
 
-1. CHANGELOG.md 작성
-2. TypeScript Domain Contract 보완
-3. Sprint-02 구현 시작
-4. Domain Types 구현
-5. GitHub Commit
+1. Sprint-03 정의
 
 ---
 

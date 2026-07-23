@@ -6,6 +6,6 @@ AI-powered world news analysis platform.
 
 - Sprint 0 ✅
 - Sprint 1 ✅
-- Sprint 2 ⏳
+- Sprint 2 ✅
 
 Developed with ChatGPT (CTO) + Codex.
