@@ -3,9 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "npm run typecheck && npm run test"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }
