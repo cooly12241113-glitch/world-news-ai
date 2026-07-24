@@ -13,6 +13,7 @@ Architecture.
 - Sprint 5 adaptive source ingestion core implemented
 - Sprint 6 persistent ingestion and deduplication implemented
 - Sprint 7 evidence-first event dossier core implemented
+- Sprint 8 question intent and briefing contract implemented
 
 ## Domain
 
@@ -119,3 +120,13 @@ statements, confidence metrics, contradictions, completeness, open questions,
 and semantic revisions. See [ADR-007](docs/architecture/ADR-007-evidence-first-event-dossier.md),
 [Event Dossier Architecture](docs/architecture/Event-Dossier-Architecture.md),
 and [Sprint-07](docs/sprints/Sprint-07.md).
+
+## Question-driven briefings
+
+Sprint 08 validates Korean/English questions, classifies primary and secondary
+intents, handles ambiguity explicitly, and compiles a deterministic,
+evidence-first `BriefingContract` before future retrieval or generation.
+
+See [ADR-008](docs/architecture/ADR-008-question-intent-briefing-contract.md),
+[Question Briefing Architecture](docs/architecture/Question-Briefing-Architecture.md),
+and [Sprint-08](docs/sprints/Sprint-08.md).

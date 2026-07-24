@@ -2,29 +2,24 @@
 
 ## Current Sprint
 
-Sprint-07 — Evidence-First Event Dossier Core
+Sprint-08 — Question Intent & Briefing Contract
 
 **Status:** Implementation complete, pending review
 
 ## Completed
 
-- Sprint 00–06 domain, ingestion, and persistence
-- URL logging/identity/canonical responsibility separation
-- EventDossier aggregate and strict typed sections
-- Statement and confidence validation
-- deterministic evidence assessment, contradiction baseline, and completeness
-- semantic fingerprint, unchanged results, revisions, and change sets
-- dossier repository ports and In-Memory/SQLite adapters
-- SQLite migration version 2
-- domain, builder, persistence, migration, conflict, and URL regression tests
+- Sprint 00–07 domain, ingestion, persistence, and event dossier capabilities
+- Strict question, intent analysis, ambiguity, and briefing contract models
+- Deterministic Korean/English analyzer with compound intents
+- Standard scope, evidence, uncertainty, visual, personalization, and stop policies
+- Semantic fingerprint and future analyzer/session extension ports
 
 ## Compatibility
 
-Sprint 00–06 public domain and ingestion contracts remain unchanged. Existing
-records are referenced by ID. Sprint 06 rows whose identity-bearing query values
-were removed may require a data audit.
+Sprint 00–07 public contracts remain unchanged. Sprint 08 adds a separate
+briefing module and does not introduce a database migration.
 
 ## Not implemented
 
-LLM generation, automatic extraction, natural-language contradiction detection,
-discovery/workers, UI/PWA/3D, PDF/OCR/video, and semantic search.
+LLM analysis/generation, retrieval, `ExplanationPlan`, renderers, UI,
+portfolio calculations, source discovery, or semantic search.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 08 — Question Intent & Briefing Contract
+
+- Added strict question, intent analysis, ambiguity, and briefing contracts.
+- Added deterministic Korean/English analysis and standard policy compilation.
+- Added evidence, uncertainty, visual, personalization, and stop policies.
+- Added semantic fingerprints and analyzer/session extension ports.
+
 ## Sprint 07 — Evidence-First Event Dossier Core
 
 - Added typed Event dossiers, statements, confidence, and completeness.
