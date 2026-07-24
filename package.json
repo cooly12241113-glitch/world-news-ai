@@ -2,6 +2,9 @@
   "name": "world-news-ai",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

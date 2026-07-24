@@ -11,6 +11,7 @@ Architecture.
 - Sprint 3 complete
 - Sprint 4 domain expansion implemented
 - Sprint 5 adaptive source ingestion core implemented
+- Sprint 6 persistent ingestion and deduplication implemented
 
 ## Domain
 
@@ -74,7 +75,7 @@ invalid URL or timestamp formats. Validation does not coerce or normalize data.
 
 ## Development
 
-Requires Node.js 20 or newer.
+Requires Node.js 24 or newer. Sprint 06 uses the built-in `node:sqlite` API.
 
 ```bash
 npm install
@@ -84,3 +85,28 @@ npm run validate
 ```
 
 Developed with ChatGPT (CTO) and Codex (Developer).
+
+## Persistent ingestion
+
+Sprint 06 adds storage-independent repository ports plus In-Memory and durable
+SQLite adapters. Exact fingerprints are idempotent, changed content at the same
+canonical URL becomes a revision, and every successful ingestion attempt keeps
+an observation.
+
+```ts
+import { IngestionPipeline } from "./src/ingestion";
+import {
+  PersistentIngestionService,
+  SqlitePersistenceAdapter,
+} from "./src/persistence";
+
+const storage = new SqlitePersistenceAdapter("./data/world-news-ai.sqlite");
+const service = new PersistentIngestionService(
+  new IngestionPipeline(),
+  storage,
+);
+```
+
+See [ADR-006](docs/architecture/ADR-006-persistent-ingestion-storage.md),
+[Persistence Architecture](docs/architecture/Persistence-Architecture.md), and
+[Sprint-06](docs/sprints/Sprint-06.md).

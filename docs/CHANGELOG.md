@@ -1,5 +1,14 @@
 # Changelog
 
+## Sprint 06 — Persistent Ingestion and Deduplication
+
+- Added persistence repository ports and Unit of Work.
+- Added In-Memory and durable SQLite adapters.
+- Added schema migration version 1 and runtime read validation.
+- Added fingerprint deduplication, revision history, observations, and job state.
+- Added persistent ingestion orchestration and duplicate-race recovery.
+- Added shared repository contract, integration, concurrency, and migration tests.
+
 ## Sprint 05 — Adaptive Source Ingestion Core
 
 - Added URL and raw-content ingestion requests.

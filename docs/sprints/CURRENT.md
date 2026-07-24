@@ -6,48 +6,44 @@ World News AI
 
 ## Current Sprint
 
-Sprint-05 — Adaptive Source Ingestion Core
+Sprint-06 — Persistent Ingestion and Deduplication
 
 **Status:** Implementation complete, pending review
 
-## Current objective
-
-Accept URL and raw-content candidates from future discovery systems and convert
-supported static HTML or plain text into validated Sprint 04
-`SourceDocument` records.
-
 ## Completed
 
-- Sprint 00–04 domain and validation work
-- Discriminated ingestion request and result contracts
-- Injectable URL/content input resolver
-- deterministic content probing
-- score/priority/stable-ID capability registry
-- generic HTML and plain-text capabilities
-- candidate-based extraction with evidence
-- normalization and configurable document classification
-- deterministic SHA-256 fingerprinting
-- SourceDocument runtime validation and mapping
-- structured errors and ingestion trace
-- URL safety, redirect, timeout, retry, and response-size policies
-- fixture-based unit and integration tests
-- ADR-005, Sprint-05, and README documentation
+- Sprint 00–05 domain, validation, and adaptive ingestion
+- persistence models with runtime validation
+- repository ports and Unit of Work
+- In-Memory persistence adapter
+- durable Node SQLite adapter
+- transactional migration version 1
+- SourceDocument persistence and read validation
+- fingerprint uniqueness and duplicate race recovery
+- canonical URL revision history
+- append-only observations
+- ingestion job state machine
+- PersistentIngestionService
+- sanitized operational URL and error handling
+- shared adapter contract and integration tests
+- ADR-006 and persistence architecture documentation
 
 ## Compatibility
 
-- Sprint 00–04 domain and validation contracts are unchanged.
-- Mapping uses the existing `SourceDocumentSchema`.
-- Entity, Topic, and Event relationship arrays remain empty until later
-  extraction stages are implemented.
+- Sprint 00–05 domain and ingestion contracts are unchanged.
+- Persistence metadata is kept outside domain models.
+- Existing 174 tests remain part of the full suite.
+- Runtime baseline is now Node.js 24 because the durable adapter uses
+  `node:sqlite`.
 
 ## Not implemented
 
-- discovery/search/crawling
-- source-specific parsing
-- JSON/feed processing
+- source discovery, crawling, feeds, queues, workers, or scheduling
+- distributed locks and multi-server deployment
+- PostgreSQL/cloud/vector databases
+- search indexing or AI extraction
+- retention/deletion automation
 - PDF/OCR/video/browser rendering
-- AI extraction
-- persistence, scheduling, workers, or deployment
 
 ## Required validation
 
