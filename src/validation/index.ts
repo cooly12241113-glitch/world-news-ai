@@ -5,3 +5,7 @@ export * from "./entity";
 export * from "./topic";
 export * from "./event";
 export * from "./analysis";
+export * from "./source-document";
+export * from "./claim";
+export * from "./data-point";
+export * from "./evidence-link";
