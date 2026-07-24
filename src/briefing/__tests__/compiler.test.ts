@@ -90,6 +90,17 @@ describe("BriefingContractCompiler", () => {
       first.contract.semanticFingerprint === second.contract.semanticFingerprint).toBe(true);
   });
 
+  it("treats caller scope lists as semantic sets", () => {
+    const first = compiler().compile(question({
+      text: "시장 영향은?", userProvidedContext: { locations: ["Seoul", "Busan"] },
+    }));
+    const second = compiler().compile(question({
+      text: "시장 영향은?", userProvidedContext: { locations: ["Busan", "Seoul"] },
+    }));
+    expect(first.success && second.success &&
+      first.contract.semanticFingerprint === second.contract.semanticFingerprint).toBe(true);
+  });
+
   it("changes the fingerprint when policy or semantic scope changes", () => {
     const base = compiler().compile(question({ text: "왜 영향이 발생했나?" }));
     const policy = compiler("standard-v2").compile(question({ text: "왜 영향이 발생했나?" }));

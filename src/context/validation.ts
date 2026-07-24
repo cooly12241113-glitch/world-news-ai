@@ -131,4 +131,40 @@ export const EvidenceContextPackageSchema: z.ZodType<EvidenceContextPackage> = z
   }),
   evidenceGaps: z.array(Gap), openQuestions: SA, provenanceIndex: z.array(Provenance),
   warnings: SA, createdAt: z.iso.datetime(), policyVersion: S, fingerprint: S,
+}).superRefine((value, context) => {
+  const excerptIds = new Set(value.excerpts.map(({ id }) => id));
+  const provenanceById = new Map(
+    value.provenanceIndex.map((record) => [record.provenanceId, record]),
+  );
+  for (const item of value.selectedItems) {
+    if (item.excerptId === undefined || !excerptIds.has(item.excerptId)) {
+      context.addIssue({
+        code: "custom",
+        path: ["selectedItems", item.id, "excerptId"],
+        message: "Every selected item must reference an existing excerpt",
+      });
+    }
+    if (item.provenanceRefs.length === 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["selectedItems", item.id, "provenanceRefs"],
+        message: "Every selected item must have provenance",
+      });
+    }
+    for (const provenanceId of item.provenanceRefs) {
+      const provenance = provenanceById.get(provenanceId);
+      if (
+        provenance === undefined ||
+        provenance.contextItemId !== item.id ||
+        provenance.recordId !== item.recordId ||
+        provenance.excerptId !== item.excerptId
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["selectedItems", item.id, "provenanceRefs"],
+          message: "Selected item provenance chain is broken",
+        });
+      }
+    }
+  }
 });

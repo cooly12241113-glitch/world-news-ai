@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { EvidenceContextBuilder } from "../builder";
-import { InMemoryEvidenceCandidateProvider } from "../provider";
+import {
+  InMemoryEvidenceCandidateProvider,
+  candidateFromRecord,
+} from "../provider";
 import { ContextBuildRequestSchema, EvidenceContextPackageSchema } from "../validation";
 import { contradiction, dataPoint, document, now, request } from "./fixtures";
 
@@ -20,6 +23,17 @@ describe("EvidenceContextBuilder", () => {
     expect(ContextBuildRequestSchema.safeParse({
       ...input, callerProvidedRecords: [{ ...document(), rawHtml: "<secret>" }],
     }).success).toBe(false);
+  });
+
+  it("rejects a broken provenance chain on read-back validation", () => {
+    const records = [document()];
+    const result = builder(records).build(request(records));
+    if (!result.success || result.contextPackage.selectedItems.length === 0) {
+      throw new Error("context package missing");
+    }
+    const broken = structuredClone(result.contextPackage);
+    broken.provenanceIndex = [];
+    expect(EvidenceContextPackageSchema.safeParse(broken).success).toBe(false);
   });
 
   it("rejects a non-ready contract", () => {
@@ -105,5 +119,26 @@ describe("EvidenceContextBuilder", () => {
     expect(corpus.contextPackage.fingerprint).not.toBe(base.contextPackage.fingerprint);
     expect(policy.contextPackage.fingerprint).not.toBe(base.contextPackage.fingerprint);
     expect(changed.contextPackage.fingerprint).not.toBe(base.contextPackage.fingerprint);
+  });
+
+  it("changes fingerprint when the selected document revision changes", () => {
+    const input = request([]);
+    const candidate = candidateFromRecord(document(), now);
+    const buildAtRevision = (revisionNumber: number) => new EvidenceContextBuilder({
+      provider: new InMemoryEvidenceCandidateProvider([{
+        ...candidate,
+        provenance: {
+          ...candidate.provenance,
+          fingerprint: `source-fingerprint-${revisionNumber}`,
+          revisionNumber,
+        },
+      }]),
+      now: () => new Date(now),
+      createId: () => "context-id",
+    }).build(input);
+    const first = buildAtRevision(1);
+    const second = buildAtRevision(2);
+    if (!first.success || !second.success) throw new Error("build failed");
+    expect(second.contextPackage.fingerprint).not.toBe(first.contextPackage.fingerprint);
   });
 });

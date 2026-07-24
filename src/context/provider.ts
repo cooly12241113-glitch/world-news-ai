@@ -56,7 +56,7 @@ export function candidateFromRecord(
       dossierIds: [],
       sourceDocumentIds: [record.id],
       title: record.title,
-      searchableText: [record.title, record.summary, record.contentText].filter(Boolean).join("\n"),
+      searchableText: [record.summary, record.contentText].filter(Boolean).join("\n"),
       publishedAt: record.publishedAt,
       retrievedAt: record.retrievedAt,
       sourceType: record.documentType,

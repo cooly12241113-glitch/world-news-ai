@@ -291,6 +291,10 @@ export class BriefingContractCompiler {
   }
 
   private fingerprint(question: BriefingQuestion, contract: BriefingContract): string {
+    const userContext = Object.fromEntries(
+      Object.entries(question.userProvidedContext ?? {})
+        .map(([key, values]) => [key, [...values].sort()]),
+    );
     return createSemanticFingerprint({
       question: {
         text: question.text.trim().replace(/\s+/g, " "),
@@ -298,7 +302,7 @@ export class BriefingContractCompiler {
         conversationContext: question.conversationContext ?? [],
         referencedEventIds: [...question.referencedEventIds].sort(),
         referencedEntityIds: [...question.referencedEntityIds].sort(),
-        userProvidedContext: question.userProvidedContext ?? {},
+        userProvidedContext: userContext,
         personalizationRequested: question.personalizationRequested,
       },
       policyVersion: contract.policyVersion,
@@ -309,7 +313,12 @@ export class BriefingContractCompiler {
       },
       scopes: {
         time: contract.timeScope,
-        geography: contract.geographicScope,
+        geography: {
+          ...contract.geographicScope,
+          focalLocations: [...contract.geographicScope.focalLocations].sort(),
+          affectedLocations: [...contract.geographicScope.affectedLocations].sort(),
+          userRelevantLocations: [...contract.geographicScope.userRelevantLocations].sort(),
+        },
         domain: [...contract.domainScope].sort(),
       },
       policies: {

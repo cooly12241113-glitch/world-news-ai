@@ -76,6 +76,7 @@ describe("candidate retrieval and selection", () => {
     expect(excerpt?.offsetPrecision).toBe("exact");
     expect(excerpt?.characterCount).toBeLessThanOrEqual(40);
     expect(excerpt?.excerptHash).toHaveLength(64);
+    expect(document().contentText).toContain(excerpt?.text.replace(/…$/, "") ?? "");
   });
 });
 

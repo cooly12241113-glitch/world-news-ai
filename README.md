@@ -15,6 +15,7 @@ Architecture.
 - Sprint 7 evidence-first event dossier core implemented
 - Sprint 8 question intent and briefing contract implemented
 - Sprint 9 evidence retrieval and context builder implemented
+- Milestone 01 intelligence foundation baseline complete
 
 ## Domain
 
@@ -142,3 +143,19 @@ source-backed excerpts, applies context budgets, and returns a provenance-rich
 See [ADR-009](docs/architecture/ADR-009-contract-driven-evidence-context.md),
 [Evidence Retrieval Architecture](docs/architecture/Evidence-Retrieval-Context-Architecture.md),
 and [Sprint-09](docs/sprints/Sprint-09.md).
+
+## Intelligence foundation baseline
+
+Milestone 01 audits the complete offline pipeline from raw content through
+validated `EvidenceContextPackage`. Four deterministic integration scenarios
+cover causal explanation, Korean economic impact, fact verification, and
+ambiguous personalization. The baseline preserves source/revision provenance,
+returns explicit evidence gaps, and performs no LLM or external API calls.
+
+- [Milestone 01](docs/milestones/Milestone-01-Intelligence-Foundation.md)
+- [System Architecture Baseline](docs/architecture/System-Architecture-Baseline.md)
+- [End-to-End Data Flow](docs/architecture/End-to-End-Data-Flow.md)
+- [Next Phase Roadmap](docs/roadmap/Next-Phase-Roadmap.md)
+
+Current persistence schema version: **2**. Next target: Sprint 10,
+ExplanationPlan Domain & Validator.

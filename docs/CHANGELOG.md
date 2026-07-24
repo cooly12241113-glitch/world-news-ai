@@ -1,5 +1,19 @@
 # Changelog
 
+## Milestone 01 — Intelligence Foundation Baseline
+
+- Audited Sprint 00–09 architecture, contracts, determinism, provenance,
+  failure modes, security/privacy, dependencies, and runtime boundaries.
+- Added four offline end-to-end integration scenarios from raw content to
+  EvidenceContextPackage.
+- Restricted SourceDocument excerpts to summary/body source text.
+- Added cross-reference validation for ContextItem, excerpt, and provenance.
+- Preserved fact-verification claim origin within bounded diversity selection.
+- Canonicalized caller/geographic scope lists in BriefingContract fingerprints.
+- Added selected source fingerprint and revision to context package fingerprints.
+- Added milestone, architecture baseline, data-flow, and next-phase documents.
+- SQLite migration version remains 2.
+
 ## Sprint 09 — Evidence Retrieval & Context Builder
 
 - Added contract-driven retrieval plans and candidate provider ports.

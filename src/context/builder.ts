@@ -102,7 +102,7 @@ export class EvidenceContextBuilder {
         evidenceCategory(entry.candidate) === "contradicting-evidence" ||
         entry.candidate.recordType === "data-point");
       const diversity: DiversityPolicy = {
-        maximumItemsPerSource: 3, maximumItemsPerDocument: 2, minimumIndependentSources: 2,
+        maximumItemsPerSource: 3, maximumItemsPerDocument: 3, minimumIndependentSources: 2,
         reserveForPrimarySources: plan.primarySourceRequirement ? 1 : 0,
         reserveForContradictingEvidence: plan.contradictionRequirement ? 1 : 0,
         reserveForDataPoints: plan.dataRequirement ? 1 : 0,
@@ -190,6 +190,17 @@ export class EvidenceContextBuilder {
         record: `${item.itemType}:${item.recordId}`,
         excerptHash: excerpts.find((excerpt) => excerpt.id === item.excerptId)?.excerptHash,
         section: Object.entries(sections).find(([, ids]) => ids.includes(item.id))?.[0],
+        provenance: provenance
+          .filter((record) => item.provenanceRefs.includes(record.provenanceId))
+          .map((record) => ({
+            canonicalIdentity: record.canonicalIdentity,
+            fingerprint: record.fingerprint,
+            revisionNumber: record.revisionNumber,
+          }))
+          .sort((left, right) =>
+            (left.fingerprint ?? "").localeCompare(right.fingerprint ?? "") ||
+            (left.canonicalIdentity ?? "").localeCompare(right.canonicalIdentity ?? "") ||
+            (left.revisionNumber ?? 0) - (right.revisionNumber ?? 0)),
       })).sort((left, right) => left.record.localeCompare(right.record)),
       policyVersion: request.retrievalPolicyVersion,
       corpusRevision: request.corpusRevision,
