@@ -10,6 +10,7 @@ Architecture.
 - Sprint 2 complete
 - Sprint 3 complete
 - Sprint 4 domain expansion implemented
+- Sprint 5 adaptive source ingestion core implemented
 
 ## Domain
 
@@ -48,6 +49,22 @@ Event-centric graph.
 
 See [ADR-004](docs/architecture/ADR-004-source-document-domain.md) for the
 architecture decision and [Sprint-04](docs/sprints/Sprint-04.md) for scope.
+
+## Adaptive ingestion
+
+Sprint 05 adds a source-agnostic pipeline for public HTTP(S) URLs and raw text:
+
+```text
+IngestionRequest → Resolve → Probe → Select capability → Extract
+→ Normalize → Classify → Fingerprint → Validate → SourceDocument
+```
+
+Generic static HTML and plain text are processed. JSON, XML, RSS, and Atom are
+detected for future capabilities. The registry selects handlers by score,
+priority, then stable ID and contains no publisher-specific rules.
+
+See [ADR-005](docs/architecture/ADR-005-adaptive-source-ingestion.md) and
+[Sprint-05](docs/sprints/Sprint-05.md).
 
 ## Validation
 

@@ -9,10 +9,12 @@
     "validate": "npm run typecheck && npm run test"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "cheerio": "^1.2.0",
     "zod": "^4.4.3"
   }
 }
