@@ -2,24 +2,27 @@
 
 ## Current Sprint
 
-Sprint-08 — Question Intent & Briefing Contract
+Sprint-09 — Evidence Retrieval & Context Builder
 
 **Status:** Implementation complete, pending review
 
 ## Completed
 
-- Sprint 00–07 domain, ingestion, persistence, and event dossier capabilities
-- Strict question, intent analysis, ambiguity, and briefing contract models
-- Deterministic Korean/English analyzer with compound intents
-- Standard scope, evidence, uncertainty, visual, personalization, and stop policies
-- Semantic fingerprint and future analyzer/session extension ports
+- Sprint 00–08 domain, ingestion, persistence, dossiers, and briefing contracts
+- Contract-driven deterministic retrieval planning
+- In-memory and repository-backed candidate providers
+- Scoring, deduplication, source diversity, excerpts, and context budgets
+- Evidence context packages with coverage, gaps, provenance, and fingerprints
+- Structured ready/partial/insufficient/no-context outcomes
 
 ## Compatibility
 
-Sprint 00–07 public contracts remain unchanged. Sprint 08 adds a separate
-briefing module and does not introduce a database migration.
+Sprint 00–08 public contracts remain unchanged. SQLite migration version stays
+at 2; Sprint 09 adds read/context boundaries without incomplete persistence
+tables.
 
 ## Not implemented
 
-LLM analysis/generation, retrieval, `ExplanationPlan`, renderers, UI,
-portfolio calculations, source discovery, or semantic search.
+LLMs, answer generation, web search, discovery/crawling, embeddings/vector
+search, semantic reranking, ExplanationPlan, renderers, UI, or portfolio
+calculations.

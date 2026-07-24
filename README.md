@@ -14,6 +14,7 @@ Architecture.
 - Sprint 6 persistent ingestion and deduplication implemented
 - Sprint 7 evidence-first event dossier core implemented
 - Sprint 8 question intent and briefing contract implemented
+- Sprint 9 evidence retrieval and context builder implemented
 
 ## Domain
 
@@ -130,3 +131,14 @@ evidence-first `BriefingContract` before future retrieval or generation.
 See [ADR-008](docs/architecture/ADR-008-question-intent-briefing-contract.md),
 [Question Briefing Architecture](docs/architecture/Question-Briefing-Architecture.md),
 and [Sprint-08](docs/sprints/Sprint-08.md).
+
+## Evidence retrieval and context
+
+Sprint 09 converts a ready `BriefingContract` into a deterministic
+`RetrievalPlan`, scores and diversifies stored evidence, extracts minimal
+source-backed excerpts, applies context budgets, and returns a provenance-rich
+`EvidenceContextPackage`. Evidence gaps remain explicit.
+
+See [ADR-009](docs/architecture/ADR-009-contract-driven-evidence-context.md),
+[Evidence Retrieval Architecture](docs/architecture/Evidence-Retrieval-Context-Architecture.md),
+and [Sprint-09](docs/sprints/Sprint-09.md).

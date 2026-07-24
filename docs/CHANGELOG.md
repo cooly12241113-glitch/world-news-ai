@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 09 — Evidence Retrieval & Context Builder
+
+- Added contract-driven retrieval plans and candidate provider ports.
+- Added deterministic scoring, deduplication, diversity, and excerpt extraction.
+- Added context budgets, coverage, evidence gaps, provenance, and fingerprints.
+- Added structured context outcomes without a database migration.
+
 ## Sprint 08 — Question Intent & Briefing Contract
 
 - Added strict question, intent analysis, ambiguity, and briefing contracts.
