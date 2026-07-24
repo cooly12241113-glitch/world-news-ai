@@ -6,3 +6,4 @@ export * from "./migrations";
 export * from "./memory-adapter";
 export * from "./sqlite-adapter";
 export * from "./service";
+export * from "./url-identity";

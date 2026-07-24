@@ -87,8 +87,8 @@ foreign keys, and status/value checks.
 - persistent results expose code, stage, and retryability only;
 - database messages, paths, credentials, raw content, and full traces are not
   returned;
-- persisted canonical and requested/final operational URLs are stripped of
-  credentials, queries, and fragments;
+- URL policy was superseded by ADR-007: identity retains ordinary query
+  parameters while logs redact sensitive values;
 - SourceDocument JSON is validated on every write and read.
 
 ## Tests

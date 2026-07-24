@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { PersistenceError } from "./errors";
 
-export const LATEST_SCHEMA_VERSION = 1;
+export const LATEST_SCHEMA_VERSION = 2;
 
 const MIGRATION_1 = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -79,6 +79,39 @@ const MIGRATION_1 = `
     ON document_revisions(canonical_url);
 `;
 
+const MIGRATION_2 = `
+  CREATE TABLE event_dossiers (
+    dossier_id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL UNIQUE,
+    current_revision_number INTEGER NOT NULL CHECK (current_revision_number > 0),
+    semantic_fingerprint TEXT NOT NULL,
+    snapshot_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE INDEX idx_event_dossiers_event_id ON event_dossiers(event_id);
+
+  CREATE TABLE dossier_revisions (
+    revision_id TEXT PRIMARY KEY,
+    dossier_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    revision_number INTEGER NOT NULL CHECK (revision_number > 0),
+    previous_revision_id TEXT,
+    semantic_fingerprint TEXT NOT NULL,
+    revision_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(dossier_id, revision_number),
+    FOREIGN KEY(dossier_id) REFERENCES event_dossiers(dossier_id)
+      DEFERRABLE INITIALLY DEFERRED
+  );
+
+  CREATE INDEX idx_dossier_revisions_dossier_id
+    ON dossier_revisions(dossier_id, revision_number);
+  CREATE INDEX idx_dossier_revisions_event_id
+    ON dossier_revisions(event_id);
+`;
+
 export const getSchemaVersion = (database: DatabaseSync): number => {
   database.exec(
     "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)",
@@ -123,6 +156,14 @@ export const runMigrations = (
           "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
         )
         .run(1, now);
+    }
+    if (current < 2) {
+      database.exec(MIGRATION_2);
+      database
+        .prepare(
+          "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+        )
+        .run(2, now);
     }
     database.exec("COMMIT");
     return LATEST_SCHEMA_VERSION;

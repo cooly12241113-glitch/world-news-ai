@@ -86,11 +86,10 @@ winner, records its observation, and returns a duplicate result.
 ## Observation and privacy
 
 Observation records are append-only audit facts. They store bounded summaries,
-not raw HTML or full trace. Persisted canonical URLs and operational
-requested/final URLs have credentials, query strings, and fragments removed.
-The persistence fingerprint is recomputed from that sanitized canonical URL and
-normalized title/body so transient tokens cannot split otherwise identical
-records. Errors expose codes, stage, retryability, and sanitized context only.
+not raw HTML or full trace. ADR-007 supersedes Sprint 06's all-query removal:
+identity URLs now retain ordinary identity-bearing parameters while removing
+tracking and sensitive parameters; log URLs redact sensitive values. Errors
+expose codes, stage, retryability, and sanitized context only.
 
 ## Migration policy
 

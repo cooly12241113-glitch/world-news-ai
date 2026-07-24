@@ -241,7 +241,9 @@ describe("PersistentIngestionService", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       const job = adapter.repositories.jobs.findById(result.jobId);
-      expect(job?.requestedUrl).toBe("https://research.example/outlook.txt");
+      expect(job?.requestedUrl).toBe(
+        "https://research.example/outlook.txt?token=%5BREDACTED%5D",
+      );
       const observations = adapter.repositories.observations.findByJobId(
         result.jobId,
       );
@@ -252,9 +254,7 @@ describe("PersistentIngestionService", () => {
       expect(stored?.sourceDocument.canonicalUrl).toBe(
         "https://research.example/outlook.txt",
       );
-      expect(JSON.stringify({ job, observations, stored })).not.toContain(
-        "secret",
-      );
+      expect(JSON.stringify({ job, observations, stored })).not.toContain("secret");
     }
   });
 });

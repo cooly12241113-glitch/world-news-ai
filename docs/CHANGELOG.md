@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 07 — Evidence-First Event Dossier Core
+
+- Added typed Event dossiers, statements, confidence, and completeness.
+- Added deterministic contradictions, semantic revisions, and change sets.
+- Added dossier persistence adapters and migration version 2.
+- Corrected URL identity handling for identity-bearing query parameters.
+
 ## Sprint 06 — Persistent Ingestion and Deduplication
 
 - Added persistence repository ports and Unit of Work.

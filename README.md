@@ -12,6 +12,7 @@ Architecture.
 - Sprint 4 domain expansion implemented
 - Sprint 5 adaptive source ingestion core implemented
 - Sprint 6 persistent ingestion and deduplication implemented
+- Sprint 7 evidence-first event dossier core implemented
 
 ## Domain
 
@@ -110,3 +111,11 @@ const service = new PersistentIngestionService(
 See [ADR-006](docs/architecture/ADR-006-persistent-ingestion-storage.md),
 [Persistence Architecture](docs/architecture/Persistence-Architecture.md), and
 [Sprint-06](docs/sprints/Sprint-06.md).
+
+## Event dossiers
+
+Sprint 07 adds deterministic, evidence-linked Event dossiers with classified
+statements, confidence metrics, contradictions, completeness, open questions,
+and semantic revisions. See [ADR-007](docs/architecture/ADR-007-evidence-first-event-dossier.md),
+[Event Dossier Architecture](docs/architecture/Event-Dossier-Architecture.md),
+and [Sprint-07](docs/sprints/Sprint-07.md).

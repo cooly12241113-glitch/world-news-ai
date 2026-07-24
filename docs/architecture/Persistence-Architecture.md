@@ -118,7 +118,7 @@ Distributed locking and multi-server coordination are outside Sprint 06.
 - all SQL is static and parameterized;
 - SourceDocument JSON is runtime-validated on write and read;
 - raw bodies and complete traces are not stored in audit tables;
-- persisted canonical and observation URLs omit credentials, query strings,
-  and fragments;
+- persisted identity URLs retain ordinary query identity while removing
+  tracking/sensitive parameters; observation URLs redact sensitive values;
 - low-level database errors and connection details are not returned;
 - no delete API or automatic retention engine is included.

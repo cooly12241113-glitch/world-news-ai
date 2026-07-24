@@ -16,6 +16,10 @@ import type {
   StoredSourceDocument,
 } from "./models";
 import type { PersistenceRepositories, UnitOfWork } from "./ports";
+import {
+  normalizeUrlForIdentity,
+  sanitizeUrlForLogging,
+} from "./url-identity";
 
 export interface IngestionPipelinePort {
   ingest(request: IngestionRequest): Promise<IngestionResult>;
@@ -29,23 +33,7 @@ export interface PersistentIngestionServiceOptions {
 const requestedUrlOf = (request: IngestionRequest): string | undefined =>
   request.kind === "url" ? request.url : request.sourceUrl;
 
-export const sanitizeObservedUrl = (
-  value: string | undefined,
-): string | undefined => {
-  if (value === undefined) {
-    return undefined;
-  }
-  try {
-    const url = new URL(value);
-    url.username = "";
-    url.password = "";
-    url.search = "";
-    url.hash = "";
-    return url.toString();
-  } catch {
-    return undefined;
-  }
-};
+export const sanitizeObservedUrl = sanitizeUrlForLogging;
 
 const warningCode = (warning: string): string => {
   const normalized = warning.toLowerCase();
@@ -168,9 +156,9 @@ export class PersistentIngestionService {
     jobId: string,
     ingestion: Extract<IngestionResult, { success: true }>,
   ): PersistentIngestionResult {
-    const canonicalUrl =
-      sanitizeObservedUrl(ingestion.document.canonicalUrl) ??
-      ingestion.document.canonicalUrl;
+    const canonicalUrl = normalizeUrlForIdentity(
+      ingestion.document.canonicalUrl,
+    );
     const fingerprint = generateFingerprint({
       canonicalUrl,
       title: ingestion.normalizedDocument.title,
