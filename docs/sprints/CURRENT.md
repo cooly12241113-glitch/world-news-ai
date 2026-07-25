@@ -32,19 +32,18 @@ Milestone 02 — Pre-Renderer Integration & Completeness Audit
 
 ## Current delivery
 
-Sprint 12 — Briefing Script Domain & Compiler.
+Sprint 13 — Interactive Briefing Renderer Prototype.
 
 **Status:** Complete
 
-Validated explanation plans now compile into evidence-bound, renderer-neutral
-briefing scenes. Deterministic validation enforces plan coverage, provenance,
-scene DAG integrity, presentation, bottom-composer, safe-viewport,
-accessibility, and static/reduced-motion policies without live providers,
-renderers, or map SDKs.
+Validated BriefingScripts now drive a fixture-only React/Vite player with
+MapLibre behind an adapter, deterministic motion planning, accessible
+map/chart/document/evidence surfaces, Bottom Composer, playback controls, and
+responsive safe viewport behavior.
 
 ## Next target
 
-Sprint 13 — Renderer Prototype.
+Sprint 14 — Interactive Briefing Player hardening.
 
 Entry is approved. See
 [Milestone 02](../milestones/Milestone-02-Pre-Renderer-Readiness-Audit.md).

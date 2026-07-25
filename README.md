@@ -19,6 +19,7 @@ Architecture.
 - Sprint 11 structured LLM generation adapter implemented
 - Sprint 12 briefing script domain and compiler implemented
 - Milestone 02 pre-renderer readiness audit complete
+- Sprint 13 interactive briefing renderer prototype implemented
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -211,3 +212,21 @@ BriefingScript renderer readiness. The result is
 See [Milestone 02](docs/milestones/Milestone-02-Pre-Renderer-Readiness-Audit.md),
 [Readiness Matrix](docs/architecture/Pre-Renderer-Readiness-Matrix.md), and
 [Contract Compatibility Matrix](docs/architecture/Contract-Compatibility-Matrix.md).
+
+## Interactive web prototype
+
+Sprint 13 adds a fixture-only React/Vite application with MapLibre, a
+script-driven scene player, renderer adapters, Motion Planner v0, accessible
+fallback surfaces, Bottom Composer, playback controls, and responsive layout.
+
+```bash
+npm run dev:web
+npm run typecheck:web
+npm run test:web
+npm run build:web
+```
+
+See [ADR-013](docs/architecture/ADR-013-interactive-renderer-prototype.md),
+[Interactive Renderer Architecture](docs/architecture/Interactive-Renderer-Architecture.md),
+[Motion Planner v0](docs/architecture/Motion-Planner-v0.md), and
+[Sprint-13](docs/sprints/Sprint-13.md).

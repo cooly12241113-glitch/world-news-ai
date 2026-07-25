@@ -23,7 +23,7 @@ Audit Sprint 00–12 contract compatibility, identity, provenance, determinism,
 validation, security, and renderer-ready script boundaries. Final decision:
 READY_WITH_NON_BLOCKING_DEBT.
 
-## Sprint 13 — Renderer Prototype
+## Sprint 13 — Renderer Prototype (Complete)
 
 Prototype map, chart, timeline, document, comparison, evidence-board, and text
 renderers selected by the visual policy.

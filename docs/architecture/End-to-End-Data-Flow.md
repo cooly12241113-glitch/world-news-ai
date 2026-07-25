@@ -29,7 +29,9 @@ flowchart TD
   SC --> SV["BriefingScript Validator"]
   SV -->|valid / static-only| VS["ValidatedBriefingScript"]
   SV -->|invalid / insufficient| ES
-  VS -. future .-> F["Motion Planner / Renderer / Player"]
+  VS --> WA["Web Presentation Adapter"]
+  WA --> BP["Briefing Player + Scene Dispatcher"]
+  BP --> F["Map / Chart / Document / Evidence Surface"]
 ```
 
 ## Provenance chain

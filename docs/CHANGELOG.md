@@ -1,5 +1,16 @@
 # Changelog
 
+## Sprint 13 — Interactive Briefing Renderer Prototype
+
+- Added a strict React/Vite web boundary and browser-safe Script contracts.
+- Added Presentation Adapter, player reducer, scene dispatcher, and accessible
+  Bottom Composer/playback/analysis/citation/uncertainty UI.
+- Added MapLibre and fake map adapters, fixture geometry catalog, overlays,
+  safe viewport calculation, and deterministic Motion Planner v0.
+- Added chart, document, evidence-board, and static fallback surfaces.
+- Added four validated fixture modes and offline Web unit/integration tests.
+- Added no backend, API call, secret, persistence, or migration.
+
 ## Milestone 02 — Pre-Renderer Readiness Audit
 
 - Reconciled the Sprint 12 test-file count: four test files plus one fixture.

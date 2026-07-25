@@ -6,19 +6,36 @@
     "node": ">=24"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck:web",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate": "npm run typecheck && npm run test"
+    "validate": "npm run typecheck && npm run test && npm run build:web",
+    "dev:web": "vite --config apps/web/vite.config.ts",
+    "build:web": "vite build --config apps/web/vite.config.ts",
+    "preview:web": "vite preview --config apps/web/vite.config.ts",
+    "typecheck:web": "tsc -p apps/web/tsconfig.json",
+    "test:web": "vitest run apps/web"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/geojson": "^7946.0.16",
     "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
+    "jsdom": "^29.1.1",
     "typescript": "^5.9.3",
+    "vite": "^8.1.5",
     "vitest": "^4.1.10"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
+    "maplibre-gl": "^6.0.0",
     "openai": "^6.49.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   }
 }
