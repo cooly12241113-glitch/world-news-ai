@@ -1,5 +1,16 @@
 # Changelog
 
+## Milestone 02 — Pre-Renderer Readiness Audit
+
+- Reconciled the Sprint 12 test-file count: four test files plus one fixture.
+- Preserved identity-bearing URL query parameters through Context provenance.
+- Centralized URL identity policy across domain, persistence, and context.
+- Returned validator-produced scripts instead of successful draft scripts.
+- Enforced the complete scene budget while preserving plan coverage.
+- Closed plan/context/excerpt/provenance/citation/visual reference validation.
+- Added URL, assumptions, immutability, scene-budget, and renderer-boundary
+  regressions without dependencies or migrations.
+
 ## Sprint 12 — Briefing Script Domain & Compiler
 
 - Added strict presentation preferences and renderer-neutral BriefingScript

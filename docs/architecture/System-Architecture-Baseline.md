@@ -4,7 +4,7 @@
 
 | Module | Role | Input → Output | Direct dependencies | Persistence | Extension point | Not implemented |
 |---|---|---|---|---|---|---|
-| `domain` | Pure event/evidence contracts | typed records → typed records | none | no | additive domain types | storage, HTTP, UI, LLM |
+| `domain` | Pure event/evidence contracts and URL identity policy | typed records → typed records | none | no | additive domain types | storage, HTTP, UI, LLM |
 | `validation` | Runtime domain boundary | unknown → validated domain record | domain, Zod | no | new schemas | normalization |
 | `ingestion` | Adaptive source conversion | URL/raw content → SourceDocument | domain, validation, Cheerio, injected fetch | no | capability registry, fetch port | discovery, scheduling |
 | `persistence` | Durable ingestion lifecycle | ingestion request → stored/duplicate/revision | ingestion, validation, `node:sqlite` adapter | memory/SQLite | repository/UoW ports | knowledge graph store |
@@ -45,7 +45,7 @@ Infrastructure libraries remain at adapter/boundary modules:
 Module `index.ts` files export their public contracts and services:
 
 - Domain: Source, Article, Event, Entity, Topic, Analysis, SourceDocument,
-  Claim, EvidenceLink, DataPoint.
+  Claim, EvidenceLink, DataPoint, and shared URL identity/sanitization policy.
 - Dossier: EventDossier, statements, confidence, completeness, revisions.
 - Briefing: BriefingQuestion, intent analysis, BriefingContract and schemas.
 - Context: RetrievalPlan, EvidenceCandidate, SourceExcerpt,

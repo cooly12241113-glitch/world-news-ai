@@ -14,6 +14,12 @@ describe("URL identity separation", () => {
     expect(
       normalizeUrlForIdentity("https://example.com/doc?documentId=7&page=2"),
     ).toContain("documentId=7");
+    expect(normalizeUrlForIdentity("https://example.com/doc?page=1")).not.toBe(
+      normalizeUrlForIdentity("https://example.com/doc?page=2"),
+    );
+    expect(normalizeUrlForIdentity("https://example.com/doc?version=1")).not.toBe(
+      normalizeUrlForIdentity("https://example.com/doc?version=2"),
+    );
   });
 
   it("removes explicit tracking parameters and sorts the remainder", () => {
@@ -22,6 +28,28 @@ describe("URL identity separation", () => {
         "https://example.com/doc?utm_source=news&id=4&b=2&a=1",
       ),
     ).toBe("https://example.com/doc?a=1&b=2&id=4");
+    expect(
+      normalizeUrlForIdentity("https://example.com/doc?id=1&utm_source=a"),
+    ).toBe(
+      normalizeUrlForIdentity("https://example.com/doc?utm_source=b&id=1"),
+    );
+  });
+
+  it("removes sensitive identity values while retaining document identity", () => {
+    expect(
+      normalizeUrlForIdentity("https://example.com/doc?id=1&session=private"),
+    ).toBe("https://example.com/doc?id=1");
+    expect(
+      normalizeUrlForIdentity("https://example.com/doc?id=1&token=one"),
+    ).toBe(
+      normalizeUrlForIdentity("https://example.com/doc?token=two&id=1"),
+    );
+  });
+
+  it("canonicalizes ordering, fragments, credentials, ports, and repeated values", () => {
+    expect(
+      normalizeUrlForIdentity("https://user:pass@EXAMPLE.com:443/doc?b=2&a=2&a=1#part"),
+    ).toBe("https://example.com/doc?a=1&a=2&b=2");
   });
 
   it("redacts sensitive query values only for logging", () => {

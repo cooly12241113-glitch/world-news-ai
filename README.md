@@ -18,6 +18,7 @@ Architecture.
 - Sprint 10 explanation plan domain and validator implemented
 - Sprint 11 structured LLM generation adapter implemented
 - Sprint 12 briefing script domain and compiler implemented
+- Milestone 02 pre-renderer readiness audit complete
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -199,3 +200,14 @@ and [Sprint-12](docs/sprints/Sprint-12.md).
 
 Current persistence schema version: **2**. Next target: Sprint 13, Renderer
 Prototype.
+
+## Pre-renderer readiness
+
+Milestone 02 audited Sprint 00–12 contracts, URL identity, provenance,
+fingerprints, runtime validation, safe outcomes, generation boundaries, and
+BriefingScript renderer readiness. The result is
+`READY_WITH_NON_BLOCKING_DEBT`; no Sprint 13 blocker remains.
+
+See [Milestone 02](docs/milestones/Milestone-02-Pre-Renderer-Readiness-Audit.md),
+[Readiness Matrix](docs/architecture/Pre-Renderer-Readiness-Matrix.md), and
+[Contract Compatibility Matrix](docs/architecture/Contract-Compatibility-Matrix.md).

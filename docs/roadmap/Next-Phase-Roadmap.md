@@ -17,6 +17,12 @@ redaction, retry boundaries, audit metadata, and a deterministic offline fake.
 Compile validated plans into renderer-neutral scenes and narration contracts
 without adding facts outside the context package.
 
+## Milestone 02 — Pre-Renderer Readiness Audit (Complete)
+
+Audit Sprint 00–12 contract compatibility, identity, provenance, determinism,
+validation, security, and renderer-ready script boundaries. Final decision:
+READY_WITH_NON_BLOCKING_DEBT.
+
 ## Sprint 13 — Renderer Prototype
 
 Prototype map, chart, timeline, document, comparison, evidence-board, and text

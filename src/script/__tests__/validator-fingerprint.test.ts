@@ -52,6 +52,19 @@ describe("BriefingScript validator and fingerprint", () => {
     );
   });
 
+  it("rejects provenance and citations that cross the scene evidence boundary", () => {
+    const { input, script } = compiled();
+    const scene = script.scenes.find(({ contentBindings }) => contentBindings.length)!;
+    scene.contentBindings[0]!.sourceDocumentIds = ["invented-document"];
+    scene.citationCues[0]!.contextItemIds = ["invented-context"];
+    const result = new BriefingScriptValidator().validate(
+      script, input.plan, input.contract, input.contextPackage,
+    );
+    expect(result.issues.map(({ code }) => code)).toEqual(
+      expect.arrayContaining(["BROKEN_CONTENT_BINDING", "BROKEN_CITATION_REFERENCE"]),
+    );
+  });
+
   it("fingerprint ignores generated IDs, timestamps, warnings, and reference order", () => {
     const { script } = compiled();
     const changed = structuredClone(script);

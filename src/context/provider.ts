@@ -5,6 +5,7 @@ import type {
   EvidenceLink,
   SourceDocument,
 } from "../domain";
+import { normalizeUrlForIdentity } from "../domain";
 import type { EventDossierRepository } from "../dossier";
 import type {
   CallerProvidedRecord,
@@ -32,15 +33,6 @@ function isEntity(record: CallerProvidedRecord): record is Entity {
 
 function primaryDocument(documentType: SourceDocument["documentType"]): boolean {
   return ["GovernmentDocument", "StatisticalDataset", "LegalDocument", "CorporateDisclosure"].includes(documentType);
-}
-
-function safeCanonicalIdentity(value: string): string {
-  const url = new URL(value);
-  url.username = "";
-  url.password = "";
-  url.search = "";
-  url.hash = "";
-  return url.toString();
 }
 
 export function candidateFromRecord(
@@ -71,7 +63,10 @@ export function candidateFromRecord(
       dataPointIds: [],
       primarySource: primaryDocument(record.documentType),
       structuredMetadata: {},
-      provenance: { canonicalIdentity: safeCanonicalIdentity(record.canonicalUrl), observedAt },
+      provenance: {
+        canonicalIdentity: normalizeUrlForIdentity(record.canonicalUrl),
+        observedAt,
+      },
     };
   }
   if (isClaim(record)) {

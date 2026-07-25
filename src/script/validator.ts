@@ -44,14 +44,16 @@ export class BriefingScriptValidator {
     if (script.scenes[0]?.kind !== "opening" || script.scenes.at(-1)?.kind !== "closing") {
       add("MISSING_REQUIRED_SCENE", "Opening must be first and closing last.", "scenes");
     }
-    if (script.scenes.length > contract.stopConditions.maximumEvidenceItems) {
+    if (script.scenes.length > contract.stopConditions.maximumScenes) {
       add("STOP_CONDITION_EXCEEDED", "Scene budget exceeded.", "scenes");
     }
     this.dependencies(script, add);
     const sections = new Set(plan.sections.map(({ id }) => id));
+    const sectionByStepId = new Map(plan.sections.flatMap((section) =>
+      section.steps.map((step) => [step.id, section.id] as const)));
     const stepById = new Map(plan.sections.flatMap(({ steps }) => steps).map((step) => [step.id, step]));
     const contextById = new Map(context.selectedItems.map((item) => [item.id, item]));
-    const excerptIds = new Set(context.excerpts.map(({ id }) => id));
+    const excerptById = new Map(context.excerpts.map((excerpt) => [excerpt.id, excerpt]));
     const provenance = new Map(context.provenanceIndex.map((record) => [record.provenanceId, record]));
     const covered = new Set<string>();
     for (const scene of script.scenes) {
@@ -66,21 +68,67 @@ export class BriefingScriptValidator {
           add("BROKEN_CONTENT_BINDING", "Content binding references a missing plan item.", "contentBindings", "error", { relatedSceneId: scene.id });
           continue;
         }
+        if (sectionByStepId.get(binding.planStepId) !== binding.planSectionId) {
+          add("BROKEN_CONTENT_BINDING", "Plan step does not belong to the referenced section.", "contentBindings.planSectionId", "error", { relatedSceneId: scene.id, relatedPlanStepId: binding.planStepId });
+        }
         const planContextIds = new Set(step.evidenceBindings.map(({ contextItemId }) => contextItemId));
         for (const itemId of binding.contextItemIds) {
           const item = contextById.get(itemId);
           if (!item || !planContextIds.has(itemId)) add("BROKEN_CONTENT_BINDING", "Content exceeds the plan evidence boundary.", "contentBindings.contextItemIds", "error", { relatedSceneId: scene.id, relatedContextItemId: itemId });
+          if (item) {
+            if (item.excerptId && !binding.excerptIds.includes(item.excerptId)) {
+              add("BROKEN_CONTENT_BINDING", "Binding does not preserve the ContextItem excerpt.", "contentBindings.excerptIds", "error", { relatedSceneId: scene.id, relatedContextItemId: itemId });
+            }
+            if (!subset(binding.sourceDocumentIds, item.sourceDocumentIds)
+              || !subset(binding.dataPointIds, item.dataPointIds)
+              || !subset(binding.entityIds, item.entityIds)
+              || !subset(binding.locationIds, item.locationIds)) {
+              add("BROKEN_CONTENT_BINDING", "Binding references records outside its ContextItem.", "contentBindings", "error", { relatedSceneId: scene.id, relatedContextItemId: itemId });
+            }
+          }
         }
-        if (binding.excerptIds.some((id) => !excerptIds.has(id))) add("BROKEN_CONTENT_BINDING", "Excerpt reference is broken.", "contentBindings.excerptIds", "error", { relatedSceneId: scene.id });
+        const planBinding = step.evidenceBindings.find(({ contextItemId }) =>
+          binding.contextItemIds.includes(contextItemId));
+        if (!planBinding
+          || !subset(binding.excerptIds, planBinding.excerptIds)
+          || !subset(binding.provenanceRecordIds, planBinding.provenanceRecordIds)
+          || !subset(binding.sourceDocumentIds, planBinding.sourceDocumentIds)
+          || !subset(binding.claimIds, planBinding.claimIds)
+          || !subset(binding.evidenceLinkIds, planBinding.evidenceLinkIds)
+          || !subset(binding.dataPointIds, planBinding.dataPointIds)
+          || !subset(binding.entityIds, planBinding.entityIds)) {
+          add("BROKEN_CONTENT_BINDING", "Binding exceeds its ExplanationPlan evidence binding.", "contentBindings", "error", { relatedSceneId: scene.id, relatedPlanStepId: binding.planStepId });
+        }
+        for (const excerptId of binding.excerptIds) {
+          const excerpt = excerptById.get(excerptId);
+          if (!excerpt || !binding.sourceDocumentIds.includes(excerpt.sourceDocumentId)) {
+            add("BROKEN_CONTENT_BINDING", "Excerpt reference is broken or belongs to another document.", "contentBindings.excerptIds", "error", { relatedSceneId: scene.id });
+          }
+        }
         for (const provenanceId of binding.provenanceRecordIds) {
           const record = provenance.get(provenanceId);
-          if (!record || !binding.contextItemIds.includes(record.contextItemId)) {
+          if (!record || !binding.contextItemIds.includes(record.contextItemId)
+            || (record.excerptId !== undefined && !binding.excerptIds.includes(record.excerptId))
+            || (record.sourceDocumentId !== undefined
+              && !binding.sourceDocumentIds.includes(record.sourceDocumentId))) {
             add("BROKEN_CONTENT_BINDING", "Provenance reference is broken.", "contentBindings.provenanceRecordIds", "error", { relatedSceneId: scene.id });
           }
         }
       }
       if (scene.contentBindings.length > 0 && scene.citationCues.length === 0) {
         add("BROKEN_CITATION_REFERENCE", "Evidence-bearing scenes require citation cues.", "citationCues", "error", { relatedSceneId: scene.id });
+      }
+      const boundContextIds = new Set(scene.contentBindings.flatMap(({ contextItemIds }) => contextItemIds));
+      const boundExcerptIds = new Set(scene.contentBindings.flatMap(({ excerptIds }) => excerptIds));
+      const boundProvenanceIds = new Set(scene.contentBindings.flatMap(({ provenanceRecordIds }) => provenanceRecordIds));
+      const boundDocumentIds = new Set(scene.contentBindings.flatMap(({ sourceDocumentIds }) => sourceDocumentIds));
+      for (const cue of scene.citationCues) {
+        if (!subset(cue.contextItemIds, boundContextIds)
+          || !subset(cue.excerptIds, boundExcerptIds)
+          || !subset(cue.provenanceRecordIds, boundProvenanceIds)
+          || !subset(cue.sourceDocumentIds, boundDocumentIds)) {
+          add("BROKEN_CITATION_REFERENCE", "Citation cue exceeds the scene evidence bindings.", "citationCues", "error", { relatedSceneId: scene.id });
+        }
       }
       this.visuals(scene, plan, contract, script, add);
       if (scene.layoutDirective.composerPosition !== "bottom-center" ||
@@ -147,6 +195,10 @@ export class BriefingScriptValidator {
     contract: BriefingContract, script: BriefingScriptDraft, add: Add,
   ): void {
     const visualById = new Map(plan.sections.flatMap(({ visualIntents }) => visualIntents).map((visual) => [visual.id, visual]));
+    const boundDocumentIds = new Set(scene.contentBindings.flatMap(({ sourceDocumentIds }) => sourceDocumentIds));
+    const boundExcerptIds = new Set(scene.contentBindings.flatMap(({ excerptIds }) => excerptIds));
+    const boundDataPointIds = new Set(scene.contentBindings.flatMap(({ dataPointIds }) => dataPointIds));
+    const boundLocationIds = new Set(scene.contentBindings.flatMap(({ locationIds }) => locationIds));
     for (const visual of scene.visualDirectives) {
       if (!contract.visualPolicy.allowedModes.includes(visual.mode) && visual.mode !== "text") {
         add("UNSUPPORTED_VISUAL_DIRECTIVE", "Visual mode is not allowed.", "visualDirectives.mode", "error", { relatedSceneId: scene.id });
@@ -156,7 +208,10 @@ export class BriefingScriptValidator {
       }
       const camera = visual.cameraIntent;
       const cameraMoves = camera.action !== "no-camera-motion" && camera.action !== "hold-current-view";
-      if (cameraMoves && camera.targetLocationIds.length === 0) add("CAMERA_POLICY_VIOLATION", "Camera focus requires a location.", "cameraIntent.targetLocationIds", "error", { relatedSceneId: scene.id });
+      if (cameraMoves && camera.targetLocationIds.length === 0
+        && camera.targetEntityIds.length === 0) {
+        add("CAMERA_POLICY_VIOLATION", "Camera focus requires a location or entity.", "cameraIntent", "error", { relatedSceneId: scene.id });
+      }
       if (script.presentationPreference.mode === "static" && cameraMoves) add("STATIC_MODE_VIOLATION", "Static mode forbids camera motion.", "cameraIntent", "error", { relatedSceneId: scene.id });
       if (script.presentationPreference.mode === "reduced-motion" &&
           (camera.transitionPreference === "smooth" || camera.motionPriority === "high")) {
@@ -168,6 +223,10 @@ export class BriefingScriptValidator {
       if (visual.mode === "chart" && (!visual.chartIntent || visual.chartIntent.dataPointIds.length === 0)) {
         add("UNSUPPORTED_VISUAL_DIRECTIVE", "Chart requires a DataPoint.", "chartIntent", "error", { relatedSceneId: scene.id });
       }
+      if (visual.mode === "chart" && visual.chartIntent
+        && !subset(visual.chartIntent.dataPointIds, boundDataPointIds)) {
+        add("UNSUPPORTED_VISUAL_DIRECTIVE", "Chart DataPoints must be bound to scene evidence.", "chartIntent.dataPointIds", "error", { relatedSceneId: scene.id });
+      }
       if (visual.mode === "document"
         && (!visual.documentIntent || visual.documentIntent.sourceDocumentIds.length === 0)) {
         add(
@@ -178,8 +237,23 @@ export class BriefingScriptValidator {
           { relatedSceneId: scene.id },
         );
       }
+      if (visual.mode === "document" && visual.documentIntent
+        && (!subset(visual.documentIntent.sourceDocumentIds, boundDocumentIds)
+          || visual.documentIntent.excerptIds.length === 0
+          || !subset(visual.documentIntent.excerptIds, boundExcerptIds))) {
+        add("UNSUPPORTED_VISUAL_DIRECTIVE", "Document intent must use bound documents and excerpts.", "documentIntent", "error", { relatedSceneId: scene.id });
+      }
+      if (["map", "map-flow"].includes(visual.mode)
+        && !subset(visual.locationIds, boundLocationIds)) {
+        add("UNSUPPORTED_VISUAL_DIRECTIVE", "Map locations must be bound to scene evidence.", "visualDirectives.locationIds", "error", { relatedSceneId: scene.id });
+      }
     }
   }
+}
+
+function subset(values: string[], allowed: Set<string> | string[]): boolean {
+  const allowlist = allowed instanceof Set ? allowed : new Set(allowed);
+  return values.every((value) => allowlist.has(value));
 }
 
 type Add = (

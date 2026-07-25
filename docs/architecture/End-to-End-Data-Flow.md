@@ -19,19 +19,27 @@ flowchart TD
   CP --> SD["Scoring / Deduplication / Diversity"]
   SD --> X["Source-backed Excerpts + Context Budget"]
   X --> EC["EvidenceContextPackage"]
-  EC -->|ready / partial / insufficient / none| EP["ExplanationPlan Generator"]
+  EC -->|ready / partial| GP["Structured Generation Boundary"]
+  EC -->|insufficient / none| ES["Structured stop"]
+  GP --> EP["ExplanationPlan Proposal + Hydration"]
   EP --> EV["ExplanationPlan Validator"]
   EV -->|valid / warnings| VP["ValidatedExplanationPlan"]
   EV -->|invalid / insufficient| ES["Structured stop"]
-  VP -. future .-> F["Briefing Script / Renderer"]
+  VP --> SC["BriefingScript Compiler"]
+  SC --> SV["BriefingScript Validator"]
+  SV -->|valid / static-only| VS["ValidatedBriefingScript"]
+  SV -->|invalid / insufficient| ES
+  VS -. future .-> F["Motion Planner / Renderer / Player"]
 ```
 
 ## Provenance chain
 
 ```text
-ContextItem
-→ SourceExcerpt
-→ ProvenanceRecord
+BriefingScene
+→ SceneContentBinding
+→ ExplanationPlan EvidenceBinding
+→ ContextItem
+→ SourceExcerpt + ProvenanceRecord
 → SourceDocument / dossier statement / claim / evidence / data
 → source fingerprint + document/dossier revision + capability observation
 → fixed original input or stored record
@@ -48,3 +56,7 @@ present in its summary/body source.
 - Dossier validation rejects broken references and invalid classifications.
 - Ambiguous/personalized questions stop before retrieval.
 - Context never promotes missing evidence to ready and never generates filler.
+- Generation treats evidence as data, allows only closed-world references, and
+  never promotes an invalid proposal to a validated plan.
+- Script compilation never returns a draft as renderer-ready and enforces the
+  contract scene budget, evidence closure, static fallback, and accessibility.

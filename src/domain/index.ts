@@ -9,3 +9,4 @@ export * from "./source-document";
 export * from "./claim";
 export * from "./data-point";
 export * from "./evidence-link";
+export * from "./url-identity";

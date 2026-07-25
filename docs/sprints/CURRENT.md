@@ -2,9 +2,9 @@
 
 ## Current Milestone
 
-Milestone 01 — Intelligence Foundation Integration Audit
+Milestone 02 — Pre-Renderer Integration & Completeness Audit
 
-**Status:** Complete; foundation baseline approved
+**Status:** READY_WITH_NON_BLOCKING_DEBT
 
 ## Completed delivery
 
@@ -45,6 +45,9 @@ renderers, or map SDKs.
 ## Next target
 
 Sprint 13 — Renderer Prototype.
+
+Entry is approved. See
+[Milestone 02](../milestones/Milestone-02-Pre-Renderer-Readiness-Audit.md).
 
 ## Known non-blocking debt
 

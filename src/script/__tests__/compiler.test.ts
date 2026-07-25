@@ -5,6 +5,7 @@ import { compileInput, compiled, now } from "./fixtures";
 describe("RuleBasedBriefingScriptCompiler", () => {
   it("compiles every required plan section and step", () => {
     const { input, script } = compiled();
+    expect(script.status).toMatch(/validated|static-only/);
     const coveredSections = new Set(script.scenes.flatMap(({ sourceSectionIds }) => sourceSectionIds));
     const coveredSteps = new Set(script.scenes.flatMap(({ sourceStepIds }) => sourceStepIds));
     expect(input.plan.sections.every(({ id }) => coveredSections.has(id))).toBe(true);
@@ -61,4 +62,25 @@ describe("RuleBasedBriefingScriptCompiler", () => {
     expect(new RuleBasedBriefingScriptCompiler().compile(insufficient))
       .toMatchObject({ success: true, outcome: "insufficient-context" });
   });
+
+  it("enforces the contract scene budget", () => {
+    const input = compileInput();
+    input.contract.stopConditions.maximumScenes = 2;
+    expect(new RuleBasedBriefingScriptCompiler().compile(input))
+      .toMatchObject({ success: false, error: { code: "SCRIPT_VALIDATION_FAILED" } });
+  });
+
+  it("does not mutate frozen plan, contract, context, or preference inputs", () => {
+    const input = deepFreeze(compileInput());
+    expect(() => new RuleBasedBriefingScriptCompiler(() => new Date(now)).compile(input))
+      .not.toThrow();
+  });
 });
+
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    Object.values(value).forEach(deepFreeze);
+  }
+  return value;
+}

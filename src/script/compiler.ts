@@ -33,8 +33,10 @@ export class RuleBasedBriefingScriptCompiler {
     }
     try {
       const staticOnly = ["static", "reduced-motion"].includes(preference.data.mode);
-      const middle = plan.sections.map((section, index) =>
-        this.scene(section, index + 1, input, preference.data.mode));
+      const maximumMiddleScenes = Math.max(0, contract.stopConditions.maximumScenes - 2);
+      const sectionGroups = groupSections(plan.sections, maximumMiddleScenes);
+      const middle = sectionGroups.map((sections, index) =>
+        this.scene(sections, index + 1, input, preference.data.mode));
       const scenes = [
         this.boundaryScene("opening", 0, input),
         ...middle,
@@ -121,7 +123,7 @@ export class RuleBasedBriefingScriptCompiler {
         success: true,
         outcome: validation.outcome === "static-only" ? "validated-static-script"
           : validation.outcome === "valid-with-warnings" ? "partial-script" : "validated-script",
-        script: schema.data, validation, warnings: schema.data.warnings,
+        script: validation.script, validation, warnings: validation.script.warnings,
       };
     } catch (error) {
       return failure("SCRIPT_ASSEMBLY_FAILED", "assembly", error instanceof Error ? error.message : undefined);
@@ -133,17 +135,24 @@ export class RuleBasedBriefingScriptCompiler {
   }
 
   private scene(
-    section: ExplanationPlanSection, order: number,
+    sections: ExplanationPlanSection[], order: number,
     input: BriefingScriptCompileInput, mode: BriefingScriptCompileInput["preference"]["mode"],
   ): BriefingScene {
-    const bindings = section.steps.flatMap((step, index) => step.evidenceBindings.map((binding) =>
-      this.binding(section, step, binding, index)));
-    const visuals = section.visualIntents.map((visual) => this.visual(visual, mode, bindings));
+    const steps = sections.flatMap(({ steps }) => steps);
+    const bindings = sections.flatMap((section) =>
+      section.steps.flatMap((step, index) => step.evidenceBindings.map((binding) =>
+        this.binding(section, step, binding, index))));
+    const visuals = sections.flatMap(({ visualIntents }) => visualIntents)
+      .map((visual) => this.visual(visual, mode, bindings));
+    const primary = sections[0]!;
     return this.baseScene(
-      stableId("scene", `${input.plan.fingerprint}:${section.kind}:${section.order}`),
-      sceneKind(section.kind, input.plan.answerStrategy), order,
-      [section.id], section.steps.map(({ id }) => id), input, bindings, visuals,
-      section.objective, section.steps,
+      stableId("scene", `${input.plan.fingerprint}:${sections.map(({ id }) => id).join(":")}`),
+      sceneKind(primary.kind, input.plan.answerStrategy), order,
+      sections.map(({ id }) => id), steps.map(({ id }) => id), input, bindings, visuals,
+      sections.length === 1
+        ? primary.objective
+        : `Represent the ${sections.map(({ kind }) => kind).join(" and ")} requirements.`,
+      steps,
     );
   }
 
@@ -342,6 +351,21 @@ function narrationType(kind: SceneKind): BriefingScene["narrationDirective"]["ou
 }
 function stableId(type: string, semantic: string) {
   return `${type}:${createSemanticFingerprint({ semantic }).slice(0, 24)}`;
+}
+function groupSections(
+  sections: ExplanationPlanSection[],
+  maximumGroups: number,
+): ExplanationPlanSection[][] {
+  if (sections.length === 0 || maximumGroups === 0) return [];
+  const groupCount = Math.min(sections.length, maximumGroups);
+  const groups: ExplanationPlanSection[][] = Array.from(
+    { length: groupCount },
+    () => [],
+  );
+  sections.forEach((section, index) => {
+    groups[Math.floor(index * groupCount / sections.length)]!.push(section);
+  });
+  return groups;
 }
 function failure(code: Parameters<typeof scriptError>[0], stage: string, details?: string): BriefingScriptBuildResult {
   return { success: false, error: scriptError(code, stage, details) };
