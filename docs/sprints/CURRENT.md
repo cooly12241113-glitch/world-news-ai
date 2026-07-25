@@ -32,18 +32,19 @@ Milestone 01 — Intelligence Foundation Integration Audit
 
 ## Current delivery
 
-Sprint 11 — Structured LLM Adapter.
+Sprint 12 — Briefing Script Domain & Compiler.
 
 **Status:** Complete
 
-The validated context now feeds a bounded provider request, strict
-closed-world proposal validation, deterministic hydration, the existing
-ExplanationPlan validator, and a redacted generation audit. Tests and ordinary
-commands remain offline; live provider use is explicit opt-in.
+Validated explanation plans now compile into evidence-bound, renderer-neutral
+briefing scenes. Deterministic validation enforces plan coverage, provenance,
+scene DAG integrity, presentation, bottom-composer, safe-viewport,
+accessibility, and static/reduced-motion policies without live providers,
+renderers, or map SDKs.
 
 ## Next target
 
-Sprint 12 — Briefing Script Compiler.
+Sprint 13 — Renderer Prototype.
 
 ## Known non-blocking debt
 

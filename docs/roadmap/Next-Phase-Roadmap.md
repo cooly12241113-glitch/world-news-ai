@@ -12,7 +12,7 @@ uncertainty obligations, validation, and deterministic plan fingerprints.
 Add a provider-neutral structured generation port with schema validation,
 redaction, retry boundaries, audit metadata, and a deterministic offline fake.
 
-## Sprint 12 — Briefing Script Compiler
+## Sprint 12 — Briefing Script Compiler (Complete)
 
 Compile validated plans into renderer-neutral scenes and narration contracts
 without adding facts outside the context package.

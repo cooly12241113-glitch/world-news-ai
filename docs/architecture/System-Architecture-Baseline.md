@@ -13,6 +13,7 @@
 | `context` | Evidence selection | ready contract + records → context package | domain, dossier port, briefing, Zod | port only | candidate/package ports, scorer | search/discovery, generation |
 | `explanation` | Evidence-grounded generation plan | contract + context package → validated plan | briefing, context, Zod | port only | generator/repository ports | prose, LLM, renderer |
 | `generation` | Untrusted structured provider boundary | question + contract + context → validated plan + audit | briefing, context, explanation, Zod; OpenAI SDK in adapter only | port only | provider/audit/cache ports | final prose, tools, live-by-default calls |
+| `script` | Renderer-neutral briefing sequence | validated plan + contract + context + preference → validated script | briefing, context, explanation, Zod | port only | compiler/repository ports | UI, map SDK, motion timing, final prose |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
 ## Dependency direction
@@ -51,6 +52,9 @@ Module `index.ts` files export their public contracts and services:
   EvidenceContextPackage, coverage, gaps, providers, and schemas.
 - Explanation: plan draft/validated boundaries, sections, steps, bindings,
   epistemic/visual policies, validator, generator port, and rule assembler.
+- Script: presentation preferences, scenes, content bindings, semantic visual
+  and camera intents, playback/interaction/accessibility policies, compiler,
+  validator, coverage, and fingerprints.
 
 ## Port and adapter boundaries
 
@@ -62,6 +66,9 @@ Module `index.ts` files export their public contracts and services:
 - ExplanationPlan consumes BriefingContract + EvidenceContextPackage.
 - Future structured generators must return the same draft schema and pass the
   same validator.
+- BriefingScript consumes only a validated plan, contract, context package, and
+  presentation preference; future motion and renderer adapters consume the
+  validated script without changing its evidence scope.
 
 ## Invalid dependency rules
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## Sprint 12 — Briefing Script Domain & Compiler
+
+- Added strict presentation preferences and renderer-neutral BriefingScript
+  aggregates, scenes, evidence bindings, and visual intent contracts.
+- Added deterministic rule-based compilation, semantic fingerprints, plan and
+  evidence coverage, scene dependency DAG validation, and structured outcomes.
+- Added bottom-composer, safe-viewport, playback, interaction, accessibility,
+  static, and reduced-motion policies.
+- Added map, chart, document, overlay, camera, narration, caption, citation,
+  and uncertainty intents without renderer commands or final prose.
+- Added offline unit and integration coverage and architecture documentation.
+- SQLite migration version remains 2.
+
 ## Sprint 11 — Structured LLM Adapter
 
 - Added a provider-independent structured generation port and coordinator.

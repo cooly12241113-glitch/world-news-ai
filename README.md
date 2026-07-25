@@ -17,6 +17,7 @@ Architecture.
 - Sprint 9 evidence retrieval and context builder implemented
 - Sprint 10 explanation plan domain and validator implemented
 - Sprint 11 structured LLM generation adapter implemented
+- Sprint 12 briefing script domain and compiler implemented
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -184,5 +185,17 @@ See [ADR-011](docs/architecture/ADR-011-structured-llm-adapter.md),
 [Structured LLM Generation Architecture](docs/architecture/Structured-LLM-Generation-Architecture.md),
 and [Sprint-11](docs/sprints/Sprint-11.md).
 
-Current persistence schema version: **2**. Next target: Sprint 12, Briefing
-Script Compiler.
+## Briefing scripts
+
+Sprint 12 compiles a validated explanation plan into deterministic,
+renderer-neutral briefing scenes. Every scene remains bound to plan steps and
+context evidence; presentation preferences select semantic visual, camera,
+layout, playback, interaction, and accessibility intents without UI, map SDK,
+motion timing, or final narration generation.
+
+See [ADR-012](docs/architecture/ADR-012-briefing-script-domain.md),
+[Briefing Script Architecture](docs/architecture/Briefing-Script-Architecture.md),
+and [Sprint-12](docs/sprints/Sprint-12.md).
+
+Current persistence schema version: **2**. Next target: Sprint 13, Renderer
+Prototype.
