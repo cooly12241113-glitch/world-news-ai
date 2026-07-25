@@ -30,12 +30,20 @@ Milestone 01 — Intelligence Foundation Integration Audit
 - Architecture baseline: [System Architecture Baseline](../architecture/System-Architecture-Baseline.md)
 - End-to-end flow: [End-to-End Data Flow](../architecture/End-to-End-Data-Flow.md)
 
-## Next target
+## Current delivery
 
 Sprint 10 — ExplanationPlan Domain & Validator.
 
-Entry is approved: contract/context boundaries, provenance, determinism,
-non-generation behavior, and structured failure outcomes are covered.
+**Status:** Complete
+
+The evidence context now feeds a strict, deterministic plan boundary with
+evidence/provenance bindings, epistemic policy, visual intent, decision rules,
+DAG validation, structured insufficiency, and a rule-based skeleton assembler.
+It generates no final answer and makes no LLM call.
+
+## Next target
+
+Sprint 11 — Structured LLM Adapter.
 
 ## Known non-blocking debt
 

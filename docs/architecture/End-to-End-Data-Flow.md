@@ -19,7 +19,11 @@ flowchart TD
   CP --> SD["Scoring / Deduplication / Diversity"]
   SD --> X["Source-backed Excerpts + Context Budget"]
   X --> EC["EvidenceContextPackage"]
-  EC -->|ready / partial / insufficient / none| F["Future ExplanationPlan"]
+  EC -->|ready / partial / insufficient / none| EP["ExplanationPlan Generator"]
+  EP --> EV["ExplanationPlan Validator"]
+  EV -->|valid / warnings| VP["ValidatedExplanationPlan"]
+  EV -->|invalid / insufficient| ES["Structured stop"]
+  VP -. future .-> F["Briefing Script / Renderer"]
 ```
 
 ## Provenance chain

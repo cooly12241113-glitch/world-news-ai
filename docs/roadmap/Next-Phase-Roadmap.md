@@ -2,7 +2,7 @@
 
 This roadmap records candidates only; it does not implement them.
 
-## Sprint 10 — ExplanationPlan Domain & Validator
+## Sprint 10 — ExplanationPlan Domain & Validator (Complete)
 
 Define evidence-referenced explanation steps, section/visual instructions,
 uncertainty obligations, validation, and deterministic plan fingerprints.

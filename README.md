@@ -15,6 +15,7 @@ Architecture.
 - Sprint 7 evidence-first event dossier core implemented
 - Sprint 8 question intent and briefing contract implemented
 - Sprint 9 evidence retrieval and context builder implemented
+- Sprint 10 explanation plan domain and validator implemented
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -157,5 +158,17 @@ returns explicit evidence gaps, and performs no LLM or external API calls.
 - [End-to-End Data Flow](docs/architecture/End-to-End-Data-Flow.md)
 - [Next Phase Roadmap](docs/roadmap/Next-Phase-Roadmap.md)
 
-Current persistence schema version: **2**. Next target: Sprint 10,
-ExplanationPlan Domain & Validator.
+## Explanation planning
+
+Sprint 10 turns `BriefingContract` plus `EvidenceContextPackage` into a strict,
+evidence-referenced `ExplanationPlanDraft`, then exposes a
+`ValidatedExplanationPlan` only after deterministic validation. The rule-based
+assembler creates structure and requirements, not prose, verdicts, or
+forecasts.
+
+See [ADR-010](docs/architecture/ADR-010-explanation-plan-domain.md),
+[Explanation Plan Architecture](docs/architecture/Explanation-Plan-Architecture.md),
+and [Sprint-10](docs/sprints/Sprint-10.md).
+
+Current persistence schema version: **2**. Next target: Sprint 11, Structured
+LLM Adapter.

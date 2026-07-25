@@ -11,6 +11,7 @@
 | `dossier` | Evidence assessment aggregate | event + referenced records → revision | domain, validation | memory/SQLite | repository/UoW ports | prose generation, NLP contradiction |
 | `briefing` | Question scope contract | BriefingQuestion → intent + contract | Zod, crypto | port only | analyzer/session ports | LLM analysis, rendering |
 | `context` | Evidence selection | ready contract + records → context package | domain, dossier port, briefing, Zod | port only | candidate/package ports, scorer | search/discovery, generation |
+| `explanation` | Evidence-grounded generation plan | contract + context package → validated plan | briefing, context, Zod | port only | generator/repository ports | prose, LLM, renderer |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
 ## Dependency direction
@@ -47,6 +48,8 @@ Module `index.ts` files export their public contracts and services:
 - Briefing: BriefingQuestion, intent analysis, BriefingContract and schemas.
 - Context: RetrievalPlan, EvidenceCandidate, SourceExcerpt,
   EvidenceContextPackage, coverage, gaps, providers, and schemas.
+- Explanation: plan draft/validated boundaries, sections, steps, bindings,
+  epistemic/visual policies, validator, generator port, and rule assembler.
 
 ## Port and adapter boundaries
 
@@ -55,7 +58,9 @@ Module `index.ts` files export their public contracts and services:
 - Persistence and dossier application services depend on repository/UoW ports.
 - Context depends on `EvidenceCandidateProvider`, not SQLite.
 - Future AI analysis implements `QuestionIntentAnalyzer`.
-- Future ExplanationPlan consumes BriefingContract + EvidenceContextPackage.
+- ExplanationPlan consumes BriefingContract + EvidenceContextPackage.
+- Future structured generators must return the same draft schema and pass the
+  same validator.
 
 ## Invalid dependency rules
 

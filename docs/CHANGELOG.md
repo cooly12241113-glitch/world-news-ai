@@ -1,5 +1,18 @@
 # Changelog
 
+## Sprint 10 — ExplanationPlan Domain & Validator
+
+- Added strict plan aggregate, sections, steps, evidence bindings, epistemic
+  policies, visual intents, coverage, and decision rules.
+- Added deterministic contract/context/provenance/policy validation and DAG
+  cycle detection.
+- Added semantic fingerprints, generator/repository ports, and a rule-based
+  skeleton assembler.
+- Added structured insufficiency and clarification outcomes without answer
+  generation or external calls.
+- Added offline unit/integration tests and architecture documentation.
+- SQLite migration version remains 2.
+
 ## Milestone 01 — Intelligence Foundation Baseline
 
 - Audited Sprint 00–09 architecture, contracts, determinism, provenance,
