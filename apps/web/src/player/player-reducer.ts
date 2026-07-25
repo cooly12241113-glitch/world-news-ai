@@ -2,12 +2,13 @@ import type { BriefingPlayerState, PauseReason, PlaybackSpeed } from "./player-s
 
 export type PlayerAction =
   | { type: "load"; sceneCount: number }
-  | { type: "start" | "pause" | "resume" | "next" | "previous" | "end" }
+  | { type: "start" | "pause" | "resume" | "next" | "previous" | "end" | "replay" }
   | { type: "jump"; index: number }
   | { type: "pause-for"; reason: PauseReason }
   | { type: "set-speed"; speed: PlaybackSpeed }
   | { type: "set-animation"; enabled: boolean }
-  | { type: "composer-focus" | "composer-cancel" | "map-interaction" | "return-to-script-camera" }
+  | { type: "composer-focus" | "composer-cancel" | "map-interaction"
+      | "keep-user-map-view" | "return-to-script-camera" | "replay-scene-motion" }
   | { type: "motion-start"; requestId: number }
   | { type: "motion-complete"; requestId: number }
   | { type: "error"; message: string };
@@ -25,6 +26,10 @@ export function playerReducer(
     case "resume":
       return state.sceneCount > 0 && state.status !== "ended"
         ? { ...state, status: "playing", pauseReason: undefined, mapConflict: false }
+        : state;
+    case "replay":
+      return state.sceneCount > 0
+        ? { ...state, currentSceneIndex: 0, status: "playing", composerExpanded: false }
         : state;
     case "pause":
       return state.status === "playing" ? { ...state, status: "paused", pauseReason: "user" } : state;
@@ -44,7 +49,8 @@ export function playerReducer(
           status: action.index === state.sceneCount - 1 ? "ended" : state.status }
         : state;
     case "end":
-      return { ...state, currentSceneIndex: Math.max(0, state.sceneCount - 1), status: "ended" };
+      return { ...state, currentSceneIndex: 0,
+        status: "exploration", composerExpanded: false };
     case "set-speed":
       return { ...state, playbackSpeed: action.speed };
     case "set-animation":
@@ -57,8 +63,12 @@ export function playerReducer(
       return { ...state, composerExpanded: false };
     case "map-interaction":
       return { ...state, status: "paused", pauseReason: "map-interaction", mapConflict: true };
+    case "keep-user-map-view":
+      return { ...state, mapConflict: false };
     case "return-to-script-camera":
       return { ...state, mapConflict: false, motionRequestId: state.motionRequestId + 1 };
+    case "replay-scene-motion":
+      return { ...state, motionRequestId: state.motionRequestId + 1 };
     case "motion-start":
       return action.requestId > state.motionRequestId ? { ...state, motionRequestId: action.requestId } : state;
     case "motion-complete":

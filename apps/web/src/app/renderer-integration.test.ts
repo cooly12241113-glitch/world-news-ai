@@ -36,9 +36,9 @@ describe("Sprint 13 renderer integration scenarios", () => {
     expect(scene.layout.safeViewport.reserveSidePanel).toBe(true);
   });
 
-  it("3. fact verification exposes a document and evidence-bound citation", () => {
+  it("3. uncertainty uses an evidence board while retaining the source citation", () => {
     const scene = briefing("document-led").scenes[5]!;
-    expect(scene.primarySurface).toBe("document");
+    expect(scene.primarySurface).toBe("evidence-board");
     expect(scene.citations[0]?.sourceDocumentIds).toContain(demoEvidence.document.id);
     expect(scene.uncertainties.length).toBeGreaterThan(0);
   });

@@ -12,8 +12,17 @@ export function ChartSurface({ scene }: { scene: RenderableScene }) {
       <h2>{data.label}</h2>
       <div className="bar-track" aria-hidden="true"><span style={{ width: `${data.value}%` }} /></div>
       <p className="metric">{data.value}<small>{data.unit}</small></p>
+      <dl className="metric-details">
+        <div><dt>Qualitative band</dt><dd>{data.band}</dd></div>
+        <div><dt>What it measures</dt><dd>{data.measures}</dd></div>
+        <div><dt>Source</dt><dd>{data.source}</dd></div>
+        <div><dt>Status</dt><dd>{data.status}</dd></div>
+        <div><dt>Data vintage</dt><dd>{data.vintage}</dd></div>
+      </dl>
       <table><caption>Accessible chart data</caption><tbody>
         <tr><th scope="row">{data.label}</th><td>{data.value}{data.unit}</td></tr>
+        <tr><th scope="row">Qualitative band</th><td>{data.band}</td></tr>
+        <tr><th scope="row">Source and vintage</th><td>{data.source}, {data.vintage}</td></tr>
       </tbody></table>
     </section>
   );
@@ -33,6 +42,24 @@ export function DocumentSurface({ scene }: { scene: RenderableScene }) {
 }
 
 export function EvidenceBoardSurface({ scene }: { scene: RenderableScene }) {
+  if (scene.kind === "uncertainty") return (
+    <section className="data-surface uncertainty-board" aria-label="Uncertainty and verification board">
+      <EvidenceColumn title="Assumptions" roleLabel="Assumption"
+        items={["The fixture assumes phased controls are implemented as described."]} />
+      <EvidenceColumn title="Evidence limits" roleLabel="Limit"
+        items={demoEvidence.contradicting} />
+      <EvidenceColumn title="Counter-factors" roleLabel="Counter-factor"
+        items={["Supplier adaptation may reduce the observed exposure."]} />
+      <EvidenceColumn title="Verification signals" roleLabel="Verify"
+        items={["Watch implementation checkpoints and supplier disclosures."]} />
+      <EvidenceColumn title="Unknowns" roleLabel="Unknown"
+        items={["Implementation timing and adaptation remain uncertain."]} />
+      <details className="source-reference">
+        <summary>Supporting source reference</summary>
+        <p>{demoEvidence.document.title} · {demoEvidence.document.publisher}</p>
+      </details>
+    </section>
+  );
   return (
     <section className="data-surface evidence-board" aria-label="Evidence board">
       <EvidenceColumn title="Supporting evidence" roleLabel="Supports" items={demoEvidence.supporting} />

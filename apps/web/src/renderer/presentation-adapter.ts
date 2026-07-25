@@ -36,6 +36,7 @@ export interface RenderableBriefing {
 }
 
 const surface = (scene: BriefingScene): RenderSurfaceKind => {
+  if (scene.kind === "uncertainty") return "evidence-board";
   const mode = scene.visualDirectives[0]?.mode;
   if (mode === "map" || mode === "map-flow") return "map";
   if (mode === "chart") return "chart";

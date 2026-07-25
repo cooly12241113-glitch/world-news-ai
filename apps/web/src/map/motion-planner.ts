@@ -39,9 +39,17 @@ const distance = (a: MapCameraState["center"], b: MapCameraState["center"]) => {
 export function planCameraMotion(input: MotionPlannerInput): CameraMotionPlan {
   const disabled = input.intent.action === "no-camera-motion"
     || input.intent.action === "hold-current-view"
-    || input.animationPolicy === "disabled"
     || input.cameraMotionPolicy === "disallow";
   if (disabled) return { segments: [], arrivalBehavior: "hold", totalEstimatedDurationMs: 0, warnings: [] };
+  if (input.animationPolicy === "disabled") {
+    return {
+      segments: [{
+        destination: input.target, transition: "jump", durationMs: 0,
+        viewportInsets: input.viewportInsets, essential: false,
+      }],
+      arrivalBehavior: "hold", totalEstimatedDurationMs: 0, warnings: [],
+    };
+  }
   const km = distance(input.current.center, input.target.center);
   const zoomDelta = Math.abs(input.current.zoom - input.target.zoom);
   const speed = { slow: 1.25, normal: 1, fast: 0.78 }[input.playbackSpeed];

@@ -186,7 +186,7 @@ export function buildDemoScript(mode: PresentationMode = "auto"): ValidatedBrief
     scene(4, "supporting-evidence", "Compare the fixture exposure indicator and primary policy source.",
       visual("visual:chart", "chart")),
     scene(5, "uncertainty", "Separate assumptions, limits, and verification signals.",
-      visual("visual:document", "document")),
+      visual("visual:uncertainty", "evidence-board")),
     scene(6, "closing", "Return to the evidence boundary and invite a follow-up."),
   ];
   if (staticMode) for (const item of scenes) {
@@ -259,7 +259,12 @@ export const demoEvidence = {
     publishedAt: "2026-07-20", revision: "1",
     excerpt: "The policy introduces phased controls and review checkpoints.",
   },
-  dataPoint: { id: DATA_POINT_ID, label: "Supply-chain exposure index", value: 68, unit: "/100" },
+  dataPoint: {
+    id: DATA_POINT_ID, label: "Supply-chain exposure index", value: 68, unit: "/100",
+    band: "Material exposure (demo fixture value)",
+    measures: "Relative supply-chain exposure represented by this fixture.",
+    source: "Fixture evidence package", status: "Demo fixture", vintage: "2026-07-20",
+  },
   supporting: ["Primary policy document defines phased controls.", "Fixture indicator shows material exposure."],
   contradicting: ["Implementation timing remains subject to review.", "Supplier adaptation may reduce the impact."],
 };

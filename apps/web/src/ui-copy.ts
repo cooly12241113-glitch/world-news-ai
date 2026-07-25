@@ -1,0 +1,18 @@
+export const ui = {
+  analysis: "Analysis",
+  currentScene: "Current Scene",
+  key: "Key",
+  evidence: "Evidence",
+  limits: "Limits",
+  uncertainty: "Uncertainty",
+  sources: "Sources",
+  play: "Play",
+  speed: "Speed",
+  motionOn: "Motion on",
+  motionOff: "Motion off",
+  startDemo: "Start demo briefing",
+  mapViewChanged: "Map view changed",
+  mapViewChangedBody: "You moved the map. Keep your current view or return to the briefing camera.",
+  keepMapView: "Keep my view",
+  returnToBriefing: "Return to briefing",
+} as const;

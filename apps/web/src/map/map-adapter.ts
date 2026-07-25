@@ -20,20 +20,26 @@ export interface ResolvedOverlayInstruction {
   type: "marker" | "route" | "region";
   points: GeoPoint[];
   label: string;
+  destinationPointIndex?: number;
+  pointLabels?: string[];
 }
 export interface MapCameraState extends ResolvedCameraTarget {}
 export interface MapUserInteractionEvent { type: "pan" | "zoom" | "rotate"; source: "user" }
 export interface MapInitializationConfiguration { style: string | object; initialCamera: MapCameraState }
+export interface MapOperationResult { success: boolean; pending?: boolean; message?: string }
+export interface ProjectedPoint { x: number; y: number }
 
 export interface MapRendererAdapter {
   initialize(container: HTMLElement, configuration: MapInitializationConfiguration): Promise<{ success: boolean; message?: string }>;
   applyMotion(instruction: CameraMotionInstruction): Promise<{ success: boolean; message?: string }>;
-  applyOverlays(overlays: ResolvedOverlayInstruction[]): Promise<{ success: boolean; message?: string }>;
-  clearSceneOverlays(): Promise<void>;
+  applyOverlays(overlays: ResolvedOverlayInstruction[], fingerprint?: string): Promise<MapOperationResult>;
+  clearSceneOverlays(fingerprint?: string): Promise<void>;
+  projectPoints(points: GeoPoint[]): ProjectedPoint[];
   getCameraState(): MapCameraState;
   resize(): void;
   setInteractionEnabled(enabled: boolean): void;
   subscribeToUserInteraction(listener: (event: MapUserInteractionEvent) => void): () => void;
+  subscribeToCameraChange(listener: () => void): () => void;
   destroy(): void;
 }
 

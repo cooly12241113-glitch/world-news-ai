@@ -20,7 +20,7 @@ export function resolveCameraTarget(
   }
   const geometries = resolved.flatMap((entry) => entry.success ? [entry.geometry] : []);
   const bounds = combineBounds(geometries.flatMap((geometry) =>
-    geometry.bounds ? [geometry.bounds] : [{
+    geometries.length === 1 && geometry.bounds ? [geometry.bounds] : [{
       west: geometry.center.longitude, east: geometry.center.longitude,
       south: geometry.center.latitude, north: geometry.center.latitude,
     }]));
@@ -43,10 +43,37 @@ export function resolveCameraTarget(
 
 export function combineBounds(bounds: GeoBounds[]): GeoBounds {
   if (bounds.length === 0) throw new Error("At least one bound is required.");
-  return bounds.reduce((combined, value) => ({
-    west: Math.min(combined.west, value.west),
-    south: Math.min(combined.south, value.south),
-    east: Math.max(combined.east, value.east),
-    north: Math.max(combined.north, value.north),
-  }));
+  const south = Math.min(...bounds.map((value) => value.south));
+  const north = Math.max(...bounds.map((value) => value.north));
+  const intervals = bounds.flatMap(({ west, east }) => longitudeIntervals(west, east))
+    .sort((left, right) => left[0] - right[0]);
+  const merged: Array<[number, number]> = [];
+  for (const interval of intervals) {
+    const previous = merged.at(-1);
+    if (previous && interval[0] <= previous[1]) previous[1] = Math.max(previous[1], interval[1]);
+    else merged.push([...interval]);
+  }
+  let largestGap: [number, number] = [0, 0];
+  for (let index = 0; index < merged.length; index += 1) {
+    const current = merged[index]!;
+    const next = merged[(index + 1) % merged.length]!;
+    const gap: [number, number] = [current[1], next[0] + (index === merged.length - 1 ? 360 : 0)];
+    if (gap[1] - gap[0] > largestGap[1] - largestGap[0]) largestGap = gap;
+  }
+  const west = normalizeLongitude(largestGap[1]);
+  return { west, south, east: west + 360 - (largestGap[1] - largestGap[0]), north };
 }
+
+const longitudeIntervals = (west: number, east: number): Array<[number, number]> => {
+  const start = normalize360(west);
+  const width = Math.min(360, Math.max(0, east - west < 0 ? east - west + 360 : east - west));
+  if (width >= 360) return [[0, 360]];
+  if (start + width <= 360) return [[start, start + width]];
+  return [[start, 360], [0, start + width - 360]];
+};
+
+const normalize360 = (longitude: number) => ((longitude % 360) + 360) % 360;
+const normalizeLongitude = (longitude: number) => {
+  const normalized = normalize360(longitude);
+  return normalized > 180 ? normalized - 360 : normalized;
+};

@@ -36,10 +36,14 @@ describe("Motion Planner v0", () => {
   });
   it.each([
     ["no camera", { intent: { ...intent, action: "no-camera-motion" as const } }],
-    ["animation disabled", { animationPolicy: "disabled" as const }],
     ["camera disallowed", { cameraMotionPolicy: "disallow" as const }],
   ])("returns no segments when %s", (_label, update) => {
     expect(planCameraMotion({ ...input(), ...update }).segments).toHaveLength(0);
+  });
+  it("uses an immediate jump when animation is disabled", () => {
+    const plan = planCameraMotion({ ...input(), animationPolicy: "disabled" });
+    expect(plan.segments).toHaveLength(1);
+    expect(plan.segments[0]).toMatchObject({ transition: "jump", durationMs: 0 });
   });
   it("uses a short ease for reduced motion and never fly", () => {
     const value = input(); value.reducedMotion = true;

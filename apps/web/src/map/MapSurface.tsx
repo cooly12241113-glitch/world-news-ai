@@ -4,7 +4,9 @@ import type { BriefingPlayerState } from "../player/player-state";
 import { resolveCameraTarget } from "./camera-target-resolver";
 import { FixtureLocationGeometryCatalog } from "./fixture-location-catalog";
 import { MapLibreMapRendererAdapter, demoMapStyle } from "./maplibre-adapter";
-import type { MapRendererAdapter, MapViewportInsets } from "./map-adapter";
+import type {
+  GeoPoint, MapRendererAdapter, MapViewportInsets, ProjectedPoint,
+} from "./map-adapter";
 import { WORLD_CAMERA } from "./map-adapter";
 import { planCameraMotion } from "./motion-planner";
 import { resolveOverlays } from "./overlay-controller";
@@ -29,8 +31,15 @@ export function MapSurface({
 }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const adapter = useRef<MapRendererAdapter | undefined>(undefined);
+  const interactionHandler = useRef(onUserInteraction);
+  const sceneOperationId = useRef(0);
+  const routeGeography = useRef<GeoPoint[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [warning, setWarning] = useState<string | undefined>();
+  const [fallbackPoints, setFallbackPoints] = useState<ProjectedPoint[]>([]);
   const [retry, setRetry] = useState(0);
+
+  useEffect(() => { interactionHandler.current = onUserInteraction; }, [onUserInteraction]);
 
   useEffect(() => {
     if (!container.current) return;
@@ -39,6 +48,7 @@ export function MapSurface({
     setStatus("loading");
     let active = true;
     let unsubscribe = () => {};
+    let unsubscribeCamera = () => {};
     void instance.initialize(container.current, {
       style: style(),
       initialCamera: WORLD_CAMERA,
@@ -48,7 +58,12 @@ export function MapSurface({
       else {
         adapter.current = instance;
         setStatus("ready");
-        unsubscribe = instance.subscribeToUserInteraction(() => onUserInteraction());
+        unsubscribe = instance.subscribeToUserInteraction(() => interactionHandler.current());
+        unsubscribeCamera = instance.subscribeToCameraChange(() => {
+          if (routeGeography.current.length >= 3) {
+            setFallbackPoints(instance.projectPoints(routeGeography.current));
+          }
+        });
       }
     });
     const observer = new ResizeObserver(() => instance.resize());
@@ -56,24 +71,46 @@ export function MapSurface({
     return () => {
       active = false;
       unsubscribe();
+      unsubscribeCamera();
       observer.disconnect();
       instance.destroy();
       if (adapter.current === instance) adapter.current = undefined;
     };
-  }, [adapterFactory, onUserInteraction, retry]);
+  }, [adapterFactory, retry]);
 
   useEffect(() => {
     const instance = adapter.current;
     if (!instance || status !== "ready") return;
-    let active = true;
+    const operationId = ++sceneOperationId.current;
+    setFallbackPoints([]);
+    routeGeography.current = [];
     const directive = scene.visualDirectives.find(({ mode }) => mode === "map" || mode === "map-flow");
-    void instance.clearSceneOverlays().then(async () => {
-      if (!active || !directive) return;
+    if (!directive) {
+      setWarning(`No map directive for scene ${scene.id}.`);
+      return;
+    }
+    void (async () => {
       const overlays = resolveOverlays(scene.visualDirectives, catalog);
-      const overlayResult = await instance.applyOverlays(overlays);
-      if (!active || !overlayResult.success) { setStatus("error"); return; }
+      if (overlays.length === 0) {
+        if (operationId === sceneOperationId.current) {
+          setWarning(`Overlay resolution failed for scene ${scene.id}.`);
+        }
+        return;
+      }
+      if (scene.kind === "impact-path") {
+        routeGeography.current = overlays[0]?.points.map((point) => ({ ...point })) ?? [];
+        setFallbackPoints(instance.projectPoints(routeGeography.current));
+      }
+      const overlayResult = await instance.applyOverlays(overlays, scene.id);
+      if (operationId !== sceneOperationId.current) return;
+      if (!overlayResult.success) {
+        setWarning(overlayResult.message ?? `Overlay application failed for scene ${scene.id}.`);
+      } else {
+        setWarning(undefined);
+        setFallbackPoints([]);
+      }
       const target = resolveCameraTarget(directive.cameraIntent, catalog);
-      if (!target.success) { setStatus("error"); return; }
+      if (!target.success) { setWarning(target.error.message); return; }
       const plan = planCameraMotion({
         intent: directive.cameraIntent,
         current: instance.getCameraState(),
@@ -88,11 +125,15 @@ export function MapSurface({
       });
       for (const segment of plan.segments) {
         const result = await instance.applyMotion(segment);
-        if (!active || !result.success) { setStatus("error"); break; }
+        if (operationId !== sceneOperationId.current) return;
+        if (!result.success) { setWarning(result.message ?? "Map motion failed."); break; }
       }
-    });
-    return () => { active = false; };
-  }, [scene, player.playbackSpeed, player.animationEnabled, insets, reducedMotion, status]);
+      if (operationId === sceneOperationId.current && scene.kind === "impact-path") {
+        setFallbackPoints(instance.projectPoints(routeGeography.current));
+      }
+    })();
+    return () => { sceneOperationId.current += 1; };
+  }, [scene.id, player.motionRequestId, status]);
 
   return (
     <section className="map-surface" aria-label="Interactive world map">
@@ -100,8 +141,14 @@ export function MapSurface({
       <p className="sr-only">
         Accessible map summary: {scene.objective}. Locations:{" "}
         {scene.visualDirectives.flatMap(({ locationIds }) => locationIds).join(", ") || "none"}.
+        {scene.kind === "impact-path"
+          ? " Route roles: United States origin, Taiwan waypoint, South Korea emphasized destination."
+          : ""}
       </p>
+      {fallbackPoints.length >= 3 && scene.kind === "impact-path"
+        && <RouteFallback points={fallbackPoints} />}
       {status === "loading" && <div className="map-status">Loading map…</div>}
+      {warning && import.meta.env.DEV && <p className="renderer-warning" role="status">{warning}</p>}
       {status === "error" && (
         <div className="map-status map-error" role="alert">
           <strong>Map unavailable</strong>
@@ -112,5 +159,15 @@ export function MapSurface({
         </div>
       )}
     </section>
+  );
+}
+
+function RouteFallback({ points }: { points: ProjectedPoint[] }) {
+  const route = points.map(({ x, y }) => `${x},${y}`).join(" ");
+  return (
+    <svg className="route-fallback" aria-label="Fallback Pacific route from the United States via Taiwan to South Korea">
+      <polyline className="route-fallback-casing" points={route} />
+      <polyline className="route-fallback-line" points={route} />
+    </svg>
   );
 }

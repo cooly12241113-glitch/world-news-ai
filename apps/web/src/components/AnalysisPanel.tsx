@@ -1,12 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RenderableScene } from "../renderer/presentation-adapter";
+import { ui } from "../ui-copy";
 
-const tabs = ["Key", "Evidence", "Limits", "Uncertainty", "Sources"] as const;
+const tabs = [ui.key, ui.evidence, ui.limits, ui.uncertainty, ui.sources] as const;
+type Tab = (typeof tabs)[number];
+export const defaultAnalysisTab = (kind: RenderableScene["kind"]): Tab => ({
+  "supporting-evidence": ui.evidence, "contradicting-evidence": ui.limits,
+  uncertainty: ui.uncertainty, "source-review": ui.sources,
+  "impact-path": ui.evidence, comparison: ui.evidence, timeline: ui.evidence,
+  opening: ui.key, "global-overview": ui.key, "regional-focus": ui.key,
+  closing: ui.key,
+} as Partial<Record<RenderableScene["kind"], Tab>>)[kind] ?? ui.key;
 
 export function AnalysisPanel({
   scene, open, onToggle,
 }: { scene: RenderableScene; open: boolean; onToggle: () => void }) {
-  const [tab, setTab] = useState<(typeof tabs)[number]>("Key");
+  const [tab, setTab] = useState<Tab>(() => defaultAnalysisTab(scene.kind));
+  useEffect(() => setTab(defaultAnalysisTab(scene.kind)), [scene.id, scene.kind]);
   return (
     <aside className={`analysis-panel ${open ? "open" : ""}`} aria-label="Analysis panel">
       <button type="button" className="panel-toggle" onClick={onToggle}
@@ -14,7 +24,7 @@ export function AnalysisPanel({
         {open ? "Close analysis" : "Open analysis"}
       </button>
       <div id="analysis-content">
-        <p className="eyebrow">Current scene</p>
+        <p className="eyebrow">{ui.currentScene}</p>
         <h2>{scene.kind.replaceAll("-", " ")}</h2>
         <div className="tabs" role="tablist" aria-label="Analysis views">
           {tabs.map((item) => <button type="button" role="tab" key={item}

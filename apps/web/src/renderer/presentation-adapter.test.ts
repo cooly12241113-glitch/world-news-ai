@@ -27,7 +27,7 @@ describe("Web presentation adapter", () => {
 
   it.each([
     ["map", 1, "map"], ["map-flow", 3, "map"], ["chart", 4, "chart"],
-    ["document", 5, "document"], ["text", 0, "text"],
+    ["uncertainty", 5, "evidence-board"], ["text", 0, "text"],
   ])("maps %s scenes to %s surface", (_name, index, expected) => {
     const result = adaptBriefingScript(buildDemoScript());
     if (!result.success) throw new Error("adaptation failed");
