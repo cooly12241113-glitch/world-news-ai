@@ -16,6 +16,7 @@ Architecture.
 - Sprint 8 question intent and briefing contract implemented
 - Sprint 9 evidence retrieval and context builder implemented
 - Sprint 10 explanation plan domain and validator implemented
+- Sprint 11 structured LLM generation adapter implemented
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -170,5 +171,18 @@ See [ADR-010](docs/architecture/ADR-010-explanation-plan-domain.md),
 [Explanation Plan Architecture](docs/architecture/Explanation-Plan-Architecture.md),
 and [Sprint-10](docs/sprints/Sprint-10.md).
 
-Current persistence schema version: **2**. Next target: Sprint 11, Structured
-LLM Adapter.
+## Structured LLM generation
+
+Sprint 11 treats providers as untrusted structured proposers. A bounded request
+package, DATA_ONLY evidence boundary, exact reference allowlist, strict
+proposal schema, deterministic hydrator, and the existing ExplanationPlan
+validator protect the domain boundary. The fake provider keeps CI offline; the
+OpenAI Responses adapter is disabled unless explicitly enabled and configured
+server-side.
+
+See [ADR-011](docs/architecture/ADR-011-structured-llm-adapter.md),
+[Structured LLM Generation Architecture](docs/architecture/Structured-LLM-Generation-Architecture.md),
+and [Sprint-11](docs/sprints/Sprint-11.md).
+
+Current persistence schema version: **2**. Next target: Sprint 12, Briefing
+Script Compiler.

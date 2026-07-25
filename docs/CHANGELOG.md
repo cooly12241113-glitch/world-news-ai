@@ -1,5 +1,17 @@
 # Changelog
 
+## Sprint 11 — Structured LLM Adapter
+
+- Added a provider-independent structured generation port and coordinator.
+- Added deterministic fake and official OpenAI Responses adapters.
+- Added bounded requests, DATA_ONLY evidence, exact allowlists, strict proposal
+  schemas, and deterministic hydration.
+- Added transport retry, maximum-one repair, refusal handling, redacted audit,
+  and request/output fingerprints.
+- Added safe server-only configuration and offline tests.
+- Corrected forecast `Assumptions` mapping for uncertainty validation.
+- Added only the official `openai` SDK; SQLite migration remains 2.
+
 ## Sprint 10 — ExplanationPlan Domain & Validator
 
 - Added strict plan aggregate, sections, steps, evidence bindings, epistemic

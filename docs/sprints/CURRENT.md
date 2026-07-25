@@ -32,18 +32,18 @@ Milestone 01 — Intelligence Foundation Integration Audit
 
 ## Current delivery
 
-Sprint 10 — ExplanationPlan Domain & Validator.
+Sprint 11 — Structured LLM Adapter.
 
 **Status:** Complete
 
-The evidence context now feeds a strict, deterministic plan boundary with
-evidence/provenance bindings, epistemic policy, visual intent, decision rules,
-DAG validation, structured insufficiency, and a rule-based skeleton assembler.
-It generates no final answer and makes no LLM call.
+The validated context now feeds a bounded provider request, strict
+closed-world proposal validation, deterministic hydration, the existing
+ExplanationPlan validator, and a redacted generation audit. Tests and ordinary
+commands remain offline; live provider use is explicit opt-in.
 
 ## Next target
 
-Sprint 11 — Structured LLM Adapter.
+Sprint 12 — Briefing Script Compiler.
 
 ## Known non-blocking debt
 

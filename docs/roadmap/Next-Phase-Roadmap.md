@@ -7,7 +7,7 @@ This roadmap records candidates only; it does not implement them.
 Define evidence-referenced explanation steps, section/visual instructions,
 uncertainty obligations, validation, and deterministic plan fingerprints.
 
-## Sprint 11 — Structured LLM Adapter
+## Sprint 11 — Structured LLM Adapter (Complete)
 
 Add a provider-neutral structured generation port with schema validation,
 redaction, retry boundaries, audit metadata, and a deterministic offline fake.

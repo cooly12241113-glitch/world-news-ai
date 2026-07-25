@@ -326,7 +326,8 @@ function sectionKind(label: string, order: number): PlanSectionKind {
   if (normalized.includes("contradict")) return "contradicting-evidence";
   if (normalized.includes("support")) return "supporting-evidence";
   if (normalized.includes("comparison") || normalized.includes("subject") || normalized.includes("difference")) return "comparison";
-  if (normalized.includes("scenario") || normalized.includes("driver") || normalized.includes("assumption")) return "scenarios";
+  if (normalized.includes("assumption")) return "uncertainty";
+  if (normalized.includes("scenario") || normalized.includes("driver")) return "scenarios";
   if (normalized.includes("counter")) return "counter-factors";
   if (normalized.includes("uncertain")) return "uncertainty";
   if (normalized.includes("confirmed") || normalized === "verdict") return "confirmed";
