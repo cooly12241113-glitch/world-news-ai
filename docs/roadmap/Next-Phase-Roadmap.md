@@ -23,20 +23,27 @@ Audit Sprint 00–12 contract compatibility, identity, provenance, determinism,
 validation, security, and renderer-ready script boundaries. Final decision:
 READY_WITH_NON_BLOCKING_DEBT.
 
-## Sprint 13 — Renderer Prototype (Complete)
+## Sprint 13.1 — Renderer Prototype and Hardening (Complete)
 
 Prototype map, chart, timeline, document, comparison, evidence-board, and text
-renderers selected by the visual policy.
+renderers selected by the visual policy, with manual-only navigation, replay
+scene motion, Composer context, MapLibre interaction handling, and responsive
+safe viewport behavior.
 
-## Sprint 14 — Interactive Briefing Player
+## Sprint 14 — Interactive Briefing Session and Follow-up
 
-Add scene navigation, citations, evidence inspection, uncertainty display, and
-accessible interaction.
+**Status: DESIGNED / NOT IMPLEMENTED**
 
-## Sprint 15 — Follow-up and Replanning
+Add the deterministic BriefingSession reducer, follow-up and replan contracts,
+fake current-context/partial/full replan adapter, atomic Script replacement,
+scene/context/viewport preservation, audit metadata, and UI state connection.
+Keep navigation manual-only and all Sprint 14 execution offline.
 
-Support follow-up questions while preserving the prior contract, evidence
-lineage, and explicit scope changes.
+## Sprint 15 — Production Follow-up and Replanning
+
+Extend the Sprint 14 fake boundary only after approval for real retrieval,
+generation, backend, persistence, and operational policies. Preserve the prior
+contract, evidence lineage, and explicit scope changes.
 
 ## Sprint 16 — Personalized Impact Analysis
 

@@ -21,10 +21,10 @@ Milestone 02 — Pre-Renderer Integration & Completeness Audit
 ## Baseline state
 
 - Foundation predecessor: `c4ead239ae29f7312f4ee61d847ac959215808aa`
-- Baseline commit: Milestone 01 commit in current Git history
+- Baseline commit: `af50333f857b5f990741fff83176efbad36a250d`
 - SQLite migration version: 2
-- Test files: 28 passing
-- Tests: 285 passing, including all 278 Sprint 00–09 tests
+- Test files: 51 passing
+- Tests: 484 passing
 - Integration scenarios: 4 offline deterministic scenarios
 - External network/API/LLM calls in integration tests: none
 - Architecture baseline: [System Architecture Baseline](../architecture/System-Architecture-Baseline.md)
@@ -32,21 +32,29 @@ Milestone 02 — Pre-Renderer Integration & Completeness Audit
 
 ## Current delivery
 
-Sprint 13 — Interactive Briefing Renderer Prototype.
+Sprint 13.1 — Interactive Briefing Renderer hardening.
 
 **Status:** Complete
 
-Validated BriefingScripts now drive a fixture-only React/Vite player with
-MapLibre behind an adapter, deterministic motion planning, accessible
-map/chart/document/evidence surfaces, Bottom Composer, playback controls, and
-responsive safe viewport behavior.
+Validated BriefingScripts drive a fixture-only React/Vite player with MapLibre
+behind an adapter, deterministic motion planning, accessible map/chart/document/
+evidence surfaces, Bottom Composer, manual-only scene navigation, playback
+controls, replay scene motion, and responsive safe viewport behavior.
 
 ## Next target
 
-Sprint 14 — Interactive Briefing Player hardening.
+Sprint 14 — Interactive Briefing Session and Follow-up.
 
-Entry is approved. See
-[Milestone 02](../milestones/Milestone-02-Pre-Renderer-Readiness-Audit.md).
+**Status:** DESIGNED / NOT IMPLEMENTED
+
+Sprint 14.0 defines the deterministic session state machine, follow-up/replan
+contracts, replacement policy, implementation matrix, and acceptance criteria.
+Implementation has not started.
+
+- [Sprint 14 design](Sprint-14-Interactive-Briefing-Session.md)
+- [Session state machine](../architecture/Briefing-Session-State-Machine.md)
+- [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
+- [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
 
 ## Known non-blocking debt
 

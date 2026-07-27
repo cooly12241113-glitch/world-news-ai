@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Designed Sprint 14 BriefingSession states, deterministic commands/events,
+  invalid-transition behavior, viewport preservation, and rollback invariants.
+- Defined follow-up classification, replanning/replacement contracts, exact
+  evidence allowlists, stale-result rejection, and privacy-minimized audit data.
+- Added the Sprint 14 implementation scope, risk matrix, acceptance criteria,
+  and fixture-only implementation sequence.
+- Marked Sprint 14 as **DESIGNED / NOT IMPLEMENTED**; no source, package,
+  dependency, database schema, or migration change is included.
+
 ## Sprint 13 — Interactive Briefing Renderer Prototype
 
 - Added a strict React/Vite web boundary and browser-safe Script contracts.

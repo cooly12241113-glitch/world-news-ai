@@ -20,6 +20,8 @@ Architecture.
 - Sprint 12 briefing script domain and compiler implemented
 - Milestone 02 pre-renderer readiness audit complete
 - Sprint 13 interactive briefing renderer prototype implemented
+- Sprint 13.1 renderer hardening complete (51 test files, 484 tests)
+- Sprint 14 briefing session and follow-up architecture designed, not implemented
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -199,8 +201,9 @@ See [ADR-012](docs/architecture/ADR-012-briefing-script-domain.md),
 [Briefing Script Architecture](docs/architecture/Briefing-Script-Architecture.md),
 and [Sprint-12](docs/sprints/Sprint-12.md).
 
-Current persistence schema version: **2**. Next target: Sprint 13, Renderer
-Prototype.
+Current persistence schema version: **2**. Next target: Sprint 14 Interactive
+Briefing Session implementation. The architecture is designed; implementation
+has not started.
 
 ## Pre-renderer readiness
 
@@ -230,3 +233,17 @@ See [ADR-013](docs/architecture/ADR-013-interactive-renderer-prototype.md),
 [Interactive Renderer Architecture](docs/architecture/Interactive-Renderer-Architecture.md),
 [Motion Planner v0](docs/architecture/Motion-Planner-v0.md), and
 [Sprint-13](docs/sprints/Sprint-13.md).
+
+## Next: interactive briefing session
+
+Sprint 14 is **DESIGNED / NOT IMPLEMENTED**. The approved design preserves
+manual-only scene navigation, the current Script and evidence while a follow-up
+is processed, explicit replacement policies, viewport restoration, stale-result
+rejection, rollback, and exact evidence reference allowlists. Sprint 14
+implementation remains fixture/fake-only with no network, LLM, backend, auth,
+database, or migration work.
+
+- [Sprint 14 design](docs/sprints/Sprint-14-Interactive-Briefing-Session.md)
+- [Briefing Session State Machine](docs/architecture/Briefing-Session-State-Machine.md)
+- [Follow-up and Replanning Contract](docs/architecture/Follow-up-and-Replanning-Contract.md)
+- [Sprint 14 Implementation Matrix](docs/architecture/Sprint-14-Implementation-Matrix.md)
