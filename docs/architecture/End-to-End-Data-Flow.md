@@ -30,6 +30,8 @@ flowchart TD
   SV -->|valid / static-only| VS["ValidatedBriefingScript"]
   SV -->|invalid / insufficient| ES
   VS --> WA["Web Presentation Adapter"]
+  VS --> BS["BriefingSession + Deterministic Reducer"]
+  BS -->|explicit session command| BP
   WA --> BP["Briefing Player + Scene Dispatcher"]
   BP --> F["Map / Chart / Document / Evidence Surface"]
 ```

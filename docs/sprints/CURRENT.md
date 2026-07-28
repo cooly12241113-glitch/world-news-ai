@@ -41,20 +41,27 @@ behind an adapter, deterministic motion planning, accessible map/chart/document/
 evidence surfaces, Bottom Composer, manual-only scene navigation, playback
 controls, replay scene motion, and responsive safe viewport behavior.
 
-## Next target
+## Current delivery
 
-Sprint 14 — Interactive Briefing Session and Follow-up.
+Sprint 14.1 — Briefing Session Domain and Deterministic Reducer.
 
-**Status:** DESIGNED / NOT IMPLEMENTED
+**Status:** IMPLEMENTED
 
-Sprint 14.0 defines the deterministic session state machine, follow-up/replan
-contracts, replacement policy, implementation matrix, and acceptance criteria.
-Implementation has not started.
+Sprint 14.0 design is complete. Sprint 14.1 implements the UI-independent
+session aggregate, strict commands, deterministic reducer, semantic
+fingerprints, privacy-minimized audit records, and an in-memory repository.
+It adds no UI, live follow-up/replanning, backend, network, LLM, or migration.
 
 - [Sprint 14 design](Sprint-14-Interactive-Briefing-Session.md)
+- [Sprint 14.1 delivery](Sprint-14.1-Briefing-Session-Domain.md)
 - [Session state machine](../architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
 - [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
+
+## Next target
+
+- Sprint 14.2: fixture-only follow-up/replan adapter
+- Sprint 14.3: Web session and UI integration
 
 ## Known non-blocking debt
 

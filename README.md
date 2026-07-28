@@ -21,7 +21,10 @@ Architecture.
 - Milestone 02 pre-renderer readiness audit complete
 - Sprint 13 interactive briefing renderer prototype implemented
 - Sprint 13.1 renderer hardening complete (51 test files, 484 tests)
-- Sprint 14 briefing session and follow-up architecture designed, not implemented
+- Sprint 14.0 briefing session architecture design complete
+- Sprint 14.1 briefing session domain and deterministic reducer implemented
+- Sprint 14.2 fixture follow-up/replan adapter planned
+- Sprint 14.3 Web session/UI integration planned
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -201,9 +204,9 @@ See [ADR-012](docs/architecture/ADR-012-briefing-script-domain.md),
 [Briefing Script Architecture](docs/architecture/Briefing-Script-Architecture.md),
 and [Sprint-12](docs/sprints/Sprint-12.md).
 
-Current persistence schema version: **2**. Next target: Sprint 14 Interactive
-Briefing Session implementation. The architecture is designed; implementation
-has not started.
+Current persistence schema version: **2**. Sprint 14.1 adds an in-memory,
+UI-independent BriefingSession boundary and no persistence migration. Fixture
+follow-up/replanning and Web integration remain planned.
 
 ## Pre-renderer readiness
 
@@ -234,16 +237,17 @@ See [ADR-013](docs/architecture/ADR-013-interactive-renderer-prototype.md),
 [Motion Planner v0](docs/architecture/Motion-Planner-v0.md), and
 [Sprint-13](docs/sprints/Sprint-13.md).
 
-## Next: interactive briefing session
+## Interactive briefing session
 
-Sprint 14 is **DESIGNED / NOT IMPLEMENTED**. The approved design preserves
-manual-only scene navigation, the current Script and evidence while a follow-up
-is processed, explicit replacement policies, viewport restoration, stale-result
-rejection, rollback, and exact evidence reference allowlists. Sprint 14
-implementation remains fixture/fake-only with no network, LLM, backend, auth,
-database, or migration work.
+Sprint 14.0 design is complete. Sprint 14.1 implements a UI-independent
+`BriefingSession`, strict commands, deterministic reducer, semantic
+fingerprints, audit metadata, and an in-memory repository. Manual scene
+navigation and Script identity remain explicit. Sprint 14.2 fixture adapters
+and Sprint 14.3 UI integration are planned; network, live LLM, backend, auth,
+database, and migration work remain excluded.
 
 - [Sprint 14 design](docs/sprints/Sprint-14-Interactive-Briefing-Session.md)
+- [Sprint 14.1 delivery](docs/sprints/Sprint-14.1-Briefing-Session-Domain.md)
 - [Briefing Session State Machine](docs/architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and Replanning Contract](docs/architecture/Follow-up-and-Replanning-Contract.md)
 - [Sprint 14 Implementation Matrix](docs/architecture/Sprint-14-Implementation-Matrix.md)

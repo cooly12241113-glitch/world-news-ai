@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Implemented Sprint 14.1 `BriefingSession` aggregate, ten lifecycle states,
+  nineteen strict commands, and a deterministic effect-free reducer.
+- Added semantic fingerprints, stale fingerprint/operation rejection, validated
+  scene replacement mapping, and privacy-minimized audit records.
+- Added a repository port and validation-enforcing in-memory adapter with
+  optimistic concurrency and mutation isolation.
+- Added offline session schema, reducer, repository, and integration tests.
+- Kept React, MapLibre, network, LLM, SQLite schema, migrations, dependencies,
+  and package lock unchanged.
 - Designed Sprint 14 BriefingSession states, deterministic commands/events,
   invalid-transition behavior, viewport preservation, and rollback invariants.
 - Defined follow-up classification, replanning/replacement contracts, exact

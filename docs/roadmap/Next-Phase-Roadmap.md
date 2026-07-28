@@ -32,12 +32,15 @@ safe viewport behavior.
 
 ## Sprint 14 — Interactive Briefing Session and Follow-up
 
-**Status: DESIGNED / NOT IMPLEMENTED**
+**Status: IN PROGRESS**
 
-Add the deterministic BriefingSession reducer, follow-up and replan contracts,
-fake current-context/partial/full replan adapter, atomic Script replacement,
-scene/context/viewport preservation, audit metadata, and UI state connection.
-Keep navigation manual-only and all Sprint 14 execution offline.
+- Sprint 14.0: design complete
+- Sprint 14.1: session domain and deterministic reducer implemented
+- Sprint 14.2: fixture-only follow-up/replan adapter planned
+- Sprint 14.3: Web session and UI integration planned
+
+Navigation remains manual-only. Live retrieval, LLM, backend, and persistent
+session storage remain outside Sprint 14.
 
 ## Sprint 15 — Production Follow-up and Replanning
 

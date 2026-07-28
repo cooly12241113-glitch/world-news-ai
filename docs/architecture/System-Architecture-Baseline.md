@@ -14,6 +14,7 @@
 | `explanation` | Evidence-grounded generation plan | contract + context package → validated plan | briefing, context, Zod | port only | generator/repository ports | prose, LLM, renderer |
 | `generation` | Untrusted structured provider boundary | question + contract + context → validated plan + audit | briefing, context, explanation, Zod; OpenAI SDK in adapter only | port only | provider/audit/cache ports | final prose, tools, live-by-default calls |
 | `script` | Renderer-neutral briefing sequence | validated plan + contract + context + preference → validated script | briefing, context, explanation, Zod | port only | compiler/repository ports | UI, map SDK, motion timing, final prose |
+| `session` | UI-independent briefing lifecycle | Script identity + command → session transition | script preference contract, Zod, crypto | memory port only | repository/effect adapters | React, MapLibre, live replan, SQLite |
 | `apps/web` | Fixture-only interactive renderer | validated script → browser presentation | React, Vite, MapLibre; browser-safe script contracts | none | map adapter, location catalog, surfaces | backend, live generation, auth |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
@@ -56,6 +57,8 @@ Module `index.ts` files export their public contracts and services:
 - Script: presentation preferences, scenes, content bindings, semantic visual
   and camera intents, playback/interaction/accessibility policies, compiler,
   validator, coverage, and fingerprints.
+- Session: BriefingSession lifecycle, strict commands/events, deterministic
+  reducer, semantic fingerprints, audit metadata, and repository port.
 
 ## Port and adapter boundaries
 
@@ -70,10 +73,13 @@ Module `index.ts` files export their public contracts and services:
 - BriefingScript consumes only a validated plan, contract, context package, and
   presentation preference; future motion and renderer adapters consume the
   validated script without changing its evidence scope.
+- BriefingSession owns lifecycle and semantic interaction state. The Web player
+  retains renderer/playback state.
 
 ## Invalid dependency rules
 
 Domain must not import infrastructure or application modules. Dossier and
 briefing must not depend on UI/LLM providers. Context must not perform answer
 generation or unrestricted retrieval. Renderers must not rewrite evidence or
-contract scope.
+contract scope. Session must not depend on React, DOM, MapLibre, network, LLM,
+SQLite, browser storage, clocks, random generators, or timers.
