@@ -49,6 +49,20 @@ export interface ReplacementSessionIdentity {
   sceneIds: string[];
 }
 
+export type ReplanResolution =
+  | {
+      type: "current-context-answer";
+      answerPlanFingerprint: string;
+    }
+  | {
+      type: "clarification-required";
+      reasonCode: string;
+    }
+  | {
+      type: "unsupported";
+      reasonCode: string;
+    };
+
 export type SessionCommand =
   | (CommandIdentity & { type: "START_BRIEFING" })
   | (CommandIdentity & { type: "NEXT_SCENE" } & TargetScene)
@@ -100,6 +114,14 @@ export type SessionCommand =
         message: string;
         retryable: boolean;
       };
+    })
+  | (CommandIdentity & {
+      type: "REPLAN_RESOLVED";
+      operationId: string;
+      startedFromSessionFingerprint: string;
+      resultFingerprint: string;
+      resolution: ReplanResolution;
+      occurredAt: string;
     })
   | (CommandIdentity & { type: "REPLAY_BRIEFING"; sceneId: string })
   | (CommandIdentity & { type: "END_BRIEFING" })

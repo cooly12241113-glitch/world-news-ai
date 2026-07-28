@@ -34,25 +34,33 @@ export function applyReplanResultToSession(
       replacement: result.replacement,
       mapping: result.sceneReplacementMapping,
     };
-  } else {
-    const failure =
-      result.outcome === "failed"
-        ? result.error
-        : {
-            code:
-              result.outcome === "current-context-answer"
-                ? "CURRENT_CONTEXT_ANSWER_READY"
-                : result.reasonCode,
-            retryable: false,
-          };
+  } else if (result.outcome === "failed") {
     command = {
       ...common,
       type: "REPLAN_FAILED",
       failure: {
-        code: failure.code,
-        message: "Replan completed without a Script replacement.",
-        retryable: failure.retryable,
+        code: result.error.code,
+        message: "Replan failed safely.",
+        retryable: result.error.retryable,
       },
+    };
+  } else {
+    command = {
+      ...common,
+      type: "REPLAN_RESOLVED",
+      startedFromSessionFingerprint: result.startedFromSessionFingerprint,
+      resultFingerprint: result.semanticFingerprint,
+      resolution:
+        result.outcome === "current-context-answer"
+          ? {
+              type: "current-context-answer",
+              answerPlanFingerprint: result.answerPlan.semanticFingerprint,
+            }
+          : {
+              type: result.outcome,
+              reasonCode: result.reasonCode,
+            },
+      occurredAt: context.sessionContext.transitionTimestamp,
     };
   }
   return reduceBriefingSession(session, command, context.sessionContext);

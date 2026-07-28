@@ -332,6 +332,19 @@ scene. Otherwise choose `append-scenes`.
 10. On failure, restore the exact old Script, cursor, evidence, tab, and map
     snapshot and offer Retry/Cancel.
 
+## Application outcome resolution
+
+Sprint 14.3A adds an application orchestrator above the classifier, fixture
+adapter, and reducer. `current-context-answer`, `clarification-required`, and
+`unsupported` are normal policy outcomes and use `REPLAN_RESOLVED`.
+`replacement-ready` uses `REPLAN_COMPLETED`; only technical or domain failures
+use `REPLAN_FAILED`. Stale results produce `stale-ignored` and do not mutate the
+input Session.
+
+Append requests are checked against an explicit maximum scene budget. Budget
+overflow returns clarification and alternatives; it is not silently converted
+to replacement or scene compression.
+
 ## Evidence safety
 
 - `SourceDocument`, `Claim`, `EvidenceLink`, and `DataPoint` IDs must be drawn

@@ -28,7 +28,7 @@ const CommandType = z.enum([
   "REPLAY_SCENE_MOTION", "SCENE_MOTION_STARTED", "SCENE_MOTION_COMPLETED",
   "USER_MAP_INTERACTION_STARTED", "KEEP_MANUAL_VIEW", "RETURN_TO_BRIEFING_CAMERA",
   "OPEN_COMPOSER", "CLOSE_COMPOSER", "SUBMIT_FOLLOW_UP", "REPLAN_STARTED",
-  "REPLAN_COMPLETED", "REPLAN_FAILED", "REPLAY_BRIEFING", "END_BRIEFING",
+  "REPLAN_COMPLETED", "REPLAN_FAILED", "REPLAN_RESOLVED", "REPLAY_BRIEFING", "END_BRIEFING",
   "RESET_SESSION",
 ]);
 
@@ -120,6 +120,8 @@ export const BriefingSessionSchema: z.ZodType<BriefingSession> = z
     if (
       session.status !== "manual-map-view" &&
       session.status !== "scene-motion-running" &&
+      session.status !== "composer-open" &&
+      session.status !== "replanning" &&
       session.manualMapViewState.status === "active"
     ) {
       context.addIssue({ code: "custom", message: "Active manual view has invalid status." });
@@ -219,6 +221,28 @@ export const SessionCommandSchema: z.ZodType<SessionCommand> =
       type: z.literal("REPLAN_FAILED"),
       operationId: Id,
       failure: z.strictObject({ code: Id, message: Id, retryable: z.boolean() }),
+    }),
+    z.strictObject({
+      ...CommandIdentity,
+      type: z.literal("REPLAN_RESOLVED"),
+      operationId: Id,
+      startedFromSessionFingerprint: Fingerprint,
+      resultFingerprint: Fingerprint,
+      resolution: z.discriminatedUnion("type", [
+        z.strictObject({
+          type: z.literal("current-context-answer"),
+          answerPlanFingerprint: Fingerprint,
+        }),
+        z.strictObject({
+          type: z.literal("clarification-required"),
+          reasonCode: Id,
+        }),
+        z.strictObject({
+          type: z.literal("unsupported"),
+          reasonCode: Id,
+        }),
+      ]),
+      occurredAt: Timestamp,
     }),
     z.strictObject({
       ...CommandIdentity,

@@ -83,6 +83,7 @@ current Contract, Context Package, Plan, Script, and exact reference allowlist.
 | `SUBMIT_FOLLOW_UP` | `composer-open` | `replanning` | Unchanged | Preserve | Preserve until validated result | Validate request, classify scope, create request token, invoke fake adapter | Invalid/empty → remain `composer-open`; unsupported/clarification is structured result | All other states |
 | `REPLAN_STARTED` | `replanning` | Same | Unchanged | Preserve | Preserve | Record active request ID/fingerprint and lock navigation | Duplicate/stale start: ignore and audit | All other states |
 | `REPLAN_COMPLETED` | `replanning` | `presenting-scene`, `manual-map-view`, `closing`, or `ended` | Policy-mapped; never implicit `+1` | Apply replacement policy; otherwise preserve | Old context retained; new context becomes active only atomically | Validate result, check token/fingerprints/allowlist, adapt Script, atomically commit | Stale/invalid result: ignore or treat as failure; never remove old Script | All other states |
+| `REPLAN_RESOLVED` | `replanning` | Saved presentation state or `composer-open` | Unchanged | Preserve | Preserve old context | Complete current-context, clarification, or unsupported outcome without replacement | Stale token/fingerprint: ignore and audit | All other states |
 | `REPLAN_FAILED` | `replanning` | Saved pre-submit state | Unchanged | Restore preserved snapshot | Preserve old context | Record structured error; expose retry/cancel | Roll back to old briefing; fatal corruption only → `error` | All other states |
 | `REPLAY_BRIEFING` | `closing`, `ended` | `presenting-scene` | Set `0` explicitly | Reset to opening scene camera | Preserve active Script context | Clear end state and request opening render/motion | Missing active Script → `error` | Exploration, ready, composer, replanning, error |
 | `END_BRIEFING` | `presenting-scene`, `scene-motion-running`, `manual-map-view`, `closing` | `ended` | Unchanged | Preserve for audit/replay until reset | Preserve | Stop motion; display ended controls; append audit record | Already ended: idempotent no-op | Composer, replanning, error |
@@ -118,6 +119,8 @@ not by mutating the Script.
 10. Unsupported evidence cannot be promoted to `confirmed-fact`.
 11. Replan failure can always return to the prior briefing state.
 12. Random IDs and timestamps do not participate in semantic fingerprints.
+13. Normal current-context, clarification, and unsupported outcomes use
+    `REPLAN_RESOLVED`; `REPLAN_FAILED` is reserved for failures.
 
 ## UI behavior contract
 

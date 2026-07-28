@@ -129,7 +129,7 @@ export function scenarios(): FixtureReplanScenario[] {
         fictional: true,
         description:
           scenarioId === "append"
-            ? "Synthetic Korea impact test fixture; not a real event."
+            ? "Synthetic Korea impact terminal replacement fixture; not a true append or real event."
             : "Synthetic deterministic test fixture; not a real event.",
       },
       ...(replacement

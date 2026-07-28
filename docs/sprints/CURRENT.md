@@ -43,26 +43,26 @@ controls, replay scene motion, and responsive safe viewport behavior.
 
 ## Current delivery
 
-Sprint 14.2 — Follow-up Classification and Fixture Replan Adapter.
+Sprint 14.3A — Follow-up Outcome Orchestrator.
 
 **Status:** IMPLEMENTED
 
-Sprint 14.0 design and Sprint 14.1 session implementation are complete.
-Sprint 14.2 implements deterministic Korean/English follow-up classification,
-allowlisted current-context answer plans, validated synthetic fixture
-replacements, evidence continuity, scene mapping, and stale-safe reducer
-integration. It adds no UI, network, LLM, backend, or migration.
+Sprint 14.0–14.2 are complete. Sprint 14.3A implements the application
+orchestrator, six strict outcomes, normal `REPLAN_RESOLVED` semantics, append
+scene budget policy, stale-result isolation, rollback, and renderer-neutral UI
+action projection. It adds no React, network, LLM, backend, or migration.
 
 - [Sprint 14 design](Sprint-14-Interactive-Briefing-Session.md)
 - [Sprint 14.1 delivery](Sprint-14.1-Briefing-Session-Domain.md)
 - [Sprint 14.2 delivery](Sprint-14.2-Follow-up-and-Fixture-Replan.md)
+- [Sprint 14.3A delivery](Sprint-14.3A-Follow-up-Outcome-Orchestrator.md)
 - [Session state machine](../architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
 - [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
 
 ## Next target
 
-- Sprint 14.3: Web session and UI integration
+- Sprint 14.3B: Composer and Session UI integration
 
 ## Known non-blocking debt
 

@@ -339,6 +339,29 @@ function applyCommand(session: BriefingSession, command: SessionCommand): void {
       delete session.activeOperation;
       delete session.resumeStatus;
       return;
+    case "REPLAN_RESOLVED": {
+      requireStatus(session, ["replanning"]);
+      const operation = requireOperation(session, command.operationId);
+      if (
+        operation.kind !== "replan" ||
+        operation.startedFromSessionFingerprint !==
+          command.startedFromSessionFingerprint
+      ) {
+        reject("STALE_OPERATION", "Resolution does not own the active replan", "ignored-stale");
+      }
+      if (command.resolution.type === "current-context-answer") {
+        session.status = session.resumeStatus ?? "presenting-scene";
+        session.composerState =
+          session.status === "exploration" ? "closed" : "compact";
+        delete session.resumeStatus;
+      } else {
+        session.status = "composer-open";
+        session.composerState = "expanded";
+      }
+      delete session.activeOperation;
+      delete session.error;
+      return;
+    }
     case "REPLAY_BRIEFING":
       requireStatus(session, ["closing", "ended"]);
       moveToScene(session, command.sceneId, 0);

@@ -37,7 +37,8 @@ safe viewport behavior.
 - Sprint 14.0: design complete
 - Sprint 14.1: session domain and deterministic reducer implemented
 - Sprint 14.2: deterministic follow-up and fixture replan adapter implemented
-- Sprint 14.3: Web session and UI integration planned
+- Sprint 14.3A: follow-up outcome orchestrator implemented
+- Sprint 14.3B: Composer and Session UI integration planned
 
 Navigation remains manual-only. Live retrieval, LLM, backend, and persistent
 session storage remain outside Sprint 14.

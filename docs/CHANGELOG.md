@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Implemented Sprint 14.3A application-level follow-up outcome orchestration
+  with six strict outcomes and renderer-neutral UI action projections.
+- Added `REPLAN_RESOLVED` for normal current-context, clarification, and
+  unsupported completion; `REPLAN_FAILED` now remains technical-failure-only.
+- Added append scene budget enforcement, stale-result isolation, exact
+  resume-state preservation, replacement revalidation, and outcome fingerprints.
+- Added no React, network, LLM, backend, dependency, or migration change.
 - Implemented Sprint 14.2 strict follow-up request/context contracts,
   deterministic Korean/English classification, and seven replan scopes.
 - Added allowlisted answer plans, strict replan results, injected synthetic

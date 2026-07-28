@@ -33,7 +33,8 @@ flowchart TD
   VS --> BS["BriefingSession + Deterministic Reducer"]
   BS --> FU["Deterministic Follow-up Classifier"]
   FU --> RA["Injected Fixture Replan Adapter"]
-  RA -->|validated result only| BS
+  RA --> FO["Follow-up Outcome Orchestrator"]
+  FO -->|resolved / completed / failed command| BS
   BS -->|explicit session command| BP
   WA --> BP["Briefing Player + Scene Dispatcher"]
   BP --> F["Map / Chart / Document / Evidence Surface"]

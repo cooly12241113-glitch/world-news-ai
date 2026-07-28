@@ -17,6 +17,7 @@
 | `session` | UI-independent briefing lifecycle | Script identity + command → session transition | script preference contract, Zod, crypto | memory port only | repository/effect adapters | React, MapLibre, live replan, SQLite |
 | `follow-up` | Bounded deterministic follow-up classification | request + captured identity context → replan decision | briefing fingerprint, script preference, Zod | none | classifier policy | LLM, retrieval, prose |
 | `replan` | Fixture-only answer/replacement preparation | decision + injected synthetic fixture → validated result | follow-up, session, script validator, Zod | none | ReplanAdapter port | live replan, network, SQLite |
+| `application/follow-up` | Follow-up execution and outcome orchestration | session + request + adapter → validated application outcome | session, follow-up, replan, script fingerprint, Zod | none | orchestrator dependencies | React, HTTP, storage |
 | `apps/web` | Fixture-only interactive renderer | validated script → browser presentation | React, Vite, MapLibre; browser-safe script contracts | none | map adapter, location catalog, surfaces | backend, live generation, auth |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
@@ -63,6 +64,8 @@ Module `index.ts` files export their public contracts and services:
   reducer, semantic fingerprints, audit metadata, and repository port.
 - Follow-up/Replan: normalized requests, bounded context allowlists,
   deterministic decisions, fixture-only results, continuity, and mapping.
+- Application Follow-up: ordered execution, append budget, normal resolution,
+  stale isolation, rollback, strict outcomes, and UI-action projections.
 
 ## Port and adapter boundaries
 
@@ -81,6 +84,8 @@ Module `index.ts` files export their public contracts and services:
   retains renderer/playback state.
 - Follow-up classification never enters the reducer. Replan adapters prepare
   results; only validated results cross the existing reducer command boundary.
+- The outcome orchestrator coordinates effects but does not own domain
+  classification, replacement validation, rendering, or persistence.
 
 ## Invalid dependency rules
 
