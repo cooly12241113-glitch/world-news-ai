@@ -32,16 +32,26 @@ safe viewport behavior.
 
 ## Sprint 14 — Interactive Briefing Session and Follow-up
 
-**Status: IN PROGRESS**
+**Status: COMPLETE**
+
+Sprint 14.0 design and Sprint 14.1–14.3B delivery are complete. Sprint 14.3B
+has passed automated validation, Chrome review, and final user browser
+acceptance.
 
 - Sprint 14.0: design complete
 - Sprint 14.1: session domain and deterministic reducer implemented
 - Sprint 14.2: deterministic follow-up and fixture replan adapter implemented
 - Sprint 14.3A: follow-up outcome orchestrator implemented
-- Sprint 14.3B: Composer and Session UI integration planned
+- Sprint 14.3B: Composer and Session UI integration implemented, browser
+  accepted, and final complete
 
 Navigation remains manual-only. Live retrieval, LLM, backend, and persistent
 session storage remain outside Sprint 14.
+
+The next delivery activity is preparation for the Milestone 02 / Sprint 14
+integration audit. True append and browser failure fixtures remain absent.
+The existing MapLibre bundle-size warning is accepted debt; dark vector maps
+and a 3D globe remain future renderer Sprint candidates.
 
 ## Sprint 15 — Production Follow-up and Replanning
 

@@ -7,7 +7,11 @@
     "baseUrl": ".",
     "paths": {
       "@world-news-ai/script-web": ["../../src/script/web-contracts.ts"],
-      "@world-news-ai/domain": ["../../src/domain/index.ts"]
+      "@world-news-ai/domain": ["../../src/domain/index.ts"],
+      "@world-news-ai/follow-up": ["../../src/follow-up/index.ts"],
+      "@world-news-ai/replan": ["../../src/replan/web-contracts.ts"],
+      "@world-news-ai/session": ["../../src/session/index.ts"],
+      "@world-news-ai/application-follow-up": ["../../src/application/follow-up/index.ts"]
     },
     "noEmit": true
   },

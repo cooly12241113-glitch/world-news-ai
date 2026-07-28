@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { adaptBriefingScript } from "../renderer/presentation-adapter";
 import { SceneDispatcher } from "../renderer/SceneDispatcher";
 import { initialPlayerState } from "../player/player-state";
 import { playerReducer } from "../player/player-reducer";
@@ -12,24 +11,33 @@ import { MapConflictPrompt, SceneCaption, SceneProgress } from "../components/Sc
 import { useBriefingKeyboard } from "../hooks/useBriefingKeyboard";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { demoCatalog } from "./demo-catalog";
+import { FollowUpStatus, useFollowUpSessionController } from "../features/follow-up";
+import type { MapCameraState } from "../map/map-adapter";
 
 export function App() {
   const [demoId, setDemoId] = useState<(typeof demoCatalog)[number]["id"]>("map-impact");
   const demo = demoCatalog.find(({ id }) => id === demoId) ?? demoCatalog[0];
-  const adapted = useMemo(() => adaptBriefingScript(demo.script), [demo]);
+  const followUp = useFollowUpSessionController(demo.script);
+  const briefing = followUp.presentation;
   const [player, dispatch] = useReducer(playerReducer, initialPlayerState);
   const [panelOpen, setPanelOpen] = useState(true);
   const systemReducedMotion = useReducedMotion();
   const reducedMotion = systemReducedMotion || demo.script.presentationPreference.mode === "reduced-motion";
 
   useEffect(() => {
-    if (adapted.success) dispatch({ type: "load", sceneCount: adapted.value.scenes.length });
-    else dispatch({ type: "error", message: adapted.error.message });
-  }, [adapted]);
+    dispatch({
+      type: "sync-script",
+      sceneCount: briefing.scenes.length,
+      sceneIndex: followUp.session.sceneCursor.sceneIndex,
+    });
+  }, [briefing.fingerprint]);
 
   const previous = useCallback(() => dispatch({ type: "previous" }), []);
   const next = useCallback(() => dispatch({ type: "next" }), []);
-  const onMapInteraction = useCallback(() => dispatch({ type: "map-interaction" }), []);
+  const onMapInteraction = useCallback((viewport: MapCameraState) => {
+    dispatch({ type: "map-interaction" });
+    followUp.recordManualMapInteraction(viewport);
+  }, [followUp.recordManualMapInteraction]);
   const closeTransient = useCallback(() => {
     dispatch({ type: "composer-cancel" });
     setPanelOpen(false);
@@ -38,10 +46,6 @@ export function App() {
     [previous, next, closeTransient]);
   useBriefingKeyboard(keyboard);
 
-  if (!adapted.success) return <main className="fatal-error" role="alert">
-    <h1>Briefing unavailable</h1><p>{adapted.error.message}</p>
-  </main>;
-  const briefing = adapted.value;
   const scene = briefing.scenes[player.currentSceneIndex] ?? briefing.scenes[0]!;
   const mobile = typeof window !== "undefined" && window.innerWidth < 760;
   const insets = calculateViewportInsets({
@@ -53,17 +57,48 @@ export function App() {
   });
   const playbackVisible = player.status !== "ready" && player.status !== "exploration";
   const mapScene = scene.primarySurface === "map";
+  const openComposer = () => {
+    dispatch({ type: "composer-focus" });
+    followUp.openComposer();
+  };
+  const closeComposer = () => {
+    dispatch({ type: "composer-cancel" });
+    followUp.closeComposer();
+  };
+  const start = () => {
+    dispatch({ type: "start" });
+    followUp.startBriefing();
+  };
+  useEffect(() => {
+    if (followUp.session.status === "presenting-scene" ||
+      followUp.session.status === "manual-map-view") {
+      followUp.navigateToScene(scene.id, player.currentSceneIndex);
+    }
+  }, [player.currentSceneIndex, scene.id]);
+  useEffect(() => {
+    dispatch({ type: followUp.session.composerState === "expanded"
+      ? "composer-focus" : "composer-cancel" });
+  }, [followUp.session.composerState]);
+  useEffect(() => {
+    if (!followUp.focusRequest) return;
+    if (followUp.focusRequest.target === "analysis") {
+      document.getElementById("analysis-scene-heading")?.focus();
+    } else {
+      document.getElementById("briefing-question")?.focus();
+    }
+  }, [followUp.focusRequest]);
   const dock = player.composerExpanded ? (
     <BottomComposer expanded briefing={playbackVisible}
       context={{ sceneId: scene.id, scriptFingerprint: briefing.fingerprint }}
-      onFocus={() => dispatch({ type: "composer-focus" })}
-      onCancel={() => dispatch({ type: "composer-cancel" })}
-      onStart={() => dispatch({ type: "start" })} />
+      value={followUp.draft} running={followUp.status === "running"}
+      maxLength={followUp.maxDraftLength}
+      onChange={followUp.updateDraft} onSubmit={followUp.submitFollowUp}
+      onFocus={openComposer} onCancel={closeComposer} onStart={start} />
   ) : player.status === "ended" ? (
     <ClosingControls
       onReplay={() => dispatch({ type: "replay" })}
-      onFollowUp={() => dispatch({ type: "composer-focus" })}
-      onEnd={() => dispatch({ type: "end" })} />
+      onFollowUp={openComposer}
+      onEnd={() => { dispatch({ type: "end" }); followUp.endSession(); }} />
   ) : playbackVisible ? (
     <PlaybackControlBar state={player} mapScene={mapScene}
       onPrevious={previous}
@@ -71,12 +106,11 @@ export function App() {
       onNext={next}
       onSpeed={(speed) => dispatch({ type: "set-speed", speed })}
       onAnimation={() => dispatch({ type: "set-animation", enabled: !player.animationEnabled })}
-      onAsk={() => dispatch({ type: "composer-focus" })} />
+      onAsk={openComposer} />
   ) : (
     <BottomComposer expanded={player.composerExpanded}
-      onFocus={() => dispatch({ type: "composer-focus" })}
-      onCancel={() => dispatch({ type: "composer-cancel" })}
-      onStart={() => dispatch({ type: "start" })} />
+      value={followUp.draft} onChange={followUp.updateDraft}
+      onFocus={openComposer} onCancel={closeComposer} onStart={start} />
   );
 
   return (
@@ -97,6 +131,7 @@ export function App() {
 
       <section className="briefing-stage" aria-label="Interactive briefing">
         <SceneDispatcher scene={scene} player={player} insets={insets}
+          surfaceIdentity={briefing.fingerprint}
           reducedMotion={reducedMotion}
           onMapInteraction={onMapInteraction}
           flowCaption={<SceneCaption scene={scene} flow />}
@@ -104,13 +139,28 @@ export function App() {
         <div className="stage-vignette" aria-hidden="true" />
         <SceneProgress current={player.currentSceneIndex} total={briefing.scenes.length} />
         {mapScene && <SceneCaption scene={scene} />}
-        <AnalysisPanel scene={scene} open={panelOpen} onToggle={() => setPanelOpen((value) => !value)} />
+        <AnalysisPanel scene={scene} open={panelOpen}
+          onToggle={() => setPanelOpen((value) => !value)}
+          followUp={followUp.viewModel}
+          onClarification={followUp.selectClarificationOption}
+          onRetry={followUp.retryFollowUp}
+          onDismiss={followUp.dismissOutcome} />
         <MapConflictPrompt visible={player.mapConflict}
-          onKeep={() => dispatch({ type: "keep-user-map-view" })}
-          onReturn={() => dispatch({ type: "return-to-script-camera" })} />
+          onKeep={() => {
+            dispatch({ type: "keep-user-map-view" });
+            followUp.keepManualMapView();
+          }}
+          onReturn={() => {
+            dispatch({ type: "return-to-script-camera" });
+            followUp.returnToBriefingCamera();
+          }} />
       </section>
 
       {mapScene && dock}
+      <FollowUpStatus status={followUp.status} />
+      {followUp.initializationError && <p className="follow-up-inline-error" role="alert">
+        {followUp.initializationError}
+      </p>}
       <div className="sr-only" aria-live="polite">
         Scene {player.currentSceneIndex + 1}: {scene.objective}
       </div>

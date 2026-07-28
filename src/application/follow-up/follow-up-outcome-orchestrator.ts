@@ -2,14 +2,11 @@ import {
   classifyFollowUp,
   type ReplanDecision,
 } from "../../follow-up";
-import {
-  ReplanResultSchema,
-  replanResultFingerprint,
-  type ReplanAdapter,
-  type ReplanRequest,
-  type ReplanResult,
-} from "../../replan";
-import { briefingScriptFingerprint } from "../../script";
+import type { ReplanAdapter } from "../../replan/replan-adapter";
+import { replanResultFingerprint } from "../../replan/replan-fingerprint";
+import type { ReplanRequest } from "../../replan/replan-request";
+import { ReplanResultSchema, type ReplanResult } from "../../replan/replan-result";
+import { briefingScriptFingerprint } from "../../script/fingerprint";
 import {
   BriefingSessionSchema,
   reduceBriefingSession,

@@ -25,7 +25,8 @@ Architecture.
 - Sprint 14.1 briefing session domain and deterministic reducer implemented
 - Sprint 14.2 deterministic follow-up/fixture replan adapter implemented
 - Sprint 14.3A follow-up outcome orchestrator implemented
-- Sprint 14.3B Composer and Session UI integration planned
+- Sprint 14.3B Composer and Session UI integration implemented, browser
+  accepted, and final complete
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -244,14 +245,18 @@ Sprint 14.0 design is complete. Sprint 14.1 implements the UI-independent
 session domain and reducer. Sprint 14.2 adds deterministic Korean/English
 follow-up classification and fixture replacements. Sprint 14.3A adds six
 strict application outcomes, normal non-failure resolution, append budget
-policy, stale isolation, and UI-action projections. Sprint 14.3B UI integration
-is planned; network, live LLM, backend, auth, database, and migration work
-remain excluded.
+policy, stale isolation, and UI-action projections. Sprint 14.3B completes the
+fixture-only Composer, Session, replacement, outcome, and renderer integration
+and has final browser acceptance. Network, live GPT/search, backend, auth,
+database, true append, and browser failure fixtures remain excluded. The
+existing MapLibre bundle-size warning is accepted debt; dark vector maps and a
+3D globe remain future renderer work.
 
 - [Sprint 14 design](docs/sprints/Sprint-14-Interactive-Briefing-Session.md)
 - [Sprint 14.1 delivery](docs/sprints/Sprint-14.1-Briefing-Session-Domain.md)
 - [Sprint 14.2 delivery](docs/sprints/Sprint-14.2-Follow-up-and-Fixture-Replan.md)
 - [Sprint 14.3A delivery](docs/sprints/Sprint-14.3A-Follow-up-Outcome-Orchestrator.md)
+- [Sprint 14.3B delivery](docs/sprints/Sprint-14.3B-Composer-Session-UI-Integration.md)
 - [Briefing Session State Machine](docs/architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and Replanning Contract](docs/architecture/Follow-up-and-Replanning-Contract.md)
 - [Sprint 14 Implementation Matrix](docs/architecture/Sprint-14-Implementation-Matrix.md)

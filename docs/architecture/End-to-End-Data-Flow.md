@@ -1,5 +1,9 @@
 # End-to-End Data Flow
 
+Sprint 14.3B's fixture-only follow-up branch is implemented, browser accepted,
+and final complete. Live GPT/search, backend persistence, true append, and a
+browser failure fixture remain outside this flow.
+
 ```mermaid
 flowchart TD
   S["Source Input"] --> I["Adaptive Ingestion"]
@@ -33,6 +37,9 @@ flowchart TD
   VS --> BS["BriefingSession + Deterministic Reducer"]
   BS --> FU["Deterministic Follow-up Classifier"]
   FU --> RA["Injected Fixture Replan Adapter"]
+  RA --> AO["Follow-up Outcome Orchestrator"]
+  AO --> AA["Atomic Session / Script / Presentation Application"]
+  AA --> UI["Outcome View Model + AnalysisPanel"]
   RA --> FO["Follow-up Outcome Orchestrator"]
   FO -->|resolved / completed / failed command| BS
   BS -->|explicit session command| BP

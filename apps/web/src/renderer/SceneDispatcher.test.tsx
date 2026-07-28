@@ -157,6 +157,33 @@ describe("Scene dispatcher integration", () => {
       mapAdapterFactory={() => adapter} />);
     expect(await screen.findByLabelText(/Fallback Pacific route/)).not.toBeNull();
   });
+  it("atomically refreshes a same-ID Impact Path replacement without dropping its route", async () => {
+    const adapter = new FakeMapRendererAdapter();
+    const original = briefing().scenes[3]!;
+    const replacement = {
+      ...original,
+      objective: `${original.objective} Counterevidence retained.`,
+    };
+    const view = render(<SceneDispatcher {...props} scene={original}
+      surfaceIdentity="script:before" mapAdapterFactory={() => adapter} />);
+    const route = await screen.findByLabelText(/Fallback Pacific route/);
+    await waitFor(() => expect(adapter.overlayApplicationCount).toBe(1));
+    expect(adapter.overlays).toMatchObject([{
+      type: "route",
+      destinationPointIndex: 2,
+    }]);
+    expect(adapter.overlays[0]?.points).toHaveLength(3);
+    view.rerender(<SceneDispatcher {...props} scene={replacement}
+      surfaceIdentity="script:after" mapAdapterFactory={() => adapter} />);
+    expect(screen.getByLabelText(/Fallback Pacific route/)).toBe(route);
+    await waitFor(() => expect(adapter.overlayApplicationCount).toBe(2));
+    expect(screen.getByLabelText(/Fallback Pacific route/)
+      .querySelector(".route-fallback-casing")).not.toBeNull();
+    expect(screen.getByLabelText(/Fallback Pacific route/)
+      .querySelector(".route-fallback-line")).not.toBeNull();
+    expect(adapter.overlays[0]?.points).toHaveLength(3);
+    expect(adapter.cameraListenerCount).toBe(1);
+  });
   it("reprojects the geographic route on camera change, resize, and replay without manual interaction", async () => {
     const adapter = new FakeMapRendererAdapter();
     const interaction = vi.fn();

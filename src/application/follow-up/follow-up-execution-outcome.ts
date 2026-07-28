@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createSemanticFingerprint } from "../../briefing";
+import { createSemanticFingerprint } from "../../briefing/fingerprint";
 import { FollowUpAnswerPlanSchema, type FollowUpAnswerPlan } from "../../follow-up";
 import {
   BriefingSessionSchema,

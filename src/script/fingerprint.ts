@@ -1,7 +1,11 @@
-import { createSemanticFingerprint } from "../briefing";
-import type { BriefingScriptDraft } from "./models";
+import { createSemanticFingerprint } from "../briefing/fingerprint";
+import type { BriefingScene, BriefingScriptDraft } from "./models";
 
 const sorted = (values: string[]) => [...new Set(values)].sort();
+
+export function briefingSceneFingerprint(scene: BriefingScene): string {
+  return createSemanticFingerprint(scene);
+}
 
 export function briefingScriptFingerprint(script: BriefingScriptDraft): string {
   const sceneById = new Map(script.scenes.map((scene) => [scene.id, scene]));

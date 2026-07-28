@@ -3,13 +3,19 @@
 ## Status and boundary
 
 - Sprint: 14.0 design
-- Delivery: **DESIGNED / NOT IMPLEMENTED**
+- Delivery: **CORE IMPLEMENTED; WEB INTEGRATION BROWSER ACCEPTED / FINAL COMPLETE**
 - Provider mode for Sprint 14 implementation: deterministic fixture/fake only
 
-This document defines a future contract. The pseudo TypeScript below is not an
-implementation. It reuses the existing `BriefingContract`,
+The contract is implemented by the core follow-up, replan, Session, and
+application modules and connected to the fixture-only Web controller. The
+reference TypeScript below reuses the existing `BriefingContract`,
 `EvidenceContextPackage`, `ValidatedExplanationPlan`,
 `ValidatedBriefingScript`, and presentation preference contracts.
+
+The Web resolver consumes the existing classifier decision and maps its
+`ReplanScope` to an injected fixture scenario. It does not maintain a second
+keyword table. True append remains unavailable in the browser fixture and
+returns clarification instead of mislabeling terminal replacement.
 
 ## Pseudo TypeScript domain contract
 

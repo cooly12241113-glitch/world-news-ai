@@ -7,6 +7,7 @@ export class FakeMapRendererAdapter implements MapRendererAdapter {
   destroyed = false;
   motions: CameraMotionInstruction[] = [];
   overlays: ResolvedOverlayInstruction[] = [];
+  overlayApplicationCount = 0;
   resizeCount = 0;
   interactionEnabled = true;
   overlayFailure = false;
@@ -27,6 +28,7 @@ export class FakeMapRendererAdapter implements MapRendererAdapter {
     return { success: true };
   }
   async applyOverlays(overlays: ResolvedOverlayInstruction[], _fingerprint?: string) {
+    this.overlayApplicationCount += 1;
     this.overlays = [...overlays];
     return this.overlayFailure ? { success: false, message: "Fixture overlay failure." } : { success: true };
   }

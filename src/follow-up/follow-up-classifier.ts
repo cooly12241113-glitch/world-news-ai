@@ -23,14 +23,14 @@ const RULES: Record<
     code: "UNSUPPORTED_SYSTEM_ACTION",
     expressions: [
       /(?:delete|remove)\s+(?:a\s+)?file|system\s+command|change\s+(?:my\s+)?account|buy\s+or\s+sell/iu,
-      /파일\s*(?:삭제|지워)|시스템\s*(?:명령|제어)|계정\s*변경|매수|매도|근거\s*없이.*사실/iu,
+      /파일(?:을|를)?\s*(?:삭제|지워)|시스템\s*(?:명령|제어)|계정\s*변경|매수|매도|근거\s*없이.*사실/iu,
     ],
   },
   "rebuild-entire-briefing": {
     code: "FULL_REBUILD_RESTART",
     expressions: [
       /start\s+over|rebuild\s+the\s+whole\s+briefing|explain\s+everything\s+for\s+a\s+beginner|switch\s+to\s+a\s+different\s+topic/iu,
-      /처음부터\s*다시|전체.*초보자|완전히\s*다른\s*주제|브리핑\s*전체.*재구성/iu,
+      /처음부터.*다시|전체.*초보자|완전히\s*다른\s*주제|브리핑\s*전체.*재구성/iu,
     ],
   },
   "replace-remaining-scenes": {
@@ -58,7 +58,7 @@ const RULES: Record<
     code: "CURRENT_CONTEXT_SOURCE_REQUEST",
     expressions: [
       /source|evidence|where\s+did\s+this\s+number\s+come\s+from|support\s+for\s+this\s+claim|citation/iu,
-      /출처|근거|이\s*수치|이\s*데이터|어디서\s*나온|확실해|증거\s*보여/iu,
+      /출처|(?<!반대\s)근거|이\s*수치|이\s*데이터|어디서\s*나온|확실해|증거\s*보여/iu,
     ],
   },
 };

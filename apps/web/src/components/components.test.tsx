@@ -101,4 +101,17 @@ describe("Briefing UI controls", () => {
     fireEvent.click(screen.getByRole("button", { name: /Start demo/ }));
     expect(start).toHaveBeenCalledOnce();
   });
+  it("submits on Enter, keeps Shift+Enter, and cancels on Escape", () => {
+    const submit = vi.fn(); const cancel = vi.fn(); const change = vi.fn();
+    render(<BottomComposer expanded briefing value="source"
+      onChange={change} onSubmit={submit} onFocus={vi.fn()}
+      onCancel={cancel} onStart={vi.fn()} />);
+    const editor = screen.getByRole("textbox", { name: "Ask a follow-up question" });
+    fireEvent.keyDown(editor, { key: "Enter" });
+    expect(submit).toHaveBeenCalledOnce();
+    fireEvent.keyDown(editor, { key: "Enter", shiftKey: true });
+    expect(submit).toHaveBeenCalledOnce();
+    fireEvent.keyDown(editor, { key: "Escape" });
+    expect(cancel).toHaveBeenCalledOnce();
+  });
 });

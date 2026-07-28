@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Implemented Sprint 14.3B fixture-only Composer, BriefingSession, classifier,
+  outcome orchestrator, atomic replacement, and AnalysisPanel integration.
+- Added six safe outcome presentations, injected browser runtime identity,
+  stale-operation defense, deterministic fixture resolution, and same-scene
+  map overlay refresh without camera replay.
+- Added no dependency, network, LLM, backend, database, or migration change;
+  final browser acceptance is complete.
+- Finalized Sprint 14.3B with semantic same-scene change accounting,
+  counterevidence fixture binding, atomic Impact Path route/marker refresh,
+  manual viewport preservation, and user-accepted browser behavior.
+- Retained fixture-only limitations: no live GPT/search, true-append fixture,
+  browser failure fixture, or backend. The existing MapLibre bundle-size
+  warning remains accepted renderer debt.
 - Implemented Sprint 14.3A application-level follow-up outcome orchestration
   with six strict outcomes and renderer-neutral UI action projections.
 - Added `REPLAN_RESOLVED` for normal current-context, clarification, and

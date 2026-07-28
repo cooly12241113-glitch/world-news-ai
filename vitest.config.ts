@@ -10,6 +10,10 @@ export default defineConfig({
       "@world-news-ai/domain": fileURLToPath(
         new URL("./src/domain/index.ts", import.meta.url),
       ),
+      "@world-news-ai/follow-up": fileURLToPath(new URL("./src/follow-up/index.ts", import.meta.url)),
+      "@world-news-ai/replan": fileURLToPath(new URL("./src/replan/web-contracts.ts", import.meta.url)),
+      "@world-news-ai/session": fileURLToPath(new URL("./src/session/index.ts", import.meta.url)),
+      "@world-news-ai/application-follow-up": fileURLToPath(new URL("./src/application/follow-up/index.ts", import.meta.url)),
     },
   },
 });

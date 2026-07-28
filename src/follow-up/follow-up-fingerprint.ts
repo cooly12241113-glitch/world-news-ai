@@ -1,11 +1,13 @@
-import { createHash } from "node:crypto";
-import { createSemanticFingerprint } from "../briefing";
+import {
+  createSemanticFingerprint,
+  createSha256Fingerprint,
+} from "../briefing/fingerprint";
 import type { FollowUpRequest } from "./follow-up-request";
 import type { ReplanDecision } from "./replan-decision";
 import { normalizeFollowUpText } from "./follow-up-normalizer";
 
 export function followUpContentHash(text: string): string {
-  return createHash("sha256").update(normalizeFollowUpText(text)).digest("hex");
+  return createSha256Fingerprint(normalizeFollowUpText(text));
 }
 
 export function followUpFingerprint(request: FollowUpRequest): string {

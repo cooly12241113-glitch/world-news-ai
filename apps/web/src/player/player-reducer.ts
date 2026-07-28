@@ -2,6 +2,7 @@ import type { BriefingPlayerState, PauseReason, PlaybackSpeed } from "./player-s
 
 export type PlayerAction =
   | { type: "load"; sceneCount: number }
+  | { type: "sync-script"; sceneCount: number; sceneIndex: number }
   | { type: "start" | "pause" | "resume" | "next" | "previous" | "end" | "replay" }
   | { type: "jump"; index: number }
   | { type: "pause-for"; reason: PauseReason }
@@ -22,6 +23,23 @@ export function playerReducer(
       return { ...state, status: action.sceneCount > 0 ? "ready" : "error",
         sceneCount: action.sceneCount, currentSceneIndex: 0,
         ...(action.sceneCount > 0 ? {} : { error: "No scenes available." }) };
+    case "sync-script":
+      if (action.sceneCount <= 0) {
+        return { ...state, status: "error", sceneCount: 0, currentSceneIndex: 0,
+          error: "No scenes available." };
+      }
+      if (state.sceneCount === 0) {
+        return { ...state, status: "ready", sceneCount: action.sceneCount,
+          currentSceneIndex: action.sceneIndex };
+      }
+      return {
+        ...state,
+        sceneCount: action.sceneCount,
+        currentSceneIndex: action.sceneIndex,
+        status: action.sceneIndex === action.sceneCount - 1
+          ? "ended"
+          : state.status === "ended" ? "paused" : state.status,
+      };
     case "start":
     case "resume":
       return state.sceneCount > 0 && state.status !== "ended"

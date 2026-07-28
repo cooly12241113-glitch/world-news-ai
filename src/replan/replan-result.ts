@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { FollowUpAnswerPlan, ReplanScope } from "../follow-up";
 import { FollowUpAnswerPlanSchema, ReplanScopeSchema } from "../follow-up";
-import type { ValidatedBriefingScript } from "../script";
-import { BriefingScriptSchema } from "../script";
+import type { ValidatedBriefingScript } from "../script/models";
+import { BriefingScriptSchema } from "../script/validation";
 import type {
   ReplacementSessionIdentity,
   SceneReplacementMapping,

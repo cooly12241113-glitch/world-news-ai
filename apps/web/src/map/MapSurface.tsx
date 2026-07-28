@@ -5,7 +5,7 @@ import { resolveCameraTarget } from "./camera-target-resolver";
 import { FixtureLocationGeometryCatalog } from "./fixture-location-catalog";
 import { MapLibreMapRendererAdapter, demoMapStyle } from "./maplibre-adapter";
 import type {
-  GeoPoint, MapRendererAdapter, MapViewportInsets, ProjectedPoint,
+  GeoPoint, MapCameraState, MapRendererAdapter, MapViewportInsets, ProjectedPoint,
 } from "./map-adapter";
 import { WORLD_CAMERA } from "./map-adapter";
 import { planCameraMotion } from "./motion-planner";
@@ -16,7 +16,8 @@ interface Props {
   player: BriefingPlayerState;
   insets: MapViewportInsets;
   reducedMotion: boolean;
-  onUserInteraction: () => void;
+  surfaceIdentity?: string;
+  onUserInteraction: (viewport: MapCameraState) => void;
   adapterFactory?: () => MapRendererAdapter;
 }
 
@@ -27,6 +28,7 @@ const style = () => import.meta.env.VITE_MAP_STYLE_URL
 
 export function MapSurface({
   scene, player, insets, reducedMotion, onUserInteraction,
+  surfaceIdentity = scene.id,
   adapterFactory = defaultAdapterFactory,
 }: Props) {
   const container = useRef<HTMLDivElement>(null);
@@ -34,6 +36,7 @@ export function MapSurface({
   const interactionHandler = useRef(onUserInteraction);
   const sceneOperationId = useRef(0);
   const routeGeography = useRef<GeoPoint[]>([]);
+  const lastMotionIdentity = useRef<{ sceneId: string; requestId: number } | undefined>(undefined);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [warning, setWarning] = useState<string | undefined>();
   const [fallbackPoints, setFallbackPoints] = useState<ProjectedPoint[]>([]);
@@ -58,7 +61,15 @@ export function MapSurface({
       else {
         adapter.current = instance;
         setStatus("ready");
-        unsubscribe = instance.subscribeToUserInteraction(() => interactionHandler.current());
+        unsubscribe = instance.subscribeToUserInteraction(() => {
+          const current = instance.getCameraState();
+          interactionHandler.current({
+            center: { ...current.center },
+            zoom: current.zoom,
+            bearing: current.bearing,
+            pitch: current.pitch,
+          });
+        });
         unsubscribeCamera = instance.subscribeToCameraChange(() => {
           if (routeGeography.current.length >= 3) {
             setFallbackPoints(instance.projectPoints(routeGeography.current));
@@ -82,8 +93,13 @@ export function MapSurface({
     const instance = adapter.current;
     if (!instance || status !== "ready") return;
     const operationId = ++sceneOperationId.current;
-    setFallbackPoints([]);
-    routeGeography.current = [];
+    const shouldMoveCamera = lastMotionIdentity.current?.sceneId !== scene.id
+      || lastMotionIdentity.current.requestId !== player.motionRequestId;
+    lastMotionIdentity.current = { sceneId: scene.id, requestId: player.motionRequestId };
+    if (scene.kind !== "impact-path") {
+      setFallbackPoints([]);
+      routeGeography.current = [];
+    }
     const directive = scene.visualDirectives.find(({ mode }) => mode === "map" || mode === "map-flow");
     if (!directive) {
       setWarning(`No map directive for scene ${scene.id}.`);
@@ -107,8 +123,9 @@ export function MapSurface({
         setWarning(overlayResult.message ?? `Overlay application failed for scene ${scene.id}.`);
       } else {
         setWarning(undefined);
-        setFallbackPoints([]);
+        if (scene.kind !== "impact-path") setFallbackPoints([]);
       }
+      if (!shouldMoveCamera) return;
       const target = resolveCameraTarget(directive.cameraIntent, catalog);
       if (!target.success) { setWarning(target.error.message); return; }
       const plan = planCameraMotion({
@@ -133,7 +150,10 @@ export function MapSurface({
       }
     })();
     return () => { sceneOperationId.current += 1; };
-  }, [scene.id, player.motionRequestId, status]);
+  }, [
+    scene.id, scene.visualDirectives, surfaceIdentity,
+    player.motionRequestId, status,
+  ]);
 
   return (
     <section className="map-surface" aria-label="Interactive world map">

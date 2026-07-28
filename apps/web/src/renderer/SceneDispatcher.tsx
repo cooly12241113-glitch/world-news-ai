@@ -1,19 +1,22 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { BriefingPlayerState } from "../player/player-state";
-import type { MapRendererAdapter, MapViewportInsets } from "../map/map-adapter";
+import type {
+  MapCameraState, MapRendererAdapter, MapViewportInsets,
+} from "../map/map-adapter";
 import { MapSurface } from "../map/MapSurface";
 import { EvidenceBoardSurface, surfaceFor } from "../surfaces/Surfaces";
 import type { RenderableScene } from "./presentation-adapter";
 
 export function SceneDispatcher({
   scene, player, insets, reducedMotion, onMapInteraction, mapAdapterFactory,
-  flowCaption, flowDock,
+  surfaceIdentity, flowCaption, flowDock,
 }: {
   scene: RenderableScene;
   player: BriefingPlayerState;
   insets: MapViewportInsets;
   reducedMotion: boolean;
-  onMapInteraction: () => void;
+  surfaceIdentity?: string;
+  onMapInteraction: (viewport: MapCameraState) => void;
   mapAdapterFactory?: () => MapRendererAdapter;
   flowCaption?: ReactNode;
   flowDock?: ReactNode;
@@ -21,6 +24,7 @@ export function SceneDispatcher({
   if (scene.primarySurface === "map") {
     return <div className="scene-stack">
       <MapSurface scene={scene} player={player} insets={insets}
+        surfaceIdentity={surfaceIdentity}
         reducedMotion={reducedMotion} onUserInteraction={onMapInteraction}
         adapterFactory={mapAdapterFactory} />
       {scene.kind === "supporting-evidence" && <EvidenceBoardSurface scene={scene} />}

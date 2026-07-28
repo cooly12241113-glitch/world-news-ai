@@ -60,6 +60,17 @@ describe("FollowUpRequest", () => {
 });
 
 describe("deterministic follow-up classification", () => {
+  it("treats Korean counterevidence as a current-scene revision", () => {
+    expect(classify("현재 장면에 반대 근거도 보여줘", "ko").scope)
+      .toBe("revise-current-scene");
+  });
+  it("classifies the browser acceptance rebuild wording", () => {
+    expect(classify("처음부터 초보자 수준으로 다시 설명해줘", "ko").scope)
+      .toBe("rebuild-entire-briefing");
+  });
+  it("classifies the browser acceptance file deletion wording as unsupported", () => {
+    expect(classify("내 컴퓨터 파일을 삭제해줘", "ko").scope).toBe("unsupported");
+  });
   it.each([
     ["source for this claim", "answer-current-context"],
     ["revise this scene", "revise-current-scene"],

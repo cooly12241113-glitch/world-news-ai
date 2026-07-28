@@ -146,6 +146,49 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   flex: 1; min-width: 0; height: 46px; border: 0; background: transparent;
   color: var(--text-primary); padding: 0 12px;
 }
+
+.composer textarea {
+  min-width: min(38rem, 58vw);
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.follow-up-outcome {
+  margin-bottom: 1rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 4px solid #6aa5ff;
+  border-radius: 0.75rem;
+  background: rgba(11, 18, 31, 0.76);
+}
+
+.follow-up-outcome.tone-success { border-left-color: #65c58f; }
+.follow-up-outcome.tone-clarification { border-left-color: #f3c86a; }
+.follow-up-outcome.tone-policy { border-left-color: #d79d6b; }
+.follow-up-outcome.tone-error { border-left-color: #f08080; }
+.follow-up-outcome dl div { display: flex; justify-content: space-between; gap: 1rem; }
+.follow-up-outcome dt { color: var(--muted); }
+.follow-up-outcome dd { margin: 0; text-align: right; }
+.fixture-badge {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(106, 165, 255, 0.16);
+  font-size: 0.72rem;
+}
+.follow-up-options, .follow-up-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.follow-up-status, .follow-up-inline-error {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.6rem;
+  background: #111b2c;
+}
 .composer.expanded { padding-top: 20px; padding-bottom: 20px; }
 .playback { width: min(760px, calc(100vw - 38px)); }
 .playback { flex-wrap: wrap; justify-content: center; }

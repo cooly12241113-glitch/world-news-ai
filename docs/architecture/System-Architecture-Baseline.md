@@ -1,5 +1,8 @@
 # System Architecture Baseline
 
+Sprint 14.3B Web integration is implemented, browser accepted, and final
+complete within the fixture-only boundary.
+
 ## Module inventory
 
 | Module | Role | Input → Output | Direct dependencies | Persistence | Extension point | Not implemented |
@@ -18,7 +21,7 @@
 | `follow-up` | Bounded deterministic follow-up classification | request + captured identity context → replan decision | briefing fingerprint, script preference, Zod | none | classifier policy | LLM, retrieval, prose |
 | `replan` | Fixture-only answer/replacement preparation | decision + injected synthetic fixture → validated result | follow-up, session, script validator, Zod | none | ReplanAdapter port | live replan, network, SQLite |
 | `application/follow-up` | Follow-up execution and outcome orchestration | session + request + adapter → validated application outcome | session, follow-up, replan, script fingerprint, Zod | none | orchestrator dependencies | React, HTTP, storage |
-| `apps/web` | Fixture-only interactive renderer | validated script → browser presentation | React, Vite, MapLibre; browser-safe script contracts | none | map adapter, location catalog, surfaces | backend, live generation, auth |
+| `apps/web` | Fixture-only interactive renderer and follow-up controller | validated script + Composer input → synchronized Session/presentation/outcome UI | React, Vite, MapLibre; browser-safe core contracts | none | map adapter, runtime context, fixture resolver, surfaces | backend, live generation, auth |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
 ## Dependency direction

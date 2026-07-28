@@ -1,5 +1,6 @@
 import {
   BriefingScriptSchema,
+  briefingScriptFingerprint,
   presentationPreference,
   type BriefingScene,
   type BriefingScriptDraft,
@@ -242,7 +243,7 @@ export function buildDemoScript(mode: PresentationMode = "auto"): ValidatedBrief
     },
     warnings: [], createdAt: CREATED_AT, fingerprint: "pending",
   };
-  draft.fingerprint = `fixture-fingerprint:${mode}`;
+  draft.fingerprint = briefingScriptFingerprint(draft);
   const parsed = BriefingScriptSchema.parse(draft);
   if (!isValidated(parsed)) throw new Error("Fixture did not produce a validated script.");
   return parsed;

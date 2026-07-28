@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { RenderableScene } from "../renderer/presentation-adapter";
 import { ui } from "../ui-copy";
+import type { ClarificationOptionId, FollowUpViewModel } from "../features/follow-up";
+import { FollowUpOutcomePanel } from "../features/follow-up";
 
 const tabs = [ui.key, ui.evidence, ui.limits, ui.uncertainty, ui.sources] as const;
 type Tab = (typeof tabs)[number];
@@ -13,8 +15,14 @@ export const defaultAnalysisTab = (kind: RenderableScene["kind"]): Tab => ({
 } as Partial<Record<RenderableScene["kind"], Tab>>)[kind] ?? ui.key;
 
 export function AnalysisPanel({
-  scene, open, onToggle,
-}: { scene: RenderableScene; open: boolean; onToggle: () => void }) {
+  scene, open, onToggle, followUp, onClarification, onRetry, onDismiss,
+}: {
+  scene: RenderableScene; open: boolean; onToggle: () => void;
+  followUp?: FollowUpViewModel;
+  onClarification?: (option: ClarificationOptionId) => void;
+  onRetry?: () => void;
+  onDismiss?: () => void;
+}) {
   const [tab, setTab] = useState<Tab>(() => defaultAnalysisTab(scene.kind));
   useEffect(() => setTab(defaultAnalysisTab(scene.kind)), [scene.id, scene.kind]);
   return (
@@ -25,12 +33,16 @@ export function AnalysisPanel({
       </button>
       <div id="analysis-content">
         <p className="eyebrow">{ui.currentScene}</p>
-        <h2>{scene.kind.replaceAll("-", " ")}</h2>
+        <h2 id="analysis-scene-heading" tabIndex={-1}>{scene.kind.replaceAll("-", " ")}</h2>
         <div className="tabs" role="tablist" aria-label="Analysis views">
           {tabs.map((item) => <button type="button" role="tab" key={item}
             aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>)}
         </div>
         <div className="panel-copy" role="tabpanel">
+          {followUp && <FollowUpOutcomePanel viewModel={followUp}
+            onClarification={onClarification ?? (() => undefined)}
+            onRetry={onRetry ?? (() => undefined)}
+            onDismiss={onDismiss ?? (() => undefined)} />}
           {tab === "Key" && <p>{scene.objective}</p>}
           {tab === "Evidence" && <p>{scene.contentBindings.length} evidence binding(s) retained.</p>}
           {tab === "Limits" && <p>No verdict is generated. Claims remain attributed.</p>}

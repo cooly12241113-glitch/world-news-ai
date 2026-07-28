@@ -1,0 +1,201 @@
+// @vitest-environment jsdom
+import { useEffect } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { withBriefingSessionFingerprint } from "@world-news-ai/session";
+import "../../tests/test-setup";
+import { BottomComposer } from "../../components/BottomComposer";
+import { buildDemoScript } from "../../fixtures/build-demo-script";
+import { createDemoBriefingSession } from "../session";
+import { FollowUpClarificationOptions } from "./FollowUpClarificationOptions";
+import { FollowUpOutcomePanel } from "./FollowUpOutcomePanel";
+import type { FollowUpRuntimeContext } from "./follow-up-runtime-context";
+import {
+  applyClarificationOption,
+  useFollowUpSessionController,
+} from "./use-follow-up-session-controller";
+
+function deterministicRuntime(): FollowUpRuntimeContext {
+  let id = 0;
+  return {
+    nextId: (prefix) => `${prefix}:${++id}`,
+    now: () => "2026-07-28T00:00:00.000Z",
+  };
+}
+
+const runtimeFixture = deterministicRuntime();
+const scriptFixture = buildDemoScript();
+
+function Harness({ runtime = runtimeFixture }: { runtime?: FollowUpRuntimeContext }) {
+  const controller = useFollowUpSessionController(scriptFixture, runtime);
+  useEffect(() => {
+    if (controller.focusRequest?.target === "composer") {
+      document.getElementById("briefing-question")?.focus();
+    } else if (controller.focusRequest?.target === "analysis") {
+      document.getElementById("analysis-scene-heading")?.focus();
+    }
+  }, [controller.focusRequest]);
+  return <div>
+    <button onClick={controller.openComposer}>Open</button>
+    <button onClick={controller.startBriefing}>Start session</button>
+    <button onClick={() => controller.recordManualMapInteraction({
+      center: { longitude: 127.8, latitude: 36.3 },
+      zoom: 4, bearing: 0, pitch: 0,
+    })}>Move map</button>
+    <button onClick={controller.keepManualMapView}>Keep map</button>
+    <button onClick={controller.returnToBriefingCamera}>Return map</button>
+    {controller.session.composerState === "expanded" && <BottomComposer
+      expanded briefing value={controller.draft}
+      onChange={controller.updateDraft} onSubmit={controller.submitFollowUp}
+      onFocus={controller.openComposer} onCancel={controller.closeComposer}
+      onStart={controller.startBriefing} />}
+    <FollowUpOutcomePanel viewModel={controller.viewModel}
+      onClarification={controller.selectClarificationOption}
+      onRetry={controller.retryFollowUp} onDismiss={controller.dismissOutcome} />
+    <h2 id="analysis-scene-heading" tabIndex={-1}>Scene analysis</h2>
+    <output data-testid="outcome">{controller.outcome?.outcome ?? "none"}</output>
+    <span data-testid="scene">{controller.session.sceneCursor.sceneId}</span>
+    <span data-testid="script">{controller.script.fingerprint}</span>
+    <span data-testid="composer">{controller.session.composerState}</span>
+    <span data-testid="operation">{controller.latestOperationIdentity ?? "none"}</span>
+    <span data-testid="session-status">{controller.session.status}</span>
+    <span data-testid="manual-map">{controller.session.manualMapViewState.status}</span>
+  </div>;
+}
+
+async function submit(text: string) {
+  fireEvent.click(screen.getByRole("button", { name: "Open" }));
+  fireEvent.change(screen.getByRole("textbox", { name: "Ask a follow-up question" }),
+    { target: { value: text } });
+  fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+  await waitFor(() => expect(screen.getByTestId("outcome").textContent).not.toBe("none"));
+}
+
+describe("follow-up session controller", () => {
+  it("answers from current context without changing Script or scene", async () => {
+    render(<Harness />);
+    const script = screen.getByTestId("script").textContent;
+    const scene = screen.getByTestId("scene").textContent;
+    await submit("source for this claim");
+    expect(screen.getByTestId("outcome").textContent).toBe("current-context-answer");
+    expect(screen.getByTestId("script").textContent).toBe(script);
+    expect(screen.getByTestId("scene").textContent).toBe(scene);
+    expect(screen.getByText("Uncertainty")).toBeTruthy();
+    expect(screen.getByText("This is a deterministic fixture response.")).toBeTruthy();
+  });
+
+  it("synchronizes manual map interaction, keep, and return with Session", () => {
+    render(<Harness runtime={deterministicRuntime()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Start session" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move map" }));
+    expect(screen.getByTestId("session-status").textContent).toBe("manual-map-view");
+    expect(screen.getByTestId("manual-map").textContent).toBe("active");
+    fireEvent.click(screen.getByRole("button", { name: "Keep map" }));
+    expect(screen.getByTestId("manual-map").textContent).toBe("active");
+    fireEvent.click(screen.getByRole("button", { name: "Return map" }));
+    expect(screen.getByTestId("session-status").textContent).toBe("presenting-scene");
+    expect(screen.getByTestId("manual-map").textContent).toBe("inactive");
+  });
+
+  it("applies a rebuild atomically and restarts at opening", async () => {
+    render(<Harness />);
+    const script = screen.getByTestId("script").textContent;
+    await submit("start over");
+    expect(screen.getByTestId("outcome").textContent).toBe("replacement-applied");
+    expect(screen.getByTestId("script").textContent).not.toBe(script);
+    expect(screen.getByTestId("scene").textContent).toBe("demo-rebuild:0");
+  });
+
+  it("returns clarification instead of pretending a terminal replacement is append", async () => {
+    render(<Harness />);
+    const script = screen.getByTestId("script").textContent;
+    await submit("add a scene");
+    expect(screen.getByTestId("outcome").textContent).toBe("clarification-required");
+    expect(screen.getByTestId("script").textContent).toBe(script);
+  });
+
+  it.each([
+    ["replace remaining scenes", "여기서부터 남은 장면을 다시 구성해줘"],
+    ["rebuild entire briefing", "처음부터 전체 브리핑을 다시 구성해줘"],
+  ] as const)("opens Composer with an explicit draft for %s without submitting", async (
+    option,
+    expectedDraft,
+  ) => {
+    render(<Harness runtime={deterministicRuntime()} />);
+    await submit("add a scene");
+    const operation = screen.getByTestId("operation").textContent;
+    fireEvent.click(screen.getByRole("button", { name: option }));
+    expect(screen.getByTestId("outcome").textContent).toBe("none");
+    expect(screen.getByTestId("composer").textContent).toBe("expanded");
+    expect(screen.getByRole("textbox", { name: "Ask a follow-up question" }))
+      .toHaveProperty("value", expectedDraft);
+    expect(screen.getByTestId("operation").textContent).toBe(operation);
+    expect(document.activeElement).toBe(
+      screen.getByRole("textbox", { name: "Ask a follow-up question" }),
+    );
+  });
+
+  it("dismisses keep-current without changing Script or scene", async () => {
+    render(<Harness runtime={deterministicRuntime()} />);
+    const script = screen.getByTestId("script").textContent;
+    const scene = screen.getByTestId("scene").textContent;
+    await submit("add a scene");
+    fireEvent.click(screen.getByRole("button", { name: "keep current briefing" }));
+    expect(screen.getByTestId("outcome").textContent).toBe("none");
+    expect(screen.getByTestId("script").textContent).toBe(script);
+    expect(screen.getByTestId("scene").textContent).toBe(scene);
+    expect(screen.getByTestId("composer").textContent).toBe("compact");
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Scene analysis" }));
+  });
+
+  it("preserves manual viewport state when keep-current closes clarification", () => {
+    const base = createDemoBriefingSession(scriptFixture, "2026-07-28T00:00:00.000Z");
+    const { semanticFingerprint: _fingerprint, ...withoutFingerprint } = base;
+    const viewport = {
+      center: { longitude: 127.8, latitude: 36.3 },
+      zoom: 4, bearing: 0, pitch: 0,
+    };
+    const session = withBriefingSessionFingerprint({
+      ...withoutFingerprint,
+      status: "composer-open",
+      sceneCursor: {
+        sceneId: scriptFixture.scenes[3]!.id,
+        sceneIndex: 3,
+        totalScenes: scriptFixture.scenes.length,
+        visitedSceneIds: scriptFixture.scenes.slice(0, 4).map(({ id }) => id),
+      },
+      composerState: "expanded",
+      resumeStatus: "manual-map-view",
+      viewportSnapshot: viewport,
+      manualMapViewState: { status: "active", viewportSnapshot: viewport },
+    });
+    const result = applyClarificationOption(
+      session, "keep-current-briefing", deterministicRuntime(),
+    );
+    expect(result.nextSession.scriptFingerprint).toBe(session.scriptFingerprint);
+    expect(result.nextSession.sceneCursor).toEqual(session.sceneCursor);
+    expect(result.nextSession.viewportSnapshot).toEqual(viewport);
+    expect(result.nextSession.manualMapViewState).toEqual({
+      status: "active", viewportSnapshot: viewport,
+    });
+    expect(result.nextSession.activeOperation).toBeUndefined();
+    expect(result.nextSession.status).toBe("manual-map-view");
+  });
+
+  it("passes the exact option ID through keyboard activation", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(<FollowUpClarificationOptions
+      options={["replace-remaining-scenes", "keep-current-briefing"]}
+      onSelect={onSelect} />);
+    const replace = screen.getByRole("button", { name: "replace remaining scenes" });
+    replace.focus();
+    await user.keyboard("{Enter}");
+    expect(onSelect).toHaveBeenLastCalledWith("replace-remaining-scenes");
+    const keep = screen.getByRole("button", { name: "keep current briefing" });
+    keep.focus();
+    await user.keyboard(" ");
+    expect(onSelect).toHaveBeenLastCalledWith("keep-current-briefing");
+  });
+});

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createSemanticFingerprint } from "../briefing";
+import { createSemanticFingerprint } from "../briefing/fingerprint";
 import type { EvidenceAllowlist } from "./follow-up-context";
 
 export const FOLLOW_UP_ANSWER_TYPES = [

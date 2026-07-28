@@ -43,29 +43,36 @@ controls, replay scene motion, and responsive safe viewport behavior.
 
 ## Current delivery
 
-Sprint 14.3A — Follow-up Outcome Orchestrator.
+Sprint 14.3B — Composer, Session & Replan UI Integration.
 
-**Status:** IMPLEMENTED
+**Status:** IMPLEMENTED / BROWSER ACCEPTED / FINAL COMPLETE
 
-Sprint 14.0–14.2 are complete. Sprint 14.3A implements the application
-orchestrator, six strict outcomes, normal `REPLAN_RESOLVED` semantics, append
-scene budget policy, stale-result isolation, rollback, and renderer-neutral UI
-action projection. It adds no React, network, LLM, backend, or migration.
+Sprint 14.0–14.3A are complete. Sprint 14.3B connects the existing Composer,
+BriefingSession, core classifier, fixture resolver, outcome orchestrator,
+atomic Script/presentation application, and AnalysisPanel. Automated
+implementation checks, Codex Chrome review, and final user browser acceptance
+are complete.
 
 - [Sprint 14 design](Sprint-14-Interactive-Briefing-Session.md)
 - [Sprint 14.1 delivery](Sprint-14.1-Briefing-Session-Domain.md)
 - [Sprint 14.2 delivery](Sprint-14.2-Follow-up-and-Fixture-Replan.md)
 - [Sprint 14.3A delivery](Sprint-14.3A-Follow-up-Outcome-Orchestrator.md)
+- [Sprint 14.3B delivery](Sprint-14.3B-Composer-Session-UI-Integration.md)
 - [Session state machine](../architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
 - [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
 
 ## Next target
 
-- Sprint 14.3B: Composer and Session UI integration
+- Prepare the Milestone 02 / Sprint 14 integration audit without changing the
+  fixture-only boundary.
 
 ## Known non-blocking debt
 
 Production DNS-rebinding controls, complete knowledge-record persistence,
 semantic retrieval, context-package persistence, and operational
 retention/redaction policy remain future work.
+Live GPT/search, true-append and browser-failure fixtures, and production
+backend integration remain unavailable. The existing MapLibre bundle-size
+warning remains accepted debt; dark vector maps and a 3D globe belong to a
+future renderer Sprint.

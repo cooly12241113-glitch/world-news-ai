@@ -1,4 +1,4 @@
-import { createSemanticFingerprint } from "../briefing";
+import { createSemanticFingerprint } from "../briefing/fingerprint";
 import type { ReplanResult } from "./replan-result";
 
 export type ReplanResultFingerprintInput =

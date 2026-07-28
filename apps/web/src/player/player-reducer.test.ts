@@ -6,6 +6,19 @@ const reduce = (...actions: PlayerAction[]) =>
   actions.reduce(playerReducer, initialPlayerState);
 
 describe("Briefing player reducer", () => {
+  it("preserves playback state while synchronizing an atomic Script replacement", () => {
+    const playing = {
+      ...initialPlayerState,
+      status: "playing" as const,
+      sceneCount: 7,
+      currentSceneIndex: 3,
+    };
+    expect(playerReducer(playing, {
+      type: "sync-script", sceneCount: 7, sceneIndex: 3,
+    })).toMatchObject({
+      status: "playing", sceneCount: 7, currentSceneIndex: 3,
+    });
+  });
   it("loads, starts, pauses, and resumes", () => {
     const state = reduce({ type: "load", sceneCount: 4 }, { type: "start" },
       { type: "pause" }, { type: "resume" });

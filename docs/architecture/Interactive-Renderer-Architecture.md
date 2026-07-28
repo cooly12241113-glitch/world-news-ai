@@ -1,5 +1,7 @@
 # Interactive Renderer Architecture
 
+**Sprint 14.3B status:** Implemented / browser accepted / final complete.
+
 ```mermaid
 flowchart TD
   S["ValidatedBriefingScript"] --> P["Web Presentation Adapter"]
@@ -14,6 +16,10 @@ flowchart TD
   L --> MP["Motion Planner v0"]
   MP --> A["Map Renderer Adapter"]
   A --> ML["MapLibre GL JS"]
+  BC["Bottom Composer"] --> FC["Follow-up Session Controller"]
+  FC --> FO["Core Outcome Orchestrator"]
+  FO --> VM["Safe Outcome View Model"]
+  VM --> AP["AnalysisPanel"]
 ```
 
 The adapter rejects draft/invalid scripts and preserves the script fingerprint,
@@ -30,3 +36,14 @@ Map failure does not remove captions, navigation, evidence, citations, or
 static surfaces. The fake adapter prevents canvas and network use in tests.
 MapLibre is initialized only by `MapSurface`, cleaned up on unmount, and does
 not leak types into core.
+
+Sprint 14.3B keeps the renderer/player boundary intact. The follow-up
+controller owns Session, validated Script, presentation, draft, operation, and
+outcome state. Replacement is applied atomically only after all identities
+match. When replacement content changes under a preserved scene ID, map
+overlays refresh but camera motion does not replay; explicit scene mapping or
+replay remains the only programmatic motion trigger.
+
+The accepted implementation remains fixture-only. The existing MapLibre
+bundle-size warning is non-blocking debt; dark vector maps and a 3D globe are
+reserved for a future renderer Sprint.

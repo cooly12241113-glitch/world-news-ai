@@ -319,6 +319,15 @@ export class MapLibreMapRendererAdapter implements MapRendererAdapter {
     for (const listener of this.listeners) listener({ type, source: "user" });
   }
   private notifyCameraChange() {
+    if (this.map) {
+      const center = this.map.getCenter();
+      this.state = {
+        center: { longitude: center.lng, latitude: center.lat },
+        zoom: this.map.getZoom(),
+        bearing: this.map.getBearing(),
+        pitch: this.map.getPitch(),
+      };
+    }
     for (const listener of this.cameraListeners) listener();
   }
 }

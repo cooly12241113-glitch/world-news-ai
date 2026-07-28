@@ -3,12 +3,13 @@
 ## Status
 
 - Sprint: 14.0 design
-- Delivery: **DESIGNED / NOT IMPLEMENTED**
+- Delivery: **IMPLEMENTED; WEB INTEGRATION BROWSER ACCEPTED / FINAL COMPLETE**
 - Baseline: `af50333f857b5f990741fff83176efbad36a250d`
 
-This contract extends the manual-only Sprint 13.1 player without changing its
-current implementation. It defines one deterministic session owner for scene,
-composer, map, follow-up, and replacement state.
+This contract extends the manual-only Sprint 13.1 player. The deterministic
+Session owns semantic lifecycle and identity; the Web player retains rendering,
+motion, and playback state. Sprint 14.3B synchronizes them through a dedicated
+controller rather than duplicating reducer rules in components.
 
 ## Current implementation audit
 
