@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Implemented Sprint 14.2 strict follow-up request/context contracts,
+  deterministic Korean/English classification, and seven replan scopes.
+- Added allowlisted answer plans, strict replan results, injected synthetic
+  fixture scenarios, Script replacement validation, evidence continuity, and
+  scene mapping.
+- Integrated fixture results through the existing session reducer with stale
+  operation/fingerprint rejection and privacy-minimized audit metadata.
+- Added no UI, network, live LLM, backend, dependency, or migration.
 - Implemented Sprint 14.1 `BriefingSession` aggregate, ten lifecycle states,
   nineteen strict commands, and a deterministic effect-free reducer.
 - Added semantic fingerprints, stale fingerprint/operation rejection, validated

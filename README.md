@@ -23,7 +23,7 @@ Architecture.
 - Sprint 13.1 renderer hardening complete (51 test files, 484 tests)
 - Sprint 14.0 briefing session architecture design complete
 - Sprint 14.1 briefing session domain and deterministic reducer implemented
-- Sprint 14.2 fixture follow-up/replan adapter planned
+- Sprint 14.2 deterministic follow-up/fixture replan adapter implemented
 - Sprint 14.3 Web session/UI integration planned
 - Milestone 01 intelligence foundation baseline complete
 
@@ -239,15 +239,16 @@ See [ADR-013](docs/architecture/ADR-013-interactive-renderer-prototype.md),
 
 ## Interactive briefing session
 
-Sprint 14.0 design is complete. Sprint 14.1 implements a UI-independent
-`BriefingSession`, strict commands, deterministic reducer, semantic
-fingerprints, audit metadata, and an in-memory repository. Manual scene
-navigation and Script identity remain explicit. Sprint 14.2 fixture adapters
-and Sprint 14.3 UI integration are planned; network, live LLM, backend, auth,
-database, and migration work remain excluded.
+Sprint 14.0 design is complete. Sprint 14.1 implements the UI-independent
+session domain and reducer. Sprint 14.2 adds deterministic Korean/English
+follow-up classification, allowlisted answer plans, synthetic fixture
+replacement validation, evidence continuity, and stale-safe reducer
+integration. Sprint 14.3 UI integration is planned; network, live LLM, backend,
+auth, database, and migration work remain excluded.
 
 - [Sprint 14 design](docs/sprints/Sprint-14-Interactive-Briefing-Session.md)
 - [Sprint 14.1 delivery](docs/sprints/Sprint-14.1-Briefing-Session-Domain.md)
+- [Sprint 14.2 delivery](docs/sprints/Sprint-14.2-Follow-up-and-Fixture-Replan.md)
 - [Briefing Session State Machine](docs/architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and Replanning Contract](docs/architecture/Follow-up-and-Replanning-Contract.md)
 - [Sprint 14 Implementation Matrix](docs/architecture/Sprint-14-Implementation-Matrix.md)

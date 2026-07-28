@@ -43,24 +43,25 @@ controls, replay scene motion, and responsive safe viewport behavior.
 
 ## Current delivery
 
-Sprint 14.1 — Briefing Session Domain and Deterministic Reducer.
+Sprint 14.2 — Follow-up Classification and Fixture Replan Adapter.
 
 **Status:** IMPLEMENTED
 
-Sprint 14.0 design is complete. Sprint 14.1 implements the UI-independent
-session aggregate, strict commands, deterministic reducer, semantic
-fingerprints, privacy-minimized audit records, and an in-memory repository.
-It adds no UI, live follow-up/replanning, backend, network, LLM, or migration.
+Sprint 14.0 design and Sprint 14.1 session implementation are complete.
+Sprint 14.2 implements deterministic Korean/English follow-up classification,
+allowlisted current-context answer plans, validated synthetic fixture
+replacements, evidence continuity, scene mapping, and stale-safe reducer
+integration. It adds no UI, network, LLM, backend, or migration.
 
 - [Sprint 14 design](Sprint-14-Interactive-Briefing-Session.md)
 - [Sprint 14.1 delivery](Sprint-14.1-Briefing-Session-Domain.md)
+- [Sprint 14.2 delivery](Sprint-14.2-Follow-up-and-Fixture-Replan.md)
 - [Session state machine](../architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
 - [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
 
 ## Next target
 
-- Sprint 14.2: fixture-only follow-up/replan adapter
 - Sprint 14.3: Web session and UI integration
 
 ## Known non-blocking debt

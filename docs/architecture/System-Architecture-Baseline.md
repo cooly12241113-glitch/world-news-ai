@@ -15,6 +15,8 @@
 | `generation` | Untrusted structured provider boundary | question + contract + context → validated plan + audit | briefing, context, explanation, Zod; OpenAI SDK in adapter only | port only | provider/audit/cache ports | final prose, tools, live-by-default calls |
 | `script` | Renderer-neutral briefing sequence | validated plan + contract + context + preference → validated script | briefing, context, explanation, Zod | port only | compiler/repository ports | UI, map SDK, motion timing, final prose |
 | `session` | UI-independent briefing lifecycle | Script identity + command → session transition | script preference contract, Zod, crypto | memory port only | repository/effect adapters | React, MapLibre, live replan, SQLite |
+| `follow-up` | Bounded deterministic follow-up classification | request + captured identity context → replan decision | briefing fingerprint, script preference, Zod | none | classifier policy | LLM, retrieval, prose |
+| `replan` | Fixture-only answer/replacement preparation | decision + injected synthetic fixture → validated result | follow-up, session, script validator, Zod | none | ReplanAdapter port | live replan, network, SQLite |
 | `apps/web` | Fixture-only interactive renderer | validated script → browser presentation | React, Vite, MapLibre; browser-safe script contracts | none | map adapter, location catalog, surfaces | backend, live generation, auth |
 | `integration` | Baseline verification | fixed fixtures → pipeline assertions | public module contracts | memory | scenario fixtures | external services |
 
@@ -59,6 +61,8 @@ Module `index.ts` files export their public contracts and services:
   validator, coverage, and fingerprints.
 - Session: BriefingSession lifecycle, strict commands/events, deterministic
   reducer, semantic fingerprints, audit metadata, and repository port.
+- Follow-up/Replan: normalized requests, bounded context allowlists,
+  deterministic decisions, fixture-only results, continuity, and mapping.
 
 ## Port and adapter boundaries
 
@@ -75,6 +79,8 @@ Module `index.ts` files export their public contracts and services:
   validated script without changing its evidence scope.
 - BriefingSession owns lifecycle and semantic interaction state. The Web player
   retains renderer/playback state.
+- Follow-up classification never enters the reducer. Replan adapters prepare
+  results; only validated results cross the existing reducer command boundary.
 
 ## Invalid dependency rules
 
@@ -82,4 +88,5 @@ Domain must not import infrastructure or application modules. Dossier and
 briefing must not depend on UI/LLM providers. Context must not perform answer
 generation or unrestricted retrieval. Renderers must not rewrite evidence or
 contract scope. Session must not depend on React, DOM, MapLibre, network, LLM,
-SQLite, browser storage, clocks, random generators, or timers.
+SQLite, browser storage, clocks, random generators, or timers. Follow-up and
+replan modules preserve the same boundary.
