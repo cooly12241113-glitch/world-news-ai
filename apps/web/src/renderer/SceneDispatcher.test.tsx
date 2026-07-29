@@ -8,6 +8,7 @@ import { buildDemoScript } from "../fixtures/build-demo-script";
 import { SceneDispatcher } from "./SceneDispatcher";
 import { initialPlayerState } from "../player/player-state";
 import { FakeMapRendererAdapter } from "../map/fake-map-adapter";
+import type { MapInitializationConfiguration } from "../map/map-adapter";
 
 const briefing = () => {
   const result = adaptBriefingScript(buildDemoScript());
@@ -71,6 +72,40 @@ describe("Scene dispatcher integration", () => {
     await waitFor(() => expect(adapter.initialized).toBe(true));
     await waitFor(() => expect(adapter.overlays.length).toBeGreaterThan(0));
     expect(screen.getByLabelText("Interactive world map")).not.toBeNull();
+  });
+  it("never hides an interactive map ancestor while its canvas retains focus", async () => {
+    class FocusableMapAdapter extends FakeMapRendererAdapter {
+      override async initialize(
+        container: HTMLElement,
+        configuration: MapInitializationConfiguration,
+      ) {
+        const result = await super.initialize(container, configuration);
+        const canvas = document.createElement("canvas");
+        canvas.className = "maplibregl-canvas";
+        canvas.tabIndex = 0;
+        container.append(canvas);
+        return result;
+      }
+    }
+    const adapter = new FocusableMapAdapter();
+    const value = briefing();
+    const view = render(<SceneDispatcher {...props} scene={value.scenes[1]!}
+      mapAdapterFactory={() => adapter} />);
+    await waitFor(() => expect(adapter.initialized).toBe(true));
+    const canvas = view.container.querySelector(".maplibregl-canvas") as HTMLCanvasElement;
+    canvas.focus();
+    const mapContainer = canvas.closest(".map-canvas");
+    expect(document.activeElement).toBe(canvas);
+    expect(mapContainer?.getAttribute("aria-hidden")).toBeNull();
+    expect(mapContainer?.getAttribute("role")).toBe("group");
+    expect(mapContainer?.getAttribute("aria-label"))
+      .toBe("Interactive map controls and visualization");
+
+    view.rerender(<SceneDispatcher {...props} scene={value.scenes[1]!}
+      surfaceIdentity="replacement-script"
+      mapAdapterFactory={() => adapter} />);
+    expect(document.activeElement).toBe(canvas);
+    expect(canvas.closest("[aria-hidden='true']")).toBeNull();
   });
   it("keeps one adapter across handler rerenders and applies the latest map scene", async () => {
     const adapter = new FakeMapRendererAdapter();

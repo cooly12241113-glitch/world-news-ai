@@ -2,9 +2,14 @@
 
 ## Current Milestone
 
-Milestone 02 — Pre-Renderer Integration & Completeness Audit
+Milestone 02 — Interactive Briefing Integration Audit
 
-**Status:** READY_WITH_NON_BLOCKING_DEBT
+**Status:** IMPLEMENTED / AUDIT COMPLETE / BROWSER ACCEPTED / FINAL COMPLETE
+
+Sprint 10–14 integration, identity, provenance, epistemic posture,
+Session/Script/Player/Web atomic application, follow-up/replan, map/motion,
+accessibility, and favicon delivery are audited and accepted. The fixture-only
+baseline has 67 test files and at least 652 passing tests.
 
 ## Completed delivery
 
@@ -64,8 +69,9 @@ are complete.
 
 ## Next target
 
-- Prepare the Milestone 02 / Sprint 14 integration audit without changing the
-  fixture-only boundary.
+- Prepare the Sprint 15 plan without starting implementation or changing the
+  accepted fixture-only boundary. See
+  [Milestone 02 — Interactive Briefing Baseline](../milestones/Milestone-02-Interactive-Briefing-Baseline.md).
 
 ## Known non-blocking debt
 

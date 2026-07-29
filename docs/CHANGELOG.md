@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Audited the Sprint 10–14 Interactive Briefing pipeline across identity,
+  provenance, epistemic policy, Session, replan, atomic Web application, and
+  renderer boundaries.
+- Corrected Core fixture current-scene revision semantics and fingerprint-based
+  changed/preserved scene accounting.
+- Added NFC normalization to common semantic fingerprint canonicalization and a
+  deterministic seven-scenario integration suite.
+- Finalized the Interactive Briefing Milestone 02 with user-operated Chrome
+  acceptance covering Console, Network, navigation, map continuity, atomic
+  replacement, accessibility focus, and favicon delivery.
+- Recorded the Codex Chrome kernel-asset path failure as a tooling issue
+  separate from the accepted product baseline.
+- Corrected the focused MapLibre canvas ARIA ancestor and added a branded SVG
+  favicon without dependency, package, backend, or migration changes.
 - Implemented Sprint 14.3B fixture-only Composer, BriefingSession, classifier,
   outcome orchestrator, atomic replacement, and AnalysisPanel integration.
 - Added six safe outcome presentations, injected browser runtime identity,

@@ -27,6 +27,8 @@ Architecture.
 - Sprint 14.3A follow-up outcome orchestrator implemented
 - Sprint 14.3B Composer and Session UI integration implemented, browser
   accepted, and final complete
+- Milestone 02 Interactive Briefing baseline implemented, audit complete,
+  browser accepted, and final complete (67 test files, 652 tests)
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain

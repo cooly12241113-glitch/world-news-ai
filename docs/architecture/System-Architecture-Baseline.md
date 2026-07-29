@@ -98,3 +98,24 @@ generation or unrestricted retrieval. Renderers must not rewrite evidence or
 contract scope. Session must not depend on React, DOM, MapLibre, network, LLM,
 SQLite, browser storage, clocks, random generators, or timers. Follow-up and
 replan modules preserve the same boundary.
+
+## Interactive Briefing audit checkpoint
+
+The Sprint 10–14 pipeline has been audited through the deterministic fixture
+checkpoint. Contract, Context Package, ExplanationPlan, BriefingScript,
+BriefingSession, follow-up/replan, application outcome, and Web presentation
+identities remain explicit at their boundaries. Replacement application rejects
+stale or mismatched identities before committing Session/Script/presentation
+state.
+
+The Core fixture replan adapter now compares same-ID scenes by semantic
+fingerprint and supplies an actual counterevidence change for current-scene
+revision. Common semantic fingerprint canonicalization normalizes Unicode
+strings to NFC.
+
+User-operated Chrome acceptance confirms Console/runtime health, expected-only
+Network traffic, manual navigation, atomic replacement, route/marker continuity,
+and accessibility focus behavior. The Codex Chrome control runtime remained
+unavailable because of a local kernel asset path issue; this tooling failure is
+separate from the product baseline. See
+[Milestone 02 — Interactive Briefing Baseline](../milestones/Milestone-02-Interactive-Briefing-Baseline.md).

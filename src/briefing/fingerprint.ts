@@ -1,4 +1,7 @@
 function canonicalize(value: unknown): unknown {
+  if (typeof value === "string") {
+    return value.normalize("NFC");
+  }
   if (Array.isArray(value)) {
     return value.map(canonicalize);
   }

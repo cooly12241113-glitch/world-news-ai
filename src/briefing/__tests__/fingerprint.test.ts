@@ -12,4 +12,9 @@ describe("portable semantic fingerprint", () => {
     expect(createSemanticFingerprint({ b: 2, a: 1 }))
       .toBe(createSemanticFingerprint({ a: 1, b: 2 }));
   });
+
+  it("canonicalizes semantically equivalent Unicode strings", () => {
+    expect(createSemanticFingerprint({ text: "évidence" }))
+      .toBe(createSemanticFingerprint({ text: "e\u0301vidence" }));
+  });
 });

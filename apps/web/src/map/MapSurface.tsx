@@ -157,7 +157,12 @@ export function MapSurface({
 
   return (
     <section className="map-surface" aria-label="Interactive world map">
-      <div ref={container} className="map-canvas" aria-hidden="true" />
+      <div
+        ref={container}
+        className="map-canvas"
+        role="group"
+        aria-label="Interactive map controls and visualization"
+      />
       <p className="sr-only">
         Accessible map summary: {scene.objective}. Locations:{" "}
         {scene.visualDirectives.flatMap(({ locationIds }) => locationIds).join(", ") || "none"}.

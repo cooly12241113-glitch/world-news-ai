@@ -4,6 +4,10 @@ Sprint 14.3B's fixture-only follow-up branch is implemented, browser accepted,
 and final complete. Live GPT/search, backend persistence, true append, and a
 browser failure fixture remain outside this flow.
 
+The Interactive Briefing Milestone 02 audit and user-operated Chrome acceptance
+are complete. This is the fixture-only Sprint 10–14 baseline; no live
+GPT/search/backend integration is implied.
+
 ```mermaid
 flowchart TD
   S["Source Input"] --> I["Adaptive Ingestion"]
@@ -75,3 +79,10 @@ present in its summary/body source.
   never promotes an invalid proposal to a validated plan.
 - Script compilation never returns a draft as renderer-ready and enforces the
   contract scene budget, evidence closure, static fallback, and accessibility.
+- Follow-up and replan results retain operation/start fingerprints; stale or
+  mismatched results cannot replace the active Session.
+- Same-ID scene changes are detected by semantic fingerprint, and Web
+  replacement is committed only after Session, Script, presentation, cursor,
+  and surface identities agree.
+- Invalid evidence or replacement identity returns a structured failure and
+  preserves the prior Script and cursor.

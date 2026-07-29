@@ -35,6 +35,18 @@ describe("fixture replan adapter", () => {
     expect(JSON.stringify(audit)).not.toContain(request.followUpRequest.text);
   });
 
+  it("classifies a semantic same-ID current-scene revision as changed", () => {
+    const context = followUpContext();
+    const result = adapter.prepare(
+      replanRequest(decision("revise this scene"), "revise"),
+    );
+    expect(result.outcome).toBe("replacement-ready");
+    if (result.outcome !== "replacement-ready") return;
+    expect(result.changedSceneIds).toEqual([context.currentSceneId]);
+    expect(result.preservedSceneIds).not.toContain(context.currentSceneId);
+    expect(result.changedSceneIds).toHaveLength(1);
+  });
+
   it.each([
     ["revise this scene", "revise", "map-to-replacement-scene"],
     ["add a scene", "append", "preserve-current-scene"],

@@ -48,16 +48,22 @@ acceptance.
 Navigation remains manual-only. Live retrieval, LLM, backend, and persistent
 session storage remain outside Sprint 14.
 
-The next delivery activity is preparation for the Milestone 02 / Sprint 14
-integration audit. True append and browser failure fixtures remain absent.
+## Milestone 02 — Interactive Briefing Baseline (Complete)
+
+Sprint 10–14 integration, identity, provenance, epistemic posture, Session and
+Web atomic application, follow-up/replan, map/motion, accessibility, and favicon
+delivery are audited. User-operated Chrome acceptance is complete. True append
+and browser failure fixtures remain absent.
 The existing MapLibre bundle-size warning is accepted debt; dark vector maps
 and a 3D globe remain future renderer Sprint candidates.
 
 ## Sprint 15 — Production Follow-up and Replanning
 
-Extend the Sprint 14 fake boundary only after approval for real retrieval,
-generation, backend, persistence, and operational policies. Preserve the prior
-contract, evidence lineage, and explicit scope changes.
+Planning may begin after the accepted Interactive Briefing baseline. Any future
+implementation must receive separate approval for real retrieval, generation,
+backend, persistence, authentication, authorization, and operational policies.
+Preserve the prior contracts and evidence lineage. This milestone does not
+start Sprint 15 implementation.
 
 ## Sprint 16 — Personalized Impact Analysis
 

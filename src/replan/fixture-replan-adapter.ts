@@ -2,7 +2,10 @@ import type { BriefingContract } from "../briefing";
 import type { EvidenceContextPackage } from "../context";
 import type { ValidatedExplanationPlan } from "../explanation";
 import { createFollowUpAnswerPlan } from "../follow-up";
-import type { BriefingScriptDraft } from "../script";
+import {
+  briefingSceneFingerprint,
+  type BriefingScriptDraft,
+} from "../script";
 import type { ReplacementSessionIdentity } from "../session";
 import {
   assessEvidenceContinuity,
@@ -43,6 +46,7 @@ export interface FixtureReplanScenario {
     | "unsupported";
   fixtureMetadata: { fictional: true; description: string };
   replacement?: {
+    sourceScript: BriefingScriptDraft;
     script: BriefingScriptDraft;
     plan: ValidatedExplanationPlan;
     contract: BriefingContract;
@@ -143,11 +147,32 @@ export class FixtureReplanAdapter implements ReplanAdapter {
       request.deterministicContext.policyVersion,
     );
     assertEvidenceContinuitySafe(continuity);
-    const previous = new Set(request.followUpContext.availableSceneIds);
-    const next = new Set(replacementSceneIds);
-    const preservedSceneIds = [...previous].filter((id) => next.has(id));
-    const removedSceneIds = [...previous].filter((id) => !next.has(id));
-    const changedSceneIds = replacementSceneIds.filter((id) => !previous.has(id));
+    const previousSceneIds = new Set(
+      request.followUpContext.availableSceneIds,
+    );
+    const replacementSceneById = new Map(
+      validated.script.scenes.map((scene) => [scene.id, scene]),
+    );
+    const sourceSceneById = new Map(
+      scenario.replacement.sourceScript.scenes.map((scene) => [scene.id, scene]),
+    );
+    const changedSceneIds = replacementSceneIds.filter((id) => {
+      if (!previousSceneIds.has(id)) return true;
+      const sourceScene = sourceSceneById.get(id);
+      const replacementScene = replacementSceneById.get(id);
+      return sourceScene !== undefined &&
+        replacementScene !== undefined &&
+        briefingSceneFingerprint(sourceScene) !==
+          briefingSceneFingerprint(replacementScene);
+    });
+    const changed = new Set(changedSceneIds);
+    const preservedSceneIds = replacementSceneIds.filter(
+      (id) => previousSceneIds.has(id) && !changed.has(id),
+    );
+    const replacementIds = new Set(replacementSceneIds);
+    const removedSceneIds = [...previousSceneIds].filter(
+      (id) => !replacementIds.has(id),
+    );
     const replacement: ReplacementSessionIdentity = {
       validated: true,
       expectedPreviousScriptFingerprint: request.currentScriptFingerprint,

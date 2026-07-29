@@ -105,6 +105,20 @@ function variant(
       id: map.get(scene.id)!,
       dependsOnSceneIds: scene.dependsOnSceneIds.map((id) => map.get(id)!),
     }));
+  } else {
+    const currentScene = scenes[current.currentSceneIndex];
+    const existingBinding = currentScene?.contentBindings[0];
+    if (currentScene && existingBinding) {
+      currentScene.objective =
+        `${currentScene.objective} Include the fixture counterevidence boundary.`;
+      currentScene.contentBindings.push({
+        ...structuredClone(existingBinding),
+        id: `${existingBinding.id}:fixture-counterevidence`,
+        usage: "contradict",
+        required: false,
+        warnings: ["Deterministic fixture counterevidence boundary."],
+      });
+    }
   }
   script.scenes = scenes;
   script.id = `fixture-script-${mode}`;
@@ -135,6 +149,7 @@ export function scenarios(): FixtureReplanScenario[] {
       ...(replacement
         ? {
             replacement: {
+              sourceScript: sourceFixture().script,
               script: replacement.script,
               plan: replacement.input.plan,
               contract: replacement.input.contract,
