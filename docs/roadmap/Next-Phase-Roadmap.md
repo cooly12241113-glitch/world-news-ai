@@ -57,7 +57,21 @@ and browser failure fixtures remain absent.
 The existing MapLibre bundle-size warning is accepted debt; dark vector maps
 and a 3D globe remain future renderer Sprint candidates.
 
-## Sprint 15 — Production Follow-up and Replanning
+## Sprint 15 — Briefing Runtime Orchestration
+
+Sprint 15.0 runtime design and compatibility audit is **DESIGN COMPLETE**.
+Implementation has not started. The design composes the existing
+Contract, Context, generation, Script, and Session APIs behind a thin
+application service, then migrates only the fixture Web bootstrap source.
+
+- 15.1: run contracts and thin orchestrator — **READY FOR IMPLEMENTATION**
+- 15.2: outcome, receipt, cancellation, and stale boundaries
+- 15.3: deterministic fixture E2E and Web bootstrap
+
+See [Sprint 15.0 design](../sprints/Sprint-15.0-Briefing-Runtime-Orchestration-Design.md).
+
+The former production follow-up direction remains future work after the
+fixture runtime boundary is proven.
 
 Planning may begin after the accepted Interactive Briefing baseline. Any future
 implementation must receive separate approval for real retrieval, generation,

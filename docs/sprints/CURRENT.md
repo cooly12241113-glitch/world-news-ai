@@ -69,9 +69,21 @@ are complete.
 
 ## Next target
 
-- Prepare the Sprint 15 plan without starting implementation or changing the
-  accepted fixture-only boundary. See
-  [Milestone 02 — Interactive Briefing Baseline](../milestones/Milestone-02-Interactive-Briefing-Baseline.md).
+- Sprint 15.0 — Briefing Runtime Orchestration Design & Compatibility Audit.
+
+  **Status:** DESIGN COMPLETE
+
+  The application orchestration boundary, compatibility constraints, outcome,
+  receipt, cancellation, stale-run policy, fixture E2E route, Web bootstrap
+  migration, and Sprint 15.1–15.3 split are defined without implementation.
+  See [Sprint 15.0 design](Sprint-15.0-Briefing-Runtime-Orchestration-Design.md).
+
+- Sprint 15.1 — Briefing Run Contracts & Thin Orchestrator.
+
+  **Status:** READY FOR IMPLEMENTATION
+
+  Implementation requires explicit approval and must preserve the accepted
+  fixture-only boundary.
 
 ## Known non-blocking debt
 
