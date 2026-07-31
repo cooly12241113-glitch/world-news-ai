@@ -131,7 +131,19 @@ export class RuleBasedBriefingScriptCompiler {
   }
 
   private boundaryScene(kind: "opening" | "closing", order: number, input: BriefingScriptCompileInput): BriefingScene {
-    return this.baseScene(stableId("scene", `${input.plan.fingerprint}:${kind}`), kind, order, [], [], input, []);
+    return this.baseScene(
+      stableId("scene", `${input.plan.fingerprint}:${kind}`),
+      kind,
+      order,
+      [],
+      [],
+      input,
+      [],
+      [],
+      kind === "opening"
+        ? "Frame the policy question and evidence boundary."
+        : "Return to the evidence boundary and invite a follow-up.",
+    );
   }
 
   private scene(
@@ -140,8 +152,8 @@ export class RuleBasedBriefingScriptCompiler {
   ): BriefingScene {
     const steps = sections.flatMap(({ steps }) => steps);
     const bindings = sections.flatMap((section) =>
-      section.steps.flatMap((step, index) => step.evidenceBindings.map((binding) =>
-        this.binding(section, step, binding, index))));
+      section.steps.flatMap((step) => step.evidenceBindings.map((binding, bindingIndex) =>
+        this.binding(section, step, binding, bindingIndex, input))));
     const visuals = sections.flatMap(({ visualIntents }) => visualIntents)
       .map((visual) => this.visual(visual, mode, bindings));
     const primary = sections[0]!;
@@ -149,9 +161,7 @@ export class RuleBasedBriefingScriptCompiler {
       stableId("scene", `${input.plan.fingerprint}:${sections.map(({ id }) => id).join(":")}`),
       sceneKind(primary.kind, input.plan.answerStrategy), order,
       sections.map(({ id }) => id), steps.map(({ id }) => id), input, bindings, visuals,
-      sections.length === 1
-        ? primary.objective
-        : `Represent the ${sections.map(({ kind }) => kind).join(" and ")} requirements.`,
+      primary.objective,
       steps,
     );
   }
@@ -232,7 +242,10 @@ export class RuleBasedBriefingScriptCompiler {
   private binding(
     section: ExplanationPlanSection, step: ExplanationStep,
     binding: ExplanationStep["evidenceBindings"][number], index: number,
+    input: BriefingScriptCompileInput,
   ): SceneContentBinding {
+    const contextItem = input.contextPackage.selectedItems.find(({ id }) =>
+      id === binding.contextItemId);
     return {
       id: stableId("binding", `${step.id}:${index}`),
       planSectionId: section.id, planStepId: step.id,
@@ -240,7 +253,7 @@ export class RuleBasedBriefingScriptCompiler {
       provenanceRecordIds: binding.provenanceRecordIds,
       sourceDocumentIds: binding.sourceDocumentIds, claimIds: binding.claimIds,
       evidenceLinkIds: binding.evidenceLinkIds, dataPointIds: binding.dataPointIds,
-      entityIds: binding.entityIds, locationIds: step.locationIds,
+      entityIds: binding.entityIds, locationIds: contextItem?.locationIds ?? [],
       usage: binding.usage === "supports" ? "support"
         : binding.usage === "contradicts" ? "contradict"
           : binding.usage === "quantifies" ? "quantify"
@@ -320,9 +333,9 @@ function cameraIntent(visual: ExplanationVisualIntent, disabled: boolean): Camer
   };
 }
 function sceneKind(kind: ExplanationPlanSection["kind"], strategy: string): SceneKind {
-  if (kind === "direct-answer") return "direct-answer";
-  if (kind === "current-situation") return "current-situation";
-  if (kind === "necessary-background") return "necessary-background";
+  if (kind === "direct-answer") return strategy === "trace-impact" ? "global-overview" : "direct-answer";
+  if (kind === "current-situation") return strategy === "trace-impact" ? "global-overview" : "current-situation";
+  if (kind === "necessary-background") return strategy === "trace-impact" ? "regional-focus" : "necessary-background";
   if (kind === "explanation-path") return strategy === "trace-impact" ? "impact-path" : "causal-step";
   if (kind === "supporting-evidence") return "supporting-evidence";
   if (kind === "contradicting-evidence") return "contradicting-evidence";

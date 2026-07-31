@@ -7,7 +7,7 @@ import { App } from "./App";
 describe("App manual briefing flow", () => {
   it("starts from the full Composer and keeps Opening until explicit navigation", async () => {
     render(<App />);
-    const start = screen.getByRole("button", { name: "Start demo briefing" });
+    const start = await screen.findByRole("button", { name: "Start demo briefing" });
     expect(screen.getByPlaceholderText(/Ask about/)).not.toBeNull();
     fireEvent.click(start);
     expect(screen.getByRole("button", { name: "Ask a question" })).not.toBeNull();

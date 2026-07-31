@@ -67,7 +67,9 @@ are complete.
 - [Follow-up and replanning contract](../architecture/Follow-up-and-Replanning-Contract.md)
 - [Implementation matrix](../architecture/Sprint-14-Implementation-Matrix.md)
 
-## Next target
+## Sprint 15 final delivery
+
+**Status:** IMPLEMENTED / INTEGRATION VERIFIED / BROWSER ACCEPTED / FINAL COMPLETE
 
 - Sprint 15.0 — Briefing Runtime Orchestration Design & Compatibility Audit.
 
@@ -95,15 +97,29 @@ are complete.
 
   Runtime ID and clock ports, strict result/receipt contracts, reached-lineage
   receipts, cooperative cancellation checkpoints, late-result rejection, and
-  stateless acceptance identity are implemented. Sprint 15 remains in progress;
-  Web bootstrap integration remains deferred to Sprint 15.3. See
+  stateless acceptance identity are implemented and retained by the completed
+  Web bootstrap integration. See
   [Sprint 15.2 delivery](Sprint-15.2-Runtime-Receipt-Cancellation-Identity.md).
 
 - Sprint 15.3 — Deterministic Local Runtime & Web Bootstrap Integration.
 
-  **Status:** READY FOR IMPLEMENTATION
+  **Status:** IMPLEMENTED / BROWSER ACCEPTED / COMPLETE
 
-  Sprint 15 remains in progress and is not final complete.
+  The Web bootstrap executes the deterministic local Contract-to-Session
+  pipeline with cancellation, latest-run acceptance, and a single authoritative
+  Session owner. See
+  [Sprint 15.3 delivery](Sprint-15.3-Local-Runtime-Web-Bootstrap.md).
+
+- Sprint 15.3A — Runtime Fixture Compatibility Repair.
+
+  **Status:** IMPLEMENTED / BROWSER RE-ACCEPTED / COMPLETE
+
+  The Sprint 15.3 browser regressions have been repaired without reverting the
+  runtime-first bootstrap. The deterministic fixture retains the accepted
+  seven-scene semantics and geographic intent through the complete pipeline.
+  Follow-up compatibility and stable citation occurrence identity are restored.
+  Sprint 15 is integration verified, browser accepted, and final complete. See
+  [Sprint 15.3A repair](Sprint-15.3A-Runtime-Fixture-Compatibility-Repair.md).
 
 ## Known non-blocking debt
 

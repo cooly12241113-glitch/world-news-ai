@@ -1,4 +1,5 @@
 export * from "./adapters/deterministic-fake-adapter";
+export * from "./adapters/deterministic-plan-proposal";
 export * from "./adapters/openai-responses-adapter";
 export * from "./audit";
 export * from "./coordinator";

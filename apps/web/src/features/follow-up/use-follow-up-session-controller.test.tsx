@@ -4,6 +4,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { withBriefingSessionFingerprint } from "@world-news-ai/session";
+import type { BriefingSession } from "@world-news-ai/session";
+import type { ValidatedBriefingScript } from "@world-news-ai/script-web";
 import "../../tests/test-setup";
 import { BottomComposer } from "../../components/BottomComposer";
 import { buildDemoScript } from "../../fixtures/build-demo-script";
@@ -15,6 +17,7 @@ import {
   applyClarificationOption,
   useFollowUpSessionController,
 } from "./use-follow-up-session-controller";
+import { createLocalBriefingRuntime } from "../runtime";
 
 function deterministicRuntime(): FollowUpRuntimeContext {
   let id = 0;
@@ -27,8 +30,14 @@ function deterministicRuntime(): FollowUpRuntimeContext {
 const runtimeFixture = deterministicRuntime();
 const scriptFixture = buildDemoScript();
 
-function Harness({ runtime = runtimeFixture }: { runtime?: FollowUpRuntimeContext }) {
-  const controller = useFollowUpSessionController(scriptFixture, runtime);
+function Harness({
+  runtime = runtimeFixture,
+  initial = scriptFixture,
+}: {
+  runtime?: FollowUpRuntimeContext;
+  initial?: ValidatedBriefingScript | { script: ValidatedBriefingScript; session: BriefingSession };
+}) {
+  const controller = useFollowUpSessionController(initial, runtime);
   useEffect(() => {
     if (controller.focusRequest?.target === "composer") {
       document.getElementById("briefing-question")?.focus();
@@ -39,6 +48,9 @@ function Harness({ runtime = runtimeFixture }: { runtime?: FollowUpRuntimeContex
   return <div>
     <button onClick={controller.openComposer}>Open</button>
     <button onClick={controller.startBriefing}>Start session</button>
+    <button onClick={() => controller.navigateToScene(
+      controller.script.scenes[3]!.id, 3,
+    )}>Jump to impact</button>
     <button onClick={() => controller.recordManualMapInteraction({
       center: { longitude: 127.8, latitude: 36.3 },
       zoom: 4, bearing: 0, pitch: 0,
@@ -73,6 +85,34 @@ async function submit(text: string) {
 }
 
 describe("follow-up session controller", () => {
+  it("keeps runtime-generated Script compatible across revision, clarification, keep, and rebuild", async () => {
+    const bootstrap = await createLocalBriefingRuntime({
+      nextRunId: () => "run:follow-up-compatibility",
+      now: () => "2026-07-31T00:00:00.000Z",
+    }).start().result;
+    if (bootstrap.outcome.kind !== "completed") throw new Error("Expected completed runtime fixture.");
+    render(<Harness runtime={deterministicRuntime()} initial={{
+      script: bootstrap.outcome.script,
+      session: bootstrap.outcome.session,
+    }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Start session" }));
+    fireEvent.click(screen.getByRole("button", { name: "Jump to impact" }));
+    await submit("현재 장면의 반대 근거를 보여줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("replacement-applied");
+    expect(screen.getByText("Changed scenes").nextSibling?.textContent).toContain("1");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    await submit("한국 경제 영향을 추가해줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("clarification-required");
+    const scriptAfterRevision = screen.getByTestId("script").textContent;
+    const sceneAfterRevision = screen.getByTestId("scene").textContent;
+    fireEvent.click(screen.getByRole("button", { name: "keep current briefing" }));
+    expect(screen.getByTestId("script").textContent).toBe(scriptAfterRevision);
+    expect(screen.getByTestId("scene").textContent).toBe(sceneAfterRevision);
+    await submit("처음부터 초보자 수준으로 다시 설명해줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("replacement-applied");
+    expect(screen.getByText("Changed scenes").nextSibling?.textContent).toContain("7");
+    expect(screen.getByTestId("scene").textContent).toBe("demo-rebuild:0");
+  });
   it("answers from current context without changing Script or scene", async () => {
     render(<Harness />);
     const script = screen.getByTestId("script").textContent;

@@ -10,6 +10,7 @@ import {
   type SceneVisualDirective,
   type ValidatedBriefingScript,
 } from "@world-news-ai/script-web";
+import { canonicalMapImpactScenes } from "./canonical-map-impact";
 
 const CREATED_AT = "2026-07-25T00:00:00.000Z";
 const CONTEXT_ID = "context:semiconductor-policy";
@@ -168,28 +169,19 @@ function scene(
   };
 }
 
-const KINDS: SceneKind[] = [
-  "opening", "global-overview", "regional-focus", "impact-path",
-  "supporting-evidence", "uncertainty", "closing",
-];
+const KINDS: SceneKind[] = canonicalMapImpactScenes.map(({ kind }) => kind);
 
 export function buildDemoScript(mode: PresentationMode = "auto"): ValidatedBriefingScript {
   const preference = presentationPreference(mode);
   const staticMode = mode === "static" || mode === "reduced-motion";
-  const scenes = [
-    scene(0, "opening", "Frame the policy question and evidence boundary."),
-    scene(1, "global-overview", "Establish the global technology-policy context.",
-      visual("visual:world", "map", ["world"])),
-    scene(2, "regional-focus", "Focus on the United States and East Asia.",
-      visual("visual:region", "map", ["united-states", "east-asia"])),
-    scene(3, "impact-path", "Trace the evidence-bound semiconductor supply path toward South Korea.",
-      visual("visual:flow", "map-flow", ["united-states", "taiwan", "south-korea"])),
-    scene(4, "supporting-evidence", "Compare the fixture exposure indicator and primary policy source.",
-      visual("visual:chart", "chart")),
-    scene(5, "uncertainty", "Separate assumptions, limits, and verification signals.",
-      visual("visual:uncertainty", "evidence-board")),
-    scene(6, "closing", "Return to the evidence boundary and invite a follow-up."),
-  ];
+  const scenes = canonicalMapImpactScenes.map((semantic, index) => scene(
+    index,
+    semantic.kind,
+    semantic.objective,
+    semantic.mode
+      ? visual(`visual:${semantic.kind}`, semantic.mode, [...semantic.locationIds])
+      : undefined,
+  ));
   if (staticMode) for (const item of scenes) {
     item.visualDirectives = item.visualDirectives.map((directive) => ({
       ...directive,

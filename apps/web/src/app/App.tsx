@@ -13,16 +13,38 @@ import { useReducedMotion } from "../hooks/useReducedMotion";
 import { demoCatalog } from "./demo-catalog";
 import { FollowUpStatus, useFollowUpSessionController } from "../features/follow-up";
 import type { MapCameraState } from "../map/map-adapter";
+import { useLocalBriefingBootstrap } from "../features/runtime";
+import type { BriefingSession } from "@world-news-ai/session";
+import type { ValidatedBriefingScript } from "@world-news-ai/script-web";
 
 export function App() {
   const [demoId, setDemoId] = useState<(typeof demoCatalog)[number]["id"]>("map-impact");
-  const demo = demoCatalog.find(({ id }) => id === demoId) ?? demoCatalog[0];
-  const followUp = useFollowUpSessionController(demo.script);
+  const bootstrap = useLocalBriefingBootstrap(demoId);
+  if (bootstrap.status === "loading") {
+    return <main className="app-shell"><p role="status" aria-live="polite">Preparing fixture briefing…</p></main>;
+  }
+  if (bootstrap.status === "terminal-unavailable") {
+    return <main className="app-shell"><p role="alert">{bootstrap.message}</p></main>;
+  }
+  return <ReadyBriefingApp demoId={demoId} onDemoChange={setDemoId}
+    script={bootstrap.script} session={bootstrap.session} />;
+}
+
+interface ReadyBriefingAppProps {
+  demoId: (typeof demoCatalog)[number]["id"];
+  onDemoChange(value: (typeof demoCatalog)[number]["id"]): void;
+  script: ValidatedBriefingScript;
+  session: BriefingSession;
+}
+
+function ReadyBriefingApp({ demoId, onDemoChange, script, session }: ReadyBriefingAppProps) {
+  const initial = useMemo(() => ({ script, session }), [script, session]);
+  const followUp = useFollowUpSessionController(initial);
   const briefing = followUp.presentation;
   const [player, dispatch] = useReducer(playerReducer, initialPlayerState);
   const [panelOpen, setPanelOpen] = useState(true);
   const systemReducedMotion = useReducedMotion();
-  const reducedMotion = systemReducedMotion || demo.script.presentationPreference.mode === "reduced-motion";
+  const reducedMotion = systemReducedMotion || script.presentationPreference.mode === "reduced-motion";
 
   useEffect(() => {
     dispatch({
@@ -120,7 +142,7 @@ export function App() {
           <span className="brand-mark">WN</span><span>World News AI<small>Evidence briefing prototype</small></span>
         </a>
         <label className="demo-selector">Demo
-          <select value={demoId} onChange={(event) => setDemoId(event.target.value as typeof demoId)}>
+          <select value={demoId} onChange={(event) => onDemoChange(event.target.value as typeof demoId)}>
             {demoCatalog.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}
           </select>
         </label>

@@ -32,6 +32,7 @@ import type {
 import { createFollowUpViewModel } from "./follow-up-view-model";
 
 const MAX_DRAFT_LENGTH = 800;
+const unique = (values: string[]) => [...new Set(values)];
 const CLARIFICATION_DRAFTS: Partial<Record<ClarificationOptionId, string>> = {
   "replace-remaining-scenes": "여기서부터 남은 장면을 다시 구성해줘",
   "rebuild-entire-briefing": "처음부터 전체 브리핑을 다시 구성해줘",
@@ -46,7 +47,6 @@ export interface ClarificationOptionApplication {
 
 function evidenceAllowlist(script: ValidatedBriefingScript): EvidenceAllowlist {
   const bindings = script.scenes.flatMap(({ contentBindings }) => contentBindings);
-  const unique = (values: string[]) => [...new Set(values)];
   return {
     contextItemIds: unique(bindings.flatMap((item) => item.contextItemIds)),
     excerptIds: unique(bindings.flatMap((item) => item.excerptIds)),
@@ -104,18 +104,24 @@ export function applyClarificationOption(
 }
 
 export function useFollowUpSessionController(
-  initialScript: ValidatedBriefingScript,
+  initialInput: ValidatedBriefingScript | {
+    script: ValidatedBriefingScript;
+    session: BriefingSession;
+  },
   runtime: FollowUpRuntimeContext = browserFollowUpRuntimeContext,
 ) {
   const initial = useMemo(() => {
+    const initialScript = "script" in initialInput ? initialInput.script : initialInput;
     const presentation = adaptBriefingScript(initialScript);
     if (!presentation.success) throw new Error(presentation.error.message);
     return {
-      session: createDemoBriefingSession(initialScript, runtime.now()),
+      session: "session" in initialInput
+        ? initialInput.session
+        : createDemoBriefingSession(initialScript, runtime.now()),
       script: initialScript,
       presentation: presentation.value,
     };
-  }, [initialScript, runtime]);
+  }, [initialInput, runtime]);
   const [session, setSession] = useState(initial.session);
   const [script, setScript] = useState(initial.script);
   const [presentation, setPresentation] = useState(initial.presentation);
@@ -217,8 +223,10 @@ export function useFollowUpSessionController(
     try {
       const sceneIds = script.scenes.map(({ id }) => id);
       const allowlist = evidenceAllowlist(script);
-      const visibleEvidenceIds = script.scenes[executionSession.sceneCursor.sceneIndex]?.contentBindings
-        .flatMap((binding) => binding.contextItemIds) ?? [];
+      const visibleEvidenceIds = unique(
+        script.scenes[executionSession.sceneCursor.sceneIndex]?.contentBindings
+          .flatMap((binding) => binding.contextItemIds) ?? [],
+      );
       const request: FollowUpRequest = {
         followUpId, sessionId: executionSession.sessionId,
         parentQuestionId: executionSession.currentQuestionId, text: normalized, locale: "en",
@@ -328,12 +336,11 @@ export function useFollowUpSessionController(
     setOutcome(undefined); setViewModel(undefined); setInitializationError(undefined);
   }, []);
   const resetSession = useCallback(() => {
-    setSession(createDemoBriefingSession(initialScript, runtime.now()));
-    setScript(initialScript);
-    const adapted = adaptBriefingScript(initialScript);
-    if (adapted.success) setPresentation(adapted.value);
+    setSession(initial.session);
+    setScript(initial.script);
+    setPresentation(initial.presentation);
     setOutcome(undefined); setViewModel(undefined); setDraft("");
-  }, [initialScript, runtime]);
+  }, [initial]);
   const endSession = useCallback(() => {
     try { setSession((current) => transition(current, { type: "END_BRIEFING" }, runtime)); }
     catch { setInitializationError("The demo session could not be ended."); }

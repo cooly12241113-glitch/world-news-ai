@@ -11,7 +11,13 @@
       "@world-news-ai/follow-up": ["../../src/follow-up/index.ts"],
       "@world-news-ai/replan": ["../../src/replan/web-contracts.ts"],
       "@world-news-ai/session": ["../../src/session/index.ts"],
-      "@world-news-ai/application-follow-up": ["../../src/application/follow-up/index.ts"]
+      "@world-news-ai/application-follow-up": ["../../src/application/follow-up/index.ts"],
+      "@world-news-ai/application-briefing-run": ["../../src/application/briefing-run/index.ts"],
+      "@world-news-ai/briefing": ["../../src/briefing/index.ts"],
+      "@world-news-ai/context": ["../../src/context/index.ts"],
+      "@world-news-ai/explanation": ["../../src/explanation/index.ts"],
+      "@world-news-ai/generation": ["../../src/generation/index.ts"],
+      "@world-news-ai/script": ["../../src/script/index.ts"]
     },
     "noEmit": true
   },

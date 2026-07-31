@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Completed Sprint 15 runtime orchestration from `CreateBriefingRequest` through
+  Contract, Context, structured generation, ExplanationPlan, Script, Session,
+  and the existing Web presentation and follow-up UI.
+- Added injected execution identity and clock, privacy-minimized receipts,
+  cooperative cancellation, late-result rejection, stale-run acceptance, and
+  atomic Script/Session bootstrap application.
+- Replaced the Web prebuilt-Script bootstrap with a deterministic local runtime
+  while retaining one authoritative Session owner and the Sprint 14 follow-up
+  flow.
+- Repaired canonical seven-scene semantics, renderer-neutral map-flow intent,
+  runtime follow-up evidence compatibility, and stable citation occurrence IDs.
+- Browser-accepted Opening, Global Overview, Impact Path, route/markers,
+  current-context, revision, clarification, keep-current, full rebuild,
+  drag/zoom, camera restoration, and replay with zero React console errors.
+- Added no live OpenAI/search/backend/telemetry integration, dependency,
+  database migration, tag, or Sprint 16 implementation. MapLibre network and
+  the existing bundle-size warning remain accepted behavior/debt.
 - Audited the Sprint 10–14 Interactive Briefing pipeline across identity,
   provenance, epistemic policy, Session, replan, atomic Web application, and
   renderer boundaries.
