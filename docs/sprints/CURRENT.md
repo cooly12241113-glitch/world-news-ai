@@ -91,10 +91,19 @@ are complete.
 
 - Sprint 15.2 — Runtime Receipt, Cancellation & Execution Identity.
 
+  **Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+  Runtime ID and clock ports, strict result/receipt contracts, reached-lineage
+  receipts, cooperative cancellation checkpoints, late-result rejection, and
+  stateless acceptance identity are implemented. Sprint 15 remains in progress;
+  Web bootstrap integration remains deferred to Sprint 15.3. See
+  [Sprint 15.2 delivery](Sprint-15.2-Runtime-Receipt-Cancellation-Identity.md).
+
+- Sprint 15.3 — Deterministic Local Runtime & Web Bootstrap Integration.
+
   **Status:** READY FOR IMPLEMENTATION
 
-  Sprint 15 remains in progress. Web bootstrap integration remains deferred to
-  Sprint 15.3.
+  Sprint 15 remains in progress and is not final complete.
 
 ## Known non-blocking debt
 

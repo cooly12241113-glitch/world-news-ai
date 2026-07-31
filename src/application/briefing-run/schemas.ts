@@ -5,6 +5,8 @@ import { BriefingSessionSchema } from "../../session";
 import {
   BRIEFING_RUN_STAGES,
   type BriefingRunOutcome,
+  type BriefingRunReceipt,
+  type BriefingRunResult,
   type BriefingRunSemanticLineage,
   type CreateBriefingRequest,
 } from "./types";
@@ -19,6 +21,8 @@ export const CreateBriefingRequestSchema: z.ZodType<CreateBriefingRequest> =
   });
 
 export const BriefingRunStageSchema = z.enum(BRIEFING_RUN_STAGES);
+
+export const RuntimeRunIdSchema = z.string().trim().min(1);
 
 export const BriefingRunSemanticLineageSchema:
 z.ZodType<BriefingRunSemanticLineage> = z.strictObject({
@@ -70,3 +74,71 @@ export const BriefingRunOutcomeSchema: z.ZodType<BriefingRunOutcome> =
     }),
   ]);
 
+export const BriefingRunReceiptSchema: z.ZodType<BriefingRunReceipt> =
+  z.strictObject({
+    runId: RuntimeRunIdSchema,
+    startedAt: z.iso.datetime(),
+    completedAt: z.iso.datetime(),
+    finalStage: BriefingRunStageSchema,
+    outcomeKind: z.enum([
+      "completed",
+      "clarification-required",
+      "insufficient-evidence",
+      "generation-unavailable",
+      "policy-rejected",
+      "cancelled",
+      "failed",
+    ]),
+    contractFingerprint: Fingerprint.optional(),
+    contextFingerprint: Fingerprint.optional(),
+    explanationPlanFingerprint: Fingerprint.optional(),
+    scriptFingerprint: Fingerprint.optional(),
+    sessionFingerprint: Fingerprint.optional(),
+    evidenceCount: z.number().int().nonnegative().optional(),
+    sceneCount: z.number().int().nonnegative().optional(),
+    failureCategory: z.enum([
+      "invalid-request",
+      "contract-invalid",
+      "context-unavailable",
+      "generation-unavailable",
+      "invalid-proposal",
+      "script-invalid",
+      "session-invalid",
+      "invariant-violation",
+      "unexpected",
+    ]).optional(),
+  }).superRefine((receipt, context) => {
+    if (receipt.completedAt < receipt.startedAt) {
+      context.addIssue({ code: "custom", message: "Receipt completion precedes start." });
+    }
+    if (receipt.outcomeKind === "completed" && (
+      receipt.finalStage !== "completed" ||
+      !receipt.contractFingerprint ||
+      !receipt.contextFingerprint ||
+      !receipt.explanationPlanFingerprint ||
+      !receipt.scriptFingerprint ||
+      !receipt.sessionFingerprint
+    )) {
+      context.addIssue({ code: "custom", message: "Completed receipt requires full lineage." });
+    }
+    if (receipt.outcomeKind !== "completed" && receipt.finalStage === "completed") {
+      context.addIssue({ code: "custom", message: "Only completed outcomes may finish at completed." });
+    }
+  });
+
+export const BriefingRunResultSchema: z.ZodType<BriefingRunResult> =
+  z.strictObject({
+    runId: RuntimeRunIdSchema,
+    outcome: BriefingRunOutcomeSchema,
+    receipt: BriefingRunReceiptSchema,
+  }).superRefine((result, context) => {
+    if (result.runId !== result.receipt.runId) {
+      context.addIssue({ code: "custom", message: "Result and receipt run IDs differ." });
+    }
+    if (
+      result.outcome.kind !== result.receipt.outcomeKind ||
+      result.outcome.finalStage !== result.receipt.finalStage
+    ) {
+      context.addIssue({ code: "custom", message: "Outcome and receipt terminal state differ." });
+    }
+  });

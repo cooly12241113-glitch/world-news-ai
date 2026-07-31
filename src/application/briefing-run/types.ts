@@ -20,6 +20,22 @@ export interface CreateBriefingRequest {
   presentationPreference: BriefingPresentationPreference;
 }
 
+export interface RuntimeIdGenerator {
+  nextRunId(): string;
+}
+
+export interface RuntimeClock {
+  now(): string;
+}
+
+export interface BriefingRunCancellation {
+  isCancellationRequested(): boolean;
+}
+
+export interface BriefingRunExecutionContext {
+  cancellation?: BriefingRunCancellation;
+}
+
 export const BRIEFING_RUN_STAGES = [
   "received",
   "contract-building",
@@ -50,6 +66,17 @@ export type BriefingRunFailureCategory =
   | "lineage-mismatch"
   | "unexpected";
 
+export type BriefingRunReceiptFailureCategory =
+  | "invalid-request"
+  | "contract-invalid"
+  | "context-unavailable"
+  | "generation-unavailable"
+  | "invalid-proposal"
+  | "script-invalid"
+  | "session-invalid"
+  | "invariant-violation"
+  | "unexpected";
+
 interface NonTechnicalOutcome {
   finalStage: BriefingRunStage;
   technical: false;
@@ -78,6 +105,28 @@ export type BriefingRunOutcome =
       reason?: string;
     };
 
+export interface BriefingRunReceipt {
+  runId: string;
+  startedAt: string;
+  completedAt: string;
+  finalStage: BriefingRunStage;
+  outcomeKind: BriefingRunOutcome["kind"];
+  contractFingerprint?: string;
+  contextFingerprint?: string;
+  explanationPlanFingerprint?: string;
+  scriptFingerprint?: string;
+  sessionFingerprint?: string;
+  evidenceCount?: number;
+  sceneCount?: number;
+  failureCategory?: BriefingRunReceiptFailureCategory;
+}
+
+export interface BriefingRunResult {
+  runId: string;
+  outcome: BriefingRunOutcome;
+  receipt: BriefingRunReceipt;
+}
+
 export interface BriefingSessionInitializationInput {
   question: BriefingQuestion;
   contract: BriefingContract;
@@ -87,6 +136,8 @@ export interface BriefingSessionInitializationInput {
 }
 
 export interface BriefingRunServiceDependencies {
+  runtimeIdGenerator: RuntimeIdGenerator;
+  runtimeClock: RuntimeClock;
   contractCompiler: {
     compile(input: unknown): import("../../briefing").CompileBriefingResult;
   };
@@ -110,4 +161,3 @@ export interface BriefingRunServiceDependencies {
   ): ExplanationPlanGenerationInput;
   initializeSession(input: BriefingSessionInitializationInput): BriefingSession;
 }
-

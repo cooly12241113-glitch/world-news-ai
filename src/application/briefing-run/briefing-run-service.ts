@@ -6,11 +6,17 @@ import {
 } from "../../script";
 import {
   BriefingRunOutcomeSchema,
+  BriefingRunResultSchema,
   CreateBriefingRequestSchema,
+  RuntimeRunIdSchema,
 } from "./schemas";
 import type {
+  BriefingRunExecutionContext,
   BriefingRunFailureCategory,
   BriefingRunOutcome,
+  BriefingRunReceipt,
+  BriefingRunReceiptFailureCategory,
+  BriefingRunResult,
   BriefingRunServiceDependencies,
   BriefingRunStage,
   CreateBriefingRequest,
@@ -27,37 +33,82 @@ const GENERATION_UNAVAILABLE_CODES = new Set([
   "PROVIDER_TRANSIENT_ERROR",
 ]);
 
+interface ExecutionState {
+  stage: BriefingRunStage;
+  contractFingerprint?: string;
+  contextFingerprint?: string;
+  explanationPlanFingerprint?: string;
+  scriptFingerprint?: string;
+  sessionFingerprint?: string;
+  evidenceCount?: number;
+  sceneCount?: number;
+}
+
 export class BriefingRunService {
   constructor(private readonly dependencies: BriefingRunServiceDependencies) {}
 
-  async execute(input: unknown): Promise<BriefingRunOutcome> {
+  async execute(
+    input: unknown,
+    executionContext: BriefingRunExecutionContext = {},
+  ): Promise<BriefingRunResult> {
+    const runId = RuntimeRunIdSchema.parse(
+      this.dependencies.runtimeIdGenerator.nextRunId(),
+    );
+    const startedAt = this.dependencies.runtimeClock.now();
+    const state: ExecutionState = { stage: "received" };
     const request = CreateBriefingRequestSchema.safeParse(input);
     if (!request.success) {
-      return this.outcome({
+      return this.finish(runId, startedAt, state, this.outcome({
         kind: "failed",
         finalStage: "received",
         technical: true,
         category: "request-invalid",
         reason: "REQUEST_INVALID",
-      });
+      }));
     }
 
-    let activeStage: BriefingRunStage = "received";
+    if (this.cancelled(executionContext)) {
+      return this.finish(
+        runId,
+        startedAt,
+        state,
+        this.nonTechnical("cancelled", "received", "CANCELLATION_REQUESTED"),
+      );
+    }
+
     try {
-      return await this.executeValidated(request.data, (stage) => {
-        activeStage = stage;
-      });
+      const outcome = await this.executeValidated(
+        request.data,
+        executionContext,
+        state,
+      );
+      return this.finish(runId, startedAt, state, outcome);
     } catch {
-      return this.failure(activeStage, "unexpected", "UNEXPECTED_FAILURE");
+      return this.finish(
+        runId,
+        startedAt,
+        state,
+        this.failure(state.stage, "unexpected", "UNEXPECTED_FAILURE"),
+      );
     }
   }
 
   private async executeValidated(
     request: CreateBriefingRequest,
-    setStage: (stage: BriefingRunStage) => void,
+    executionContext: BriefingRunExecutionContext,
+    state: ExecutionState,
   ): Promise<BriefingRunOutcome> {
-    setStage("contract-building");
+    state.stage = "contract-building";
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const contractResult = this.dependencies.contractCompiler.compile(request.question);
+    if (contractResult.success) {
+      state.contractFingerprint = contractResult.contract.semanticFingerprint;
+    }
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     if (!contractResult.success) {
       return this.failure(
         "contract-building",
@@ -81,10 +132,20 @@ export class BriefingRunService {
     }
 
     const contract = contractResult.contract;
-    setStage("context-building");
+    state.stage = "context-building";
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const contextResult = this.dependencies.contextBuilder.build(
       this.dependencies.createContextRequest(request, contract),
     );
+    if (contextResult.success) {
+      state.contextFingerprint = contextResult.contextPackage.fingerprint;
+      state.evidenceCount = contextResult.contextPackage.selectedItems.length;
+    }
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     if (!contextResult.success) {
       return this.failure(
         "context-building",
@@ -104,10 +165,19 @@ export class BriefingRunService {
     }
 
     const contextPackage = contextResult.contextPackage;
-    setStage("plan-generating");
+    state.stage = "plan-generating";
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const generationResult = await this.dependencies.generationCoordinator.generate(
       this.dependencies.createGenerationInput(request, contract, contextPackage),
     );
+    if (generationResult.success && generationResult.outcome === "validated-plan") {
+      state.explanationPlanFingerprint = generationResult.plan.fingerprint;
+    }
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     if (!generationResult.success) {
       if (generationResult.error.code === "PROVIDER_ABORTED") {
         return this.nonTechnical("cancelled", "plan-generating", "PROVIDER_ABORTED");
@@ -162,13 +232,23 @@ export class BriefingRunService {
     }
 
     const plan = generationResult.plan;
-    setStage("script-compiling");
+    state.stage = "script-compiling";
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const scriptResult = this.dependencies.scriptCompiler.compile({
       plan,
       contract,
       contextPackage,
       preference: request.presentationPreference,
     });
+    if ("script" in scriptResult) {
+      state.scriptFingerprint = scriptResult.script.fingerprint;
+      state.sceneCount = scriptResult.script.scenes.length;
+    }
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     if (!scriptResult.success) {
       return this.failure(
         "script-compiling",
@@ -201,7 +281,10 @@ export class BriefingRunService {
       return this.failure("script-compiling", "lineage-mismatch", "SCRIPT_LINEAGE_MISMATCH");
     }
 
-    setStage("session-creating");
+    state.stage = "session-creating";
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const sessionCandidate = this.dependencies.initializeSession({
       question: request.question,
       contract,
@@ -209,6 +292,9 @@ export class BriefingRunService {
       plan,
       script,
     });
+    if (this.cancelled(executionContext)) {
+      return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+    }
     const parsedSession = BriefingSessionSchema.safeParse(sessionCandidate);
     if (
       !parsedSession.success ||
@@ -227,7 +313,8 @@ export class BriefingRunService {
       return this.failure("session-creating", "lineage-mismatch", "SESSION_LINEAGE_MISMATCH");
     }
 
-    setStage("completed");
+    state.sessionFingerprint = session.semanticFingerprint;
+    state.stage = "completed";
     return this.outcome({
       kind: "completed",
       finalStage: "completed",
@@ -279,6 +366,67 @@ export class BriefingRunService {
 
   private outcome(value: BriefingRunOutcome): BriefingRunOutcome {
     return BriefingRunOutcomeSchema.parse(value);
+  }
+
+  private cancelled(context: BriefingRunExecutionContext): boolean {
+    return context.cancellation?.isCancellationRequested() === true;
+  }
+
+  private finish(
+    runId: string,
+    startedAt: string,
+    state: ExecutionState,
+    outcome: BriefingRunOutcome,
+  ): BriefingRunResult {
+    const receipt: BriefingRunReceipt = {
+      runId,
+      startedAt,
+      completedAt: this.dependencies.runtimeClock.now(),
+      finalStage: outcome.finalStage,
+      outcomeKind: outcome.kind,
+      ...(state.contractFingerprint
+        ? { contractFingerprint: state.contractFingerprint }
+        : {}),
+      ...(state.contextFingerprint
+        ? { contextFingerprint: state.contextFingerprint }
+        : {}),
+      ...(state.explanationPlanFingerprint
+        ? { explanationPlanFingerprint: state.explanationPlanFingerprint }
+        : {}),
+      ...(state.scriptFingerprint
+        ? { scriptFingerprint: state.scriptFingerprint }
+        : {}),
+      ...(state.sessionFingerprint
+        ? { sessionFingerprint: state.sessionFingerprint }
+        : {}),
+      ...(state.evidenceCount !== undefined
+        ? { evidenceCount: state.evidenceCount }
+        : {}),
+      ...(state.sceneCount !== undefined ? { sceneCount: state.sceneCount } : {}),
+      ...(this.receiptFailureCategory(outcome)
+        ? { failureCategory: this.receiptFailureCategory(outcome) }
+        : {}),
+    };
+    return BriefingRunResultSchema.parse({ runId, outcome, receipt });
+  }
+
+  private receiptFailureCategory(
+    outcome: BriefingRunOutcome,
+  ): BriefingRunReceiptFailureCategory | undefined {
+    if (outcome.kind === "generation-unavailable") {
+      return "generation-unavailable";
+    }
+    if (outcome.kind !== "failed") return undefined;
+    switch (outcome.category) {
+      case "request-invalid": return "invalid-request";
+      case "contract-invalid": return "contract-invalid";
+      case "context-failed": return "context-unavailable";
+      case "generation-failed": return "invalid-proposal";
+      case "script-failed": return "script-invalid";
+      case "session-invalid": return "session-invalid";
+      case "lineage-mismatch": return "invariant-violation";
+      case "unexpected": return "unexpected";
+    }
   }
 }
 
