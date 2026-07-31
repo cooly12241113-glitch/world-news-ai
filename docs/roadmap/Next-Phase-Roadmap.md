@@ -64,8 +64,8 @@ Implementation has not started. The design composes the existing
 Contract, Context, generation, Script, and Session APIs behind a thin
 application service, then migrates only the fixture Web bootstrap source.
 
-- 15.1: run contracts and thin orchestrator — **READY FOR IMPLEMENTATION**
-- 15.2: outcome, receipt, cancellation, and stale boundaries
+- 15.1: run contracts and thin orchestrator — **IMPLEMENTED / REVIEWED / COMPLETE**
+- 15.2: outcome, receipt, cancellation, and stale boundaries — **READY FOR IMPLEMENTATION**
 - 15.3: deterministic fixture E2E and Web bootstrap
 
 See [Sprint 15.0 design](../sprints/Sprint-15.0-Briefing-Runtime-Orchestration-Design.md).

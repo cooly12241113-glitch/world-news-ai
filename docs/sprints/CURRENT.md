@@ -80,10 +80,21 @@ are complete.
 
 - Sprint 15.1 — Briefing Run Contracts & Thin Orchestrator.
 
+  **Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+  Strict request, stage, outcome, and semantic-lineage contracts plus the thin
+  application orchestrator are implemented against the existing Contract,
+  Context, structured generation, Script, and Session APIs. Web bootstrap,
+  operational receipt, clock/ID framework, advanced cancellation, and stale
+  acceptance remain deferred. See
+  [Sprint 15.1 delivery](Sprint-15.1-Briefing-Run-Contracts-Orchestrator.md).
+
+- Sprint 15.2 — Runtime Receipt, Cancellation & Execution Identity.
+
   **Status:** READY FOR IMPLEMENTATION
 
-  Implementation requires explicit approval and must preserve the accepted
-  fixture-only boundary.
+  Sprint 15 remains in progress. Web bootstrap integration remains deferred to
+  Sprint 15.3.
 
 ## Known non-blocking debt
 
