@@ -4,6 +4,10 @@ import {
   type ProviderMetadata,
   type StructuredGenerationProvider,
 } from "../../../generation";
+import {
+  createPersonalImpactContext,
+  createUserExposure,
+} from "../../../personalization";
 import { BriefingRunService } from "../briefing-run-service";
 import {
   BriefingRunOutcomeSchema,
@@ -27,6 +31,60 @@ describe("BriefingRun contracts", () => {
       category: "request-invalid",
       stack: "private",
     }).success).toBe(false);
+  });
+
+  it("transports strict personal impact context only with an explicit request", () => {
+    const runtimeRequest = request("How could this affect my USD exposure?");
+    runtimeRequest.question.personalizationRequested = true;
+    runtimeRequest.personalImpactContext = createPersonalImpactContext({
+      contextVersion: "1",
+      consent: {
+        enabled: true,
+        purpose: "personalized-impact-analysis",
+      },
+      callerScope: {
+        lifetime: "request-run",
+        propagation: "explicit-only",
+      },
+      exposures: [
+        createUserExposure({ dimension: "currency", currencyCode: "USD" }),
+      ],
+    });
+
+    const parsed = CreateBriefingRequestSchema.parse(runtimeRequest);
+    expect(parsed.personalImpactContext?.exposures[0]?.dimension).toBe("currency");
+    expect(parsed.personalImpactContext?.semanticFingerprint).toHaveLength(64);
+  });
+
+  it("rejects enabled context when the question did not request personalization", () => {
+    const runtimeRequest = request();
+    runtimeRequest.personalImpactContext = createPersonalImpactContext({
+      contextVersion: "1",
+      consent: {
+        enabled: true,
+        purpose: "personalized-impact-analysis",
+      },
+      callerScope: {
+        lifetime: "request-run",
+        propagation: "explicit-only",
+      },
+      exposures: [],
+    });
+
+    expect(CreateBriefingRequestSchema.safeParse(runtimeRequest).success).toBe(false);
+  });
+
+  it("keeps legacy UserProvidedContext request compatibility", () => {
+    const legacyRequest = request("What is the impact on my industry?");
+    legacyRequest.question.personalizationRequested = true;
+    legacyRequest.question.userProvidedContext = {
+      industries: ["semiconductor"],
+    };
+
+    const parsed = CreateBriefingRequestSchema.parse(legacyRequest);
+    expect(parsed.question.userProvidedContext?.industries)
+      .toEqual(["semiconductor"]);
+    expect(parsed.personalImpactContext).toBeUndefined();
   });
 });
 

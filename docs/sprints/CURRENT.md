@@ -143,3 +143,16 @@ future renderer Sprint.
   packages, dependencies, and migrations remain unchanged. The open design
   questions are resolved and Sprint 16.1 is **READY FOR IMPLEMENTATION**. See
   [Sprint 16.0 design](Sprint-16.0-Personalized-Impact-Analysis-Design.md).
+
+## Sprint 16.1 implementation
+
+- Sprint 16.1 — Explicit Personal Context & Exposure Contracts.
+
+  **Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+  Request-scoped consent, closed purpose/caller scope, seven strict explicit
+  exposure variants, deterministic IDs and context fingerprints, validation,
+  sensitive-attribute rejection, and optional `CreateBriefingRequest` transport
+  are implemented. Legacy context remains compatible. Impact inference,
+  Plan/Script/Session/Web behavior, persistence, and live providers remain out
+  of scope. See [Sprint 16.1 delivery](Sprint-16.1-Explicit-Personal-Context-Exposure-Contracts.md).

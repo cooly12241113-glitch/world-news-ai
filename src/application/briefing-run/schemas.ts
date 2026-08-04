@@ -2,6 +2,7 @@ import { z } from "zod";
 import { BriefingQuestionSchema } from "../../briefing";
 import { BriefingPresentationPreferenceSchema, BriefingScriptSchema } from "../../script";
 import { BriefingSessionSchema } from "../../session";
+import { PersonalImpactContextSchema } from "../../personalization";
 import {
   BRIEFING_RUN_STAGES,
   type BriefingRunOutcome,
@@ -18,6 +19,18 @@ export const CreateBriefingRequestSchema: z.ZodType<CreateBriefingRequest> =
   z.strictObject({
     question: BriefingQuestionSchema,
     presentationPreference: BriefingPresentationPreferenceSchema,
+    personalImpactContext: PersonalImpactContextSchema.optional(),
+  }).superRefine((request, context) => {
+    if (
+      request.personalImpactContext?.consent.enabled === true &&
+      !request.question.personalizationRequested
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["question", "personalizationRequested"],
+        message: "Enabled personal impact context requires an explicit personalization request.",
+      });
+    }
   });
 
 export const BriefingRunStageSchema = z.enum(BRIEFING_RUN_STAGES);

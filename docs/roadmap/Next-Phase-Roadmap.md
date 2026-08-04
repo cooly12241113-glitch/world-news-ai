@@ -90,7 +90,9 @@ direct buy/sell recommendations or inferred sensitive attributes.
 
 The compatibility audit and implementation contract are defined in
 [Sprint 16.0](../sprints/Sprint-16.0-Personalized-Impact-Analysis-Design.md).
-Sprint 16.1 is approved and ready for implementation.
+Sprint 16.1 explicit context and exposure contracts are **IMPLEMENTED /
+REVIEWED / COMPLETE**. See
+[Sprint 16.1](../sprints/Sprint-16.1-Explicit-Personal-Context-Exposure-Contracts.md).
 
 ## Cross-cutting prerequisites
 

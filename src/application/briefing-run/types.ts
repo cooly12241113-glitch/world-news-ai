@@ -14,10 +14,12 @@ import type {
   ValidatedBriefingScript,
 } from "../../script";
 import type { BriefingSession } from "../../session";
+import type { PersonalImpactContext } from "../../personalization";
 
 export interface CreateBriefingRequest {
   question: BriefingQuestion;
   presentationPreference: BriefingPresentationPreference;
+  personalImpactContext?: PersonalImpactContext;
 }
 
 export interface RuntimeIdGenerator {
