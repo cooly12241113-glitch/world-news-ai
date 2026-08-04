@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BriefingQuestionSchema } from "../../briefing";
 import { BriefingPresentationPreferenceSchema, BriefingScriptSchema } from "../../script";
 import { BriefingSessionSchema } from "../../session";
-import { PersonalImpactContextSchema } from "../../personalization";
+import { PersonalImpactContextSchema } from "../../personalization/validation";
 import {
   BRIEFING_RUN_STAGES,
   type BriefingRunOutcome,

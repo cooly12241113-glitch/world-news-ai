@@ -156,3 +156,17 @@ future renderer Sprint.
   are implemented. Legacy context remains compatible. Impact inference,
   Plan/Script/Session/Web behavior, persistence, and live providers remain out
   of scope. See [Sprint 16.1 delivery](Sprint-16.1-Explicit-Personal-Context-Exposure-Contracts.md).
+
+## Sprint 16.2 implementation
+
+- Sprint 16.2 — Personalized Impact Channel & Scenario Domain.
+
+  **Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+  Dual evidence/exposure provenance, impact relations and directions,
+  assessments, structured conditions/scenarios, uncertainty and unknown-impact
+  posture, deterministic IDs/fingerprints, strict validation, a standalone
+  analyzer boundary, and a fictional deterministic fixture are implemented.
+  Runtime, Plan, Script, Session, receipt, follow-up, and Web integration remain
+  deferred to Sprint 16.3. See
+  [Sprint 16.2 delivery](Sprint-16.2-Personalized-Impact-Channel-Scenario-Domain.md).

@@ -94,6 +94,11 @@ Sprint 16.1 explicit context and exposure contracts are **IMPLEMENTED /
 REVIEWED / COMPLETE**. See
 [Sprint 16.1](../sprints/Sprint-16.1-Explicit-Personal-Context-Exposure-Contracts.md).
 
+Sprint 16.2 personalized impact channel and scenario domain is **IMPLEMENTED /
+REVIEWED / COMPLETE**. Runtime and presentation integration remain
+deferred. See
+[Sprint 16.2](../sprints/Sprint-16.2-Personalized-Impact-Channel-Scenario-Domain.md).
+
 ## Cross-cutting prerequisites
 
 Before unrestricted production ingestion: DNS-resolution SSRF controls,
