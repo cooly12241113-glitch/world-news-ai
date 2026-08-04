@@ -7,6 +7,8 @@ export function explanationPlanSemanticFingerprint(plan: ExplanationPlanDraft): 
   return createSemanticFingerprint({
     contractFingerprint: plan.contractFingerprint,
     contextPackageFingerprint: plan.contextPackageFingerprint,
+    personalContextFingerprint: plan.personalContextFingerprint,
+    personalizedImpactAnalysisFingerprint: plan.personalizedImpactAnalysisFingerprint,
     answerStrategy: plan.answerStrategy,
     answerObjective: plan.answerObjective,
     planVersion: plan.planVersion,
@@ -54,6 +56,13 @@ export function explanationPlanSemanticFingerprint(plan: ExplanationPlanDraft): 
               .sort((left, right) =>
                 left.contextItemId.localeCompare(right.contextItemId) ||
                 left.usage.localeCompare(right.usage)),
+            personalImpactBindings: step.personalImpactBindings ? {
+              analysisFingerprint: step.personalImpactBindings.analysisFingerprint,
+              exposureIds: sorted(step.personalImpactBindings.exposureIds),
+              impactChannelIds: sorted(step.personalImpactBindings.impactChannelIds),
+              impactAssessmentIds: sorted(step.personalImpactBindings.impactAssessmentIds),
+              scenarioIds: sorted(step.personalImpactBindings.scenarioIds),
+            } : undefined,
             dependencyKinds: sorted(step.dependencyStepIds.map((dependencyId) => {
               const dependency = plan.sections.flatMap(({ steps }) => steps)
                 .find(({ id }) => id === dependencyId);

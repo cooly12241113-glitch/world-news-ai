@@ -19,7 +19,11 @@ export class ExplanationPlanLlmRequestBuilder {
     if (["no-relevant-context", "insufficient-evidence"].includes(context.status)) {
       throw new Error("CONTEXT_NOT_READY");
     }
-    const allowed = this.allowedReferences(contract, context);
+    const allowed = this.allowedReferences(
+      contract,
+      context,
+      parsed.data.personalizedImpactPlanningContext,
+    );
     const template = createPromptTemplate(
       input.generationPolicy.promptTemplateId,
       input.generationPolicy.promptTemplateVersion,
@@ -58,6 +62,9 @@ export class ExplanationPlanLlmRequestBuilder {
       ],
       proposalSchemaVersion: input.generationPolicy.proposalSchemaVersion,
       promptTemplate: template, generationBudget: input.generationBudget,
+      ...(input.personalizedImpactPlanningContext
+        ? { personalizedImpactPlanningContext: input.personalizedImpactPlanningContext }
+        : {}),
     };
     const { requestId: _requestId, ...semantic } = withoutFingerprint;
     const request: ExplanationPlanLlmRequestPackage = {
@@ -74,6 +81,8 @@ export class ExplanationPlanLlmRequestBuilder {
   private allowedReferences(
     contract: ExplanationPlanGenerationInput["briefingContract"],
     context: ExplanationPlanGenerationInput["evidenceContextPackage"],
+    personalizedImpactPlanningContext:
+      ExplanationPlanGenerationInput["personalizedImpactPlanningContext"],
   ): AllowedReferenceCatalog {
     return canonicalReferences({
       contextItemIds: context.selectedItems.map(({ id }) => id),
@@ -88,6 +97,16 @@ export class ExplanationPlanLlmRequestBuilder {
       requiredSectionKinds: contract.sectionPolicy.orderedSections,
       allowedVisualModes: contract.visualPolicy.allowedModes,
       allowedEpistemicTypes: ["confirmed-fact", "attributed-claim", "interpretation", "inference", "forecast", "unknown"],
+      ...(contract.intentAnalysis.primaryIntent === "personalized-impact" &&
+          personalizedImpactPlanningContext ? {
+        personalImpact: {
+          analysisFingerprint: personalizedImpactPlanningContext.analysisFingerprint,
+          exposureIds: personalizedImpactPlanningContext.exposures.map(({ exposureId }) => exposureId),
+          impactChannelIds: personalizedImpactPlanningContext.channels.map(({ channelId }) => channelId),
+          impactAssessmentIds: personalizedImpactPlanningContext.assessments.map(({ assessmentId }) => assessmentId),
+          scenarioIds: personalizedImpactPlanningContext.scenarios.map(({ scenarioId }) => scenarioId),
+        },
+      } : {}),
     });
   }
 

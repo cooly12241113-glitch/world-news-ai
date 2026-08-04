@@ -99,6 +99,13 @@ REVIEWED / COMPLETE**. Runtime and presentation integration remain
 deferred. See
 [Sprint 16.2](../sprints/Sprint-16.2-Personalized-Impact-Channel-Scenario-Domain.md).
 
+Sprint 16.3 personalized impact runtime and briefing integration is
+**IMPLEMENTED / REVIEWED / COMPLETE**. It connects explicit
+personalized intent to the optional impact stage, safe generation projection,
+Plan/Script bindings, runtime lineage, and deterministic Contract-to-Session
+tests without adding Web UI. See
+[Sprint 16.3](../sprints/Sprint-16.3-Personalized-Impact-Runtime-Briefing-Integration.md).
+
 ## Cross-cutting prerequisites
 
 Before unrestricted production ingestion: DNS-resolution SSRF controls,

@@ -14,6 +14,7 @@ import type {
   ProviderStructuredResponse, StructuredGenerationBudget,
   StructuredGenerationResult,
 } from "./models";
+import { PersonalizedImpactPlanningContextSchema } from "../personalization";
 
 const S = z.string().trim().min(1);
 const SA = z.array(S);
@@ -62,12 +63,20 @@ export const ExplanationPlanGenerationInputSchema: z.ZodType<Omit<ExplanationPla
   providerSelection: z.strictObject({ providerId: S, modelId: S }),
   generationBudget: StructuredGenerationBudgetSchema,
   requestedAt: z.iso.datetime(), requestId: S,
+  personalizedImpactPlanningContext: PersonalizedImpactPlanningContextSchema.optional(),
 });
 export const AllowedReferenceCatalogSchema: z.ZodType<AllowedReferenceCatalog> = z.strictObject({
   contextItemIds: SA, excerptIds: SA, provenanceRecordIds: SA,
   sourceDocumentIds: SA, claimIds: SA, evidenceLinkIds: SA, dataPointIds: SA,
   entityIds: SA, locationIds: SA, requiredSectionKinds: SA,
   allowedVisualModes: z.array(VisualMode), allowedEpistemicTypes: z.array(Epistemic),
+  personalImpact: z.strictObject({
+    analysisFingerprint: S,
+    exposureIds: SA,
+    impactChannelIds: SA,
+    impactAssessmentIds: SA,
+    scenarioIds: SA,
+  }).optional(),
 });
 const UntrustedEvidenceSchema = z.strictObject({
   recordType: z.literal("UNTRUSTED_EVIDENCE"), instructionPolicy: z.literal("DATA_ONLY"),
@@ -94,6 +103,7 @@ export const ExplanationPlanLlmRequestPackageSchema: z.ZodType<ExplanationPlanLl
   permittedVisualModes: z.array(VisualMode), prohibitedBehaviors: SA,
   proposalSchemaVersion: S, promptTemplate: PromptTemplateDefinitionSchema,
   generationBudget: StructuredGenerationBudgetSchema, requestFingerprint: S,
+  personalizedImpactPlanningContext: PersonalizedImpactPlanningContextSchema.optional(),
 });
 
 export const ProposalEvidenceBindingSchema = ExplanationEvidenceBindingSchema.omit({ id: true }).extend({ localKey: S }).strict();

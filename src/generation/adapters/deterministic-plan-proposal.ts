@@ -48,6 +48,9 @@ export function proposalFromExplanationPlan(
       visualIntentKeys: step.visualIntentIds.map((id) => required(visualKeys, id)),
       confidenceRequirement: step.confidenceRequirement,
       uncertaintyRequirement: step.uncertaintyRequirement,
+      ...(step.personalImpactBindings
+        ? { personalImpactBindings: step.personalImpactBindings }
+        : {}),
       optional: step.optional,
       warnings: step.warnings,
     })),

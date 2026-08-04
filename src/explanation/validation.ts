@@ -32,6 +32,7 @@ const ErrorCode = z.enum([
   "UNSUPPORTED_FACT_PROMOTION", "FORECAST_ASSUMPTION_MISSING",
   "UNCERTAINTY_REQUIREMENT_MISSING", "PLAN_VALIDATION_FAILED",
   "PLAN_ASSEMBLY_FAILED",
+  "PERSONAL_IMPACT_REFERENCE_INVALID", "PERSONAL_IMPACT_LINEAGE_MISMATCH",
 ]);
 
 export const StepOutputRequirementSchema = z.strictObject({
@@ -78,6 +79,14 @@ export const ExplanationEvidenceBindingSchema = z.strictObject({
   confidence: Score, warnings: z.array(z.string()),
 });
 
+export const PersonalImpactBindingSchema = z.strictObject({
+  analysisFingerprint: Id,
+  exposureIds: Strings,
+  impactChannelIds: Strings,
+  impactAssessmentIds: Strings,
+  scenarioIds: Strings,
+});
+
 export const ExplanationVisualIntentSchema = z.strictObject({
   id: Id, mode: VisualMode, purpose: Text,
   requiredness: z.enum(["required", "preferred", "optional"]),
@@ -103,6 +112,7 @@ export const ExplanationStepSchema: z.ZodType<ExplanationStep> = z.strictObject(
   outputRequirement: StepOutputRequirementSchema,
   epistemicPolicy: StepEpistemicPolicySchema,
   evidenceBindings: z.array(ExplanationEvidenceBindingSchema),
+  personalImpactBindings: PersonalImpactBindingSchema.optional(),
   dependencyStepIds: Strings, subjectEntityIds: Strings, locationIds: Strings,
   timeReference: Text.optional(), visualIntentIds: Strings,
   confidenceRequirement: z.enum(["required", "when-uncertain", "not-required"]),
@@ -143,6 +153,8 @@ export const ExplanationDecisionRuleSchema = z.strictObject({
 export const ExplanationPlanSchema: z.ZodType<ExplanationPlanDraft> = z.strictObject({
   id: Id, questionId: Id, contractId: Id, contextPackageId: Id,
   contractFingerprint: Id, contextPackageFingerprint: Id,
+  personalContextFingerprint: Id.optional(),
+  personalizedImpactAnalysisFingerprint: Id.optional(),
   planVersion: Id, policyVersion: Id,
   generator: z.strictObject({
     type: z.enum(["rule", "llm", "human"]), id: Id, version: Id,

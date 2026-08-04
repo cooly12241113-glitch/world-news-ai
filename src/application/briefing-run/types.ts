@@ -15,6 +15,11 @@ import type {
 } from "../../script";
 import type { BriefingSession } from "../../session";
 import type { PersonalImpactContext } from "../../personalization";
+import type { PersonalizedImpactPlanningContext } from "../../personalization";
+import type {
+  PersonalizedImpactCoordinatorInput,
+  PersonalizedImpactCoordinatorResult,
+} from "../personalized-impact";
 
 export interface CreateBriefingRequest {
   question: BriefingQuestion;
@@ -42,6 +47,7 @@ export const BRIEFING_RUN_STAGES = [
   "received",
   "contract-building",
   "context-building",
+  "impact-analyzing",
   "plan-generating",
   "script-compiling",
   "session-creating",
@@ -56,12 +62,15 @@ export interface BriefingRunSemanticLineage {
   explanationPlanFingerprint: string;
   scriptFingerprint: string;
   sessionFingerprint: string;
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
 }
 
 export type BriefingRunFailureCategory =
   | "request-invalid"
   | "contract-invalid"
   | "context-failed"
+  | "personalization-failed"
   | "generation-failed"
   | "script-failed"
   | "session-invalid"
@@ -72,6 +81,7 @@ export type BriefingRunReceiptFailureCategory =
   | "invalid-request"
   | "contract-invalid"
   | "context-unavailable"
+  | "personalization-unavailable"
   | "generation-unavailable"
   | "invalid-proposal"
   | "script-invalid"
@@ -97,6 +107,8 @@ export type BriefingRunOutcome =
   | (NonTechnicalOutcome & { kind: "clarification-required" })
   | (NonTechnicalOutcome & { kind: "insufficient-evidence" })
   | (NonTechnicalOutcome & { kind: "generation-unavailable" })
+  | (NonTechnicalOutcome & { kind: "personalization-context-required" })
+  | (NonTechnicalOutcome & { kind: "personalized-impact-unavailable" })
   | (NonTechnicalOutcome & { kind: "policy-rejected" })
   | (NonTechnicalOutcome & { kind: "cancelled" })
   | {
@@ -118,6 +130,11 @@ export interface BriefingRunReceipt {
   explanationPlanFingerprint?: string;
   scriptFingerprint?: string;
   sessionFingerprint?: string;
+  personalizationRequested?: true;
+  personalizationUsed?: true;
+  exposureCount?: number;
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
   evidenceCount?: number;
   sceneCount?: number;
   failureCategory?: BriefingRunReceiptFailureCategory;
@@ -149,6 +166,10 @@ export interface BriefingRunServiceDependencies {
   generationCoordinator: {
     generate(input: ExplanationPlanGenerationInput): Promise<StructuredGenerationResult>;
   };
+  personalizedImpactCoordinator?: {
+    coordinate(input: PersonalizedImpactCoordinatorInput):
+      Promise<PersonalizedImpactCoordinatorResult>;
+  };
   scriptCompiler: {
     compile(input: import("../../script").BriefingScriptCompileInput): BriefingScriptBuildResult;
   };
@@ -160,6 +181,7 @@ export interface BriefingRunServiceDependencies {
     request: CreateBriefingRequest,
     contract: BriefingContract,
     contextPackage: EvidenceContextPackage,
+    personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext,
   ): ExplanationPlanGenerationInput;
   initializeSession(input: BriefingSessionInitializationInput): BriefingSession;
 }

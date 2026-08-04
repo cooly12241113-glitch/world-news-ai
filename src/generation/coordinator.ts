@@ -109,11 +109,19 @@ export class StructuredExplanationPlanCoordinator {
         generator: { type: "llm", id: this.options.provider.metadata.adapterId, version: this.options.provider.metadata.adapterVersion },
         planVersion: input.generationPolicy.planSchemaVersion,
         policyVersion: input.generationPolicy.version,
+        ...(input.personalizedImpactPlanningContext
+          ? { personalizedImpactPlanningContext: input.personalizedImpactPlanningContext }
+          : {}),
       });
       if (!hydrated.success || !hydrated.plan) {
         return { success: false, error: hydrated.error!, audit: this.audit(input, startedAt, request.requestFingerprint, attempts, { warnings: [hydrated.error!.code] }, request) };
       }
-      const validation = this.validator.validate(hydrated.plan, input.briefingContract, input.evidenceContextPackage);
+      const validation = this.validator.validate(
+        hydrated.plan,
+        input.briefingContract,
+        input.evidenceContextPackage,
+        input.personalizedImpactPlanningContext,
+      );
       if (!("plan" in validation)) {
         if (validation.outcome === "insufficient-context") {
           return {

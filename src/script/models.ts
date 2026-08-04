@@ -1,6 +1,10 @@
 import type { BriefingContract, VisualMode } from "../briefing";
 import type { EvidenceContextPackage } from "../context";
 import type { EpistemicType, ValidatedExplanationPlan } from "../explanation";
+import type {
+  PersonalImpactBinding,
+} from "../explanation";
+import type { PersonalizedImpactPlanningContext } from "../personalization";
 
 export type PresentationMode =
   | "auto" | "cinematic-map" | "map-and-chart" | "chart-led"
@@ -155,6 +159,7 @@ export interface BriefingScene {
   id: string; kind: SceneKind; order: number; titleRequirement: string;
   objective: string; sourceSectionIds: string[]; sourceStepIds: string[];
   dependsOnSceneIds: string[]; contentBindings: SceneContentBinding[];
+  personalImpactBindings?: Array<PersonalImpactBinding & { planStepId: string }>;
   visualDirectives: SceneVisualDirective[];
   narrationDirective: SceneNarrationDirective; captionDirective: SceneCaptionDirective;
   citationCues: SceneCitationCue[]; uncertaintyCues: SceneUncertaintyCue[];
@@ -191,6 +196,9 @@ export interface BriefingScriptDraft {
   id: string; questionId: string; contractId: string; contextPackageId: string;
   explanationPlanId: string; contractFingerprint: string;
   contextPackageFingerprint: string; explanationPlanFingerprint: string;
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
   scriptVersion: string;
   compiler: { type: "rule" | "llm" | "human"; id: string; version: string; policyVersion: string };
   presentationPreference: BriefingPresentationPreference;
@@ -227,7 +235,8 @@ export type ScriptErrorCode =
   | "CAMERA_POLICY_VIOLATION" | "STATIC_MODE_VIOLATION"
   | "REDUCED_MOTION_VIOLATION" | "SAFE_VIEWPORT_POLICY_MISSING"
   | "COMPOSER_POLICY_VIOLATION" | "ACCESSIBILITY_REQUIREMENT_MISSING"
-  | "STOP_CONDITION_EXCEEDED" | "SCRIPT_VALIDATION_FAILED";
+  | "STOP_CONDITION_EXCEEDED" | "SCRIPT_VALIDATION_FAILED"
+  | "PERSONAL_IMPACT_REFERENCE_INVALID" | "PERSONAL_IMPACT_LINEAGE_MISMATCH";
 export interface BriefingScriptValidationIssue {
   code: ScriptErrorCode; severity: "error" | "warning" | "info";
   path: string; message: string; relatedSceneId?: string;
@@ -244,6 +253,7 @@ export type BriefingScriptBuildResult =
 export interface BriefingScriptCompileInput {
   plan: ValidatedExplanationPlan; contract: BriefingContract;
   contextPackage: EvidenceContextPackage; preference: BriefingPresentationPreference;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
 }
 export interface BriefingScriptRepository {
   save(script: ValidatedBriefingScript): void;

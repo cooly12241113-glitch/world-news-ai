@@ -4,6 +4,8 @@ import type {
   BriefingScriptValidationIssue, BriefingScriptValidationResult, BriefingScene,
   BriefingOpening, BriefingClosing, SceneContentBinding, SceneVisualDirective,
 } from "./models";
+import { PersonalImpactBindingSchema } from "../explanation";
+import { PersonalizedImpactPlanningContextSchema } from "../personalization";
 
 const S = z.string().trim().min(1);
 const Text = z.string().trim().min(1).max(500);
@@ -23,6 +25,7 @@ const ScriptErrorCode = z.enum([
   "REDUCED_MOTION_VIOLATION", "SAFE_VIEWPORT_POLICY_MISSING",
   "COMPOSER_POLICY_VIOLATION", "ACCESSIBILITY_REQUIREMENT_MISSING",
   "STOP_CONDITION_EXCEEDED", "SCRIPT_VALIDATION_FAILED",
+  "PERSONAL_IMPACT_REFERENCE_INVALID", "PERSONAL_IMPACT_LINEAGE_MISMATCH",
 ]);
 
 export const BriefingPresentationPreferenceSchema: z.ZodType<BriefingPresentationPreference> = z.strictObject({
@@ -154,6 +157,9 @@ export const BriefingSceneSchema: z.ZodType<BriefingScene> = z.strictObject({
   order: z.number().int().nonnegative(), titleRequirement: Text, objective: Text,
   sourceSectionIds: SA, sourceStepIds: SA, dependsOnSceneIds: SA,
   contentBindings: z.array(SceneContentBindingSchema),
+  personalImpactBindings: z.array(
+    PersonalImpactBindingSchema.extend({ planStepId: S }).strict(),
+  ).optional(),
   visualDirectives: z.array(SceneVisualDirectiveSchema),
   narrationDirective: SceneNarrationDirectiveSchema,
   captionDirective: SceneCaptionDirectiveSchema,
@@ -201,6 +207,9 @@ export const BriefingScriptCoverageSchema = z.strictObject({
 export const BriefingScriptSchema: z.ZodType<BriefingScriptDraft> = z.strictObject({
   id: S, questionId: S, contractId: S, contextPackageId: S, explanationPlanId: S,
   contractFingerprint: S, contextPackageFingerprint: S, explanationPlanFingerprint: S,
+  personalContextFingerprint: S.optional(),
+  personalizedImpactAnalysisFingerprint: S.optional(),
+  personalizedImpactPlanningContext: PersonalizedImpactPlanningContextSchema.optional(),
   scriptVersion: S, compiler: z.strictObject({
     type: z.enum(["rule", "llm", "human"]), id: S, version: S, policyVersion: S,
   }),

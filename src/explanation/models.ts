@@ -1,5 +1,6 @@
 import type { BriefingContract, BriefingQuestion, QuestionIntent, VisualMode } from "../briefing";
 import type { EvidenceContextPackage } from "../context";
+import type { PersonalizedImpactPlanningContext } from "../personalization";
 
 export type AnswerStrategy =
   | "explain-cause" | "trace-impact" | "verify-claim" | "compare-subjects"
@@ -83,6 +84,14 @@ export interface ExplanationEvidenceBinding {
   warnings: string[];
 }
 
+export interface PersonalImpactBinding {
+  analysisFingerprint: string;
+  exposureIds: string[];
+  impactChannelIds: string[];
+  impactAssessmentIds: string[];
+  scenarioIds: string[];
+}
+
 export interface ExplanationVisualIntent {
   id: string;
   mode: VisualMode;
@@ -109,6 +118,7 @@ export interface ExplanationStep {
   outputRequirement: StepOutputRequirement;
   epistemicPolicy: StepEpistemicPolicy;
   evidenceBindings: ExplanationEvidenceBinding[];
+  personalImpactBindings?: PersonalImpactBinding;
   dependencyStepIds: string[];
   subjectEntityIds: string[];
   locationIds: string[];
@@ -164,6 +174,8 @@ export interface ExplanationPlanDraft {
   contextPackageId: string;
   contractFingerprint: string;
   contextPackageFingerprint: string;
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
   planVersion: string;
   policyVersion: string;
   generator: { type: "rule" | "llm" | "human"; id: string; version: string };
@@ -195,7 +207,8 @@ export type ExplanationPlanErrorCode =
   | "STEP_DEPENDENCY_CYCLE" | "STOP_CONDITION_EXCEEDED"
   | "UNSUPPORTED_FACT_PROMOTION" | "FORECAST_ASSUMPTION_MISSING"
   | "UNCERTAINTY_REQUIREMENT_MISSING" | "PLAN_VALIDATION_FAILED"
-  | "PLAN_ASSEMBLY_FAILED";
+  | "PLAN_ASSEMBLY_FAILED" | "PERSONAL_IMPACT_REFERENCE_INVALID"
+  | "PERSONAL_IMPACT_LINEAGE_MISMATCH";
 
 export interface ExplanationPlanValidationIssue {
   code: ExplanationPlanErrorCode;
@@ -249,6 +262,7 @@ export interface ExplanationPlanGenerationInput {
   question: BriefingQuestion;
   contract: BriefingContract;
   contextPackage: EvidenceContextPackage;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
 }
 
 export interface ExplanationPlanGenerator {

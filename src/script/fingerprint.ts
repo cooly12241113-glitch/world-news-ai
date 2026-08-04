@@ -13,6 +13,9 @@ export function briefingScriptFingerprint(script: BriefingScriptDraft): string {
     contractFingerprint: script.contractFingerprint,
     contextPackageFingerprint: script.contextPackageFingerprint,
     explanationPlanFingerprint: script.explanationPlanFingerprint,
+    personalContextFingerprint: script.personalContextFingerprint,
+    personalizedImpactAnalysisFingerprint: script.personalizedImpactAnalysisFingerprint,
+    personalizedImpactPlanningContext: script.personalizedImpactPlanningContext,
     scriptVersion: script.scriptVersion, compiler: script.compiler,
     presentationPreference: script.presentationPreference,
     scenes: [...script.scenes].sort((a, b) => a.order - b.order).map((scene) => ({
@@ -30,6 +33,14 @@ export function briefingScriptFingerprint(script: BriefingScriptDraft): string {
         evidenceLinkIds: sorted(binding.evidenceLinkIds), dataPointIds: sorted(binding.dataPointIds),
         entityIds: sorted(binding.entityIds), locationIds: sorted(binding.locationIds),
         usage: binding.usage, required: binding.required,
+      })).sort((a, b) => a.planStepId.localeCompare(b.planStepId)),
+      personalImpactBindings: scene.personalImpactBindings?.map((binding) => ({
+        planStepId: binding.planStepId,
+        analysisFingerprint: binding.analysisFingerprint,
+        exposureIds: sorted(binding.exposureIds),
+        impactChannelIds: sorted(binding.impactChannelIds),
+        impactAssessmentIds: sorted(binding.impactAssessmentIds),
+        scenarioIds: sorted(binding.scenarioIds),
       })).sort((a, b) => a.planStepId.localeCompare(b.planStepId)),
       visualDirectives: scene.visualDirectives.map((visual) => ({
         mode: visual.mode, purpose: visual.purpose, requiredness: visual.requiredness,

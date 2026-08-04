@@ -8,11 +8,13 @@ import type {
   BriefingScriptValidationResult, ScriptErrorCode, ValidatedBriefingScript,
 } from "./models";
 import { BriefingScriptSchema } from "./validation";
+import type { PersonalizedImpactPlanningContext } from "../personalization";
 
 export class BriefingScriptValidator {
   validate(
     draft: unknown, plan: ValidatedExplanationPlan,
     contract: BriefingContract, context: EvidenceContextPackage,
+    personalizedImpact?: PersonalizedImpactPlanningContext,
   ): BriefingScriptValidationResult {
     const parsed = BriefingScriptSchema.safeParse(draft);
     if (!parsed.success) return invalid(parsed.error.issues.map((issue) => ({
@@ -62,6 +64,17 @@ export class BriefingScriptValidator {
         add("BROKEN_CONTENT_BINDING", "Scene references a missing plan section or step.", "scenes.sourceStepIds", "error", { relatedSceneId: scene.id });
       }
       scene.sourceStepIds.forEach((id) => covered.add(id));
+      for (const binding of scene.personalImpactBindings ?? []) {
+        const planBinding = stepById.get(binding.planStepId)?.personalImpactBindings;
+        if (!planBinding ||
+            binding.analysisFingerprint !== planBinding.analysisFingerprint ||
+            !sameIds(binding.exposureIds, planBinding.exposureIds) ||
+            !sameIds(binding.impactChannelIds, planBinding.impactChannelIds) ||
+            !sameIds(binding.impactAssessmentIds, planBinding.impactAssessmentIds) ||
+            !sameIds(binding.scenarioIds, planBinding.scenarioIds)) {
+          add("PERSONAL_IMPACT_REFERENCE_INVALID", "Script personal binding is not preserved from its Plan step.", "personalImpactBindings", "error", { relatedSceneId: scene.id, relatedPlanStepId: binding.planStepId });
+        }
+      }
       for (const binding of scene.contentBindings) {
         const step = stepById.get(binding.planStepId);
         if (!step || !sections.has(binding.planSectionId)) {
@@ -139,6 +152,24 @@ export class BriefingScriptValidator {
       if (!scene.layoutDirective.safeViewport.preservePrimaryVisualFocus) {
         add("SAFE_VIEWPORT_POLICY_MISSING", "Safe viewport must preserve visual focus.", "layoutDirective.safeViewport", "error", { relatedSceneId: scene.id });
       }
+    }
+    const hasPersonalBindings = script.scenes.some(
+      ({ personalImpactBindings }) => (personalImpactBindings?.length ?? 0) > 0,
+    );
+    if (hasPersonalBindings) {
+      if (!personalizedImpact ||
+          script.personalContextFingerprint !== personalizedImpact.personalContextFingerprint ||
+          script.personalizedImpactAnalysisFingerprint !== personalizedImpact.analysisFingerprint ||
+          script.personalizedImpactPlanningContext?.analysisFingerprint !== personalizedImpact.analysisFingerprint ||
+          createSemanticFingerprint(script.personalizedImpactPlanningContext) !==
+            createSemanticFingerprint(personalizedImpact) ||
+          script.contextPackageFingerprint !== personalizedImpact.evidenceContextFingerprint) {
+        add("PERSONAL_IMPACT_LINEAGE_MISMATCH", "Script personal impact lineage is missing or stale.", "personalizedImpactAnalysisFingerprint");
+      }
+    } else if (script.personalizedImpactPlanningContext ||
+               script.personalContextFingerprint ||
+               script.personalizedImpactAnalysisFingerprint) {
+      add("PERSONAL_IMPACT_LINEAGE_MISMATCH", "Unbound Script must not carry personal impact lineage.", "personalizedImpactPlanningContext");
     }
     for (const step of plan.sections.flatMap(({ steps }) => steps).filter(({ optional }) => !optional)) {
       if (!covered.has(step.id)) add("MISSING_PLAN_STEP_COVERAGE", "Required plan step is not represented.", "scenes.sourceStepIds", "error", { relatedPlanStepId: step.id });
@@ -254,6 +285,10 @@ export class BriefingScriptValidator {
 function subset(values: string[], allowed: Set<string> | string[]): boolean {
   const allowlist = allowed instanceof Set ? allowed : new Set(allowed);
   return values.every((value) => allowlist.has(value));
+}
+
+function sameIds(left: string[], right: string[]): boolean {
+  return left.length === right.length && subset(left, right) && subset(right, left);
 }
 
 type Add = (

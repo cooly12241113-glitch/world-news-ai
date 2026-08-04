@@ -60,6 +60,12 @@ export class ExplanationPlanProposalHydrator {
         contextPackageId: context.contextPackage.id,
         contractFingerprint: context.contract.semanticFingerprint,
         contextPackageFingerprint: context.contextPackage.fingerprint,
+        ...(context.personalizedImpactPlanningContext ? {
+          personalContextFingerprint:
+            context.personalizedImpactPlanningContext.personalContextFingerprint,
+          personalizedImpactAnalysisFingerprint:
+            context.personalizedImpactPlanningContext.analysisFingerprint,
+        } : {}),
         planVersion: context.planVersion, policyVersion: context.policyVersion,
         generator: context.generator,
         answerStrategy: proposal.answerStrategy,

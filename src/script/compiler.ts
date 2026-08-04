@@ -63,6 +63,13 @@ export class RuleBasedBriefingScriptCompiler {
         contractFingerprint: contract.semanticFingerprint,
         contextPackageFingerprint: context.fingerprint,
         explanationPlanFingerprint: plan.fingerprint, scriptVersion: "briefing-script-v1",
+        ...(input.personalizedImpactPlanningContext ? {
+          personalContextFingerprint:
+            input.personalizedImpactPlanningContext.personalContextFingerprint,
+          personalizedImpactAnalysisFingerprint:
+            input.personalizedImpactPlanningContext.analysisFingerprint,
+          personalizedImpactPlanningContext: input.personalizedImpactPlanningContext,
+        } : {}),
         compiler: { type: "rule", id: this.id, version: this.version, policyVersion: this.policyVersion },
         presentationPreference: preference.data,
         status: staticOnly ? "static-only" : "draft",
@@ -117,7 +124,13 @@ export class RuleBasedBriefingScriptCompiler {
       draft.fingerprint = briefingScriptFingerprint(draft);
       const schema = BriefingScriptSchema.safeParse(draft);
       if (!schema.success) return failure("SCRIPT_SCHEMA_INVALID", "schema", schema.error.message);
-      const validation = this.validator.validate(schema.data, plan, contract, context);
+      const validation = this.validator.validate(
+        schema.data,
+        plan,
+        contract,
+        context,
+        input.personalizedImpactPlanningContext,
+      );
       if (!("script" in validation)) return failure("SCRIPT_VALIDATION_FAILED", "validation");
       return {
         success: true,
@@ -157,9 +170,14 @@ export class RuleBasedBriefingScriptCompiler {
     const visuals = sections.flatMap(({ visualIntents }) => visualIntents)
       .map((visual) => this.visual(visual, mode, bindings));
     const primary = sections[0]!;
+    const personalizedKind: SceneKind | undefined = steps.some(
+      ({ personalImpactBindings }) => (personalImpactBindings?.scenarioIds.length ?? 0) > 0,
+    ) ? "scenario" : steps.some(
+      ({ personalImpactBindings }) => (personalImpactBindings?.impactChannelIds.length ?? 0) > 0,
+    ) ? "impact-path" : undefined;
     return this.baseScene(
       stableId("scene", `${input.plan.fingerprint}:${sections.map(({ id }) => id).join(":")}`),
-      sceneKind(primary.kind, input.plan.answerStrategy), order,
+      personalizedKind ?? sceneKind(primary.kind, input.plan.answerStrategy), order,
       sections.map(({ id }) => id), steps.map(({ id }) => id), input, bindings, visuals,
       primary.objective,
       steps,
@@ -178,6 +196,12 @@ export class RuleBasedBriefingScriptCompiler {
       id, kind, order, titleRequirement: `Provide a concise ${kind} scene label.`,
       objective, sourceSectionIds: sectionIds, sourceStepIds: stepIds,
       dependsOnSceneIds: [], contentBindings: bindings, visualDirectives: visuals,
+      ...(steps.some(({ personalImpactBindings }) => personalImpactBindings) ? {
+        personalImpactBindings: steps.flatMap((step) =>
+          step.personalImpactBindings
+            ? [{ planStepId: step.id, ...step.personalImpactBindings }]
+            : []),
+      } : {}),
       narrationDirective: {
         required: input.preference.narrationPolicy === "required",
         purpose: `Express the ${kind} requirements without storing final prose.`,

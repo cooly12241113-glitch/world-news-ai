@@ -42,6 +42,11 @@ interface ExecutionState {
   sessionFingerprint?: string;
   evidenceCount?: number;
   sceneCount?: number;
+  personalizationRequested?: true;
+  personalizationUsed?: true;
+  exposureCount?: number;
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
 }
 
 export class BriefingRunService {
@@ -102,7 +107,16 @@ export class BriefingRunService {
     if (this.cancelled(executionContext)) {
       return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
     }
-    const contractResult = this.dependencies.contractCompiler.compile(request.question);
+    let contractResult = this.dependencies.contractCompiler.compile(request.question);
+    if (
+      contractResult.success &&
+      contractResult.contract.intentAnalysis.primaryIntent === "personalized-impact" &&
+      request.personalImpactContext
+    ) {
+      contractResult = this.dependencies.contractCompiler.compile(
+        questionWithPersonalContextBridge(request),
+      );
+    }
     if (contractResult.success) {
       state.contractFingerprint = contractResult.contract.semanticFingerprint;
     }
@@ -117,6 +131,27 @@ export class BriefingRunService {
       );
     }
     if (contractResult.outcome === "clarification-required") {
+      if (contractResult.contract.intentAnalysis.primaryIntent === "personalized-impact") {
+        if (request.personalImpactContext && !request.personalImpactContext.consent.enabled) {
+          return this.nonTechnical(
+            "personalized-impact-unavailable",
+            "contract-building",
+            "personalization-disabled",
+          );
+        }
+        if (request.personalImpactContext?.exposures.length === 0) {
+          return this.nonTechnical(
+            "personalized-impact-unavailable",
+            "contract-building",
+            "enabled-no-exposures",
+          );
+        }
+        return this.nonTechnical(
+          "personalization-context-required",
+          "contract-building",
+          "PERSONAL_CONTEXT_REQUIRED",
+        );
+      }
       return this.nonTechnical(
         "clarification-required",
         "contract-building",
@@ -157,20 +192,93 @@ export class BriefingRunService {
       contextResult.outcome === "insufficient-evidence" ||
       contextResult.outcome === "no-relevant-context"
     ) {
-      return this.nonTechnical(
-        "insufficient-evidence",
-        "context-building",
-        contextResult.outcome,
-      );
+      if (contract.intentAnalysis.primaryIntent !== "personalized-impact") {
+        return this.nonTechnical(
+          "insufficient-evidence",
+          "context-building",
+          contextResult.outcome,
+        );
+      }
     }
 
     const contextPackage = contextResult.contextPackage;
+    let personalizedImpactPlanningContext:
+      import("../../personalization").PersonalizedImpactPlanningContext | undefined;
+    if (contract.intentAnalysis.primaryIntent === "personalized-impact") {
+      state.stage = "impact-analyzing";
+      state.personalizationRequested = true;
+      if (request.personalImpactContext) {
+        state.personalContextFingerprint = request.personalImpactContext.semanticFingerprint;
+        state.exposureCount = request.personalImpactContext.exposures.length;
+      }
+      if (this.cancelled(executionContext)) {
+        return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+      }
+      const coordinator = this.dependencies.personalizedImpactCoordinator;
+      if (!coordinator) {
+        return this.nonTechnical(
+          "personalized-impact-unavailable",
+          state.stage,
+          "PERSONALIZED_IMPACT_COORDINATOR_UNAVAILABLE",
+        );
+      }
+      const impactResult = await coordinator.coordinate({
+        personalContext: request.personalImpactContext,
+        contract,
+        evidenceContextPackage: contextPackage,
+      });
+      if (this.cancelled(executionContext)) {
+        return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
+      }
+      if (impactResult.outcome === "context-required") {
+        return this.nonTechnical(
+          "personalization-context-required",
+          state.stage,
+          impactResult.reason,
+        );
+      }
+      if (impactResult.outcome === "unavailable") {
+        return this.nonTechnical(
+          "personalized-impact-unavailable",
+          state.stage,
+          impactResult.reason,
+        );
+      }
+      if (impactResult.outcome === "policy-rejected") {
+        return this.nonTechnical("policy-rejected", state.stage, impactResult.reason);
+      }
+      if (impactResult.outcome !== "completed") {
+        return this.failure(state.stage, "personalization-failed", "IMPACT_ACTIVATION_INVALID");
+      }
+      if (impactResult.analysis.evidenceContextFingerprint !== contextPackage.fingerprint) {
+        return this.failure(state.stage, "lineage-mismatch", "IMPACT_EVIDENCE_LINEAGE_MISMATCH");
+      }
+      if (!request.personalImpactContext ||
+          impactResult.analysis.personalContextFingerprint !==
+            request.personalImpactContext.semanticFingerprint ||
+          impactResult.planningContext.personalContextFingerprint !==
+            request.personalImpactContext.semanticFingerprint ||
+          impactResult.planningContext.analysisFingerprint !==
+            impactResult.analysis.semanticFingerprint ||
+          impactResult.planningContext.evidenceContextFingerprint !==
+            contextPackage.fingerprint) {
+        return this.failure(state.stage, "lineage-mismatch", "IMPACT_LINEAGE_MISMATCH");
+      }
+      personalizedImpactPlanningContext = impactResult.planningContext;
+      state.personalizationUsed = true;
+      state.personalizedImpactAnalysisFingerprint = impactResult.analysis.semanticFingerprint;
+    }
     state.stage = "plan-generating";
     if (this.cancelled(executionContext)) {
       return this.nonTechnical("cancelled", state.stage, "CANCELLATION_REQUESTED");
     }
     const generationResult = await this.dependencies.generationCoordinator.generate(
-      this.dependencies.createGenerationInput(request, contract, contextPackage),
+      this.dependencies.createGenerationInput(
+        request,
+        contract,
+        contextPackage,
+        personalizedImpactPlanningContext,
+      ),
     );
     if (generationResult.success && generationResult.outcome === "validated-plan") {
       state.explanationPlanFingerprint = generationResult.plan.fingerprint;
@@ -241,6 +349,9 @@ export class BriefingRunService {
       contract,
       contextPackage,
       preference: request.presentationPreference,
+      ...(personalizedImpactPlanningContext
+        ? { personalizedImpactPlanningContext }
+        : {}),
     });
     if ("script" in scriptResult) {
       state.scriptFingerprint = scriptResult.script.fingerprint;
@@ -327,6 +438,12 @@ export class BriefingRunService {
         explanationPlanFingerprint: plan.fingerprint,
         scriptFingerprint: script.fingerprint,
         sessionFingerprint: session.semanticFingerprint,
+        ...(state.personalContextFingerprint
+          ? { personalContextFingerprint: state.personalContextFingerprint }
+          : {}),
+        ...(state.personalizedImpactAnalysisFingerprint
+          ? { personalizedImpactAnalysisFingerprint: state.personalizedImpactAnalysisFingerprint }
+          : {}),
       },
     });
   }
@@ -342,6 +459,10 @@ export class BriefingRunService {
       case "insufficient-evidence":
         return this.outcome({ kind, finalStage, technical: false, reason });
       case "generation-unavailable":
+        return this.outcome({ kind, finalStage, technical: false, reason });
+      case "personalization-context-required":
+        return this.outcome({ kind, finalStage, technical: false, reason });
+      case "personalized-impact-unavailable":
         return this.outcome({ kind, finalStage, technical: false, reason });
       case "policy-rejected":
         return this.outcome({ kind, finalStage, technical: false, reason });
@@ -399,6 +520,17 @@ export class BriefingRunService {
       ...(state.sessionFingerprint
         ? { sessionFingerprint: state.sessionFingerprint }
         : {}),
+      ...(state.personalizationRequested
+        ? { personalizationRequested: true as const }
+        : {}),
+      ...(state.personalizationUsed ? { personalizationUsed: true as const } : {}),
+      ...(state.exposureCount !== undefined ? { exposureCount: state.exposureCount } : {}),
+      ...(state.personalContextFingerprint
+        ? { personalContextFingerprint: state.personalContextFingerprint }
+        : {}),
+      ...(state.personalizedImpactAnalysisFingerprint
+        ? { personalizedImpactAnalysisFingerprint: state.personalizedImpactAnalysisFingerprint }
+        : {}),
       ...(state.evidenceCount !== undefined
         ? { evidenceCount: state.evidenceCount }
         : {}),
@@ -416,11 +548,16 @@ export class BriefingRunService {
     if (outcome.kind === "generation-unavailable") {
       return "generation-unavailable";
     }
+    if (outcome.kind === "personalization-context-required" ||
+        outcome.kind === "personalized-impact-unavailable") {
+      return "personalization-unavailable";
+    }
     if (outcome.kind !== "failed") return undefined;
     switch (outcome.category) {
       case "request-invalid": return "invalid-request";
       case "contract-invalid": return "contract-invalid";
       case "context-failed": return "context-unavailable";
+      case "personalization-failed": return "personalization-unavailable";
       case "generation-failed": return "invalid-proposal";
       case "script-failed": return "script-invalid";
       case "session-invalid": return "session-invalid";
@@ -434,4 +571,33 @@ function isValidatedScript(
   script: import("../../script").BriefingScriptDraft,
 ): script is ValidatedBriefingScript {
   return script.status === "validated" || script.status === "static-only";
+}
+
+function questionWithPersonalContextBridge(
+  request: CreateBriefingRequest,
+): CreateBriefingRequest["question"] {
+  const current = request.question.userProvidedContext ?? {};
+  const locations = [...(current.locations ?? [])];
+  const industries = [...(current.industries ?? [])];
+  const watchlist = [...(current.watchlist ?? [])];
+  for (const exposure of request.personalImpactContext?.exposures ?? []) {
+    switch (exposure.dimension) {
+      case "geography": locations.push(exposure.countryCode); break;
+      case "currency": watchlist.push(`currency:${exposure.currencyCode}`); break;
+      case "industry": industries.push(exposure.industry); break;
+      case "asset-class": watchlist.push(`asset-class:${exposure.assetClass}`); break;
+      case "employment-business": industries.push(exposure.industry); break;
+      case "consumption": watchlist.push(`consumption:${exposure.category}`); break;
+      case "supply-chain": industries.push(exposure.industry); break;
+    }
+  }
+  return {
+    ...request.question,
+    userProvidedContext: {
+      ...current,
+      ...(locations.length ? { locations: [...new Set(locations)].sort() } : {}),
+      ...(industries.length ? { industries: [...new Set(industries)].sort() } : {}),
+      ...(watchlist.length ? { watchlist: [...new Set(watchlist)].sort() } : {}),
+    },
+  };
 }

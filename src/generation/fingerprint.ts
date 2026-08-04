@@ -17,6 +17,13 @@ export function canonicalReferences(catalog: AllowedReferenceCatalog): AllowedRe
     requiredSectionKinds: sorted(catalog.requiredSectionKinds),
     allowedVisualModes: sorted(catalog.allowedVisualModes) as AllowedReferenceCatalog["allowedVisualModes"],
     allowedEpistemicTypes: sorted(catalog.allowedEpistemicTypes) as AllowedReferenceCatalog["allowedEpistemicTypes"],
+    ...(catalog.personalImpact ? { personalImpact: {
+      analysisFingerprint: catalog.personalImpact.analysisFingerprint,
+      exposureIds: sorted(catalog.personalImpact.exposureIds),
+      impactChannelIds: sorted(catalog.personalImpact.impactChannelIds),
+      impactAssessmentIds: sorted(catalog.personalImpact.impactAssessmentIds),
+      scenarioIds: sorted(catalog.personalImpact.scenarioIds),
+    } } : {}),
   };
 }
 
@@ -44,6 +51,10 @@ export function requestFingerprint(
     budget: request.generationBudget,
     allowedReferences: canonicalReferences(request.allowedReferenceCatalog),
     visualModes: sorted(request.permittedVisualModes),
+    ...(request.personalizedImpactPlanningContext ? {
+      personalizedImpactAnalysisFingerprint:
+        request.personalizedImpactPlanningContext.analysisFingerprint,
+    } : {}),
   });
 }
 

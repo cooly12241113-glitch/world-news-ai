@@ -52,6 +52,22 @@ export function validateProposal(
       if (step.epistemicPolicy.allowedTypes.some((type) => !allowed.allowedEpistemicTypes.includes(type))) {
         return failure("PROPOSAL_REFERENCE_INVALID", "Epistemic type is not allowlisted.");
       }
+      if (step.personalImpactBindings) {
+        const personal = allowed.personalImpact;
+        if (!personal ||
+            step.personalImpactBindings.analysisFingerprint !== personal.analysisFingerprint) {
+          return failure("PROPOSAL_REFERENCE_INVALID", "Personal impact lineage is not allowlisted.");
+        }
+        for (const [values, allowedValues, label] of [
+          [step.personalImpactBindings.exposureIds, personal.exposureIds, "Exposure ID"],
+          [step.personalImpactBindings.impactChannelIds, personal.impactChannelIds, "ImpactChannel ID"],
+          [step.personalImpactBindings.impactAssessmentIds, personal.impactAssessmentIds, "ImpactAssessment ID"],
+          [step.personalImpactBindings.scenarioIds, personal.scenarioIds, "Scenario ID"],
+        ] as const) {
+          const invalid = exact(values, allowedValues, label);
+          if (invalid) return { success: false, error: invalid };
+        }
+      }
       for (const binding of step.evidenceBindings) {
         for (const [values, allowedValues, label] of [
           [[binding.contextItemId], allowed.contextItemIds, "ContextItem ID"],

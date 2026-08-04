@@ -44,6 +44,16 @@ z.ZodType<BriefingRunSemanticLineage> = z.strictObject({
   explanationPlanFingerprint: Fingerprint,
   scriptFingerprint: Fingerprint,
   sessionFingerprint: Fingerprint,
+  personalContextFingerprint: Fingerprint.optional(),
+  personalizedImpactAnalysisFingerprint: Fingerprint.optional(),
+}).superRefine((lineage, context) => {
+  if (Boolean(lineage.personalContextFingerprint) !==
+      Boolean(lineage.personalizedImpactAnalysisFingerprint)) {
+    context.addIssue({
+      code: "custom",
+      message: "Personalized completed lineage requires both personal and analysis fingerprints.",
+    });
+  }
 });
 
 const nonTechnical = {
@@ -67,6 +77,8 @@ export const BriefingRunOutcomeSchema: z.ZodType<BriefingRunOutcome> =
     z.strictObject({ kind: z.literal("clarification-required"), ...nonTechnical }),
     z.strictObject({ kind: z.literal("insufficient-evidence"), ...nonTechnical }),
     z.strictObject({ kind: z.literal("generation-unavailable"), ...nonTechnical }),
+    z.strictObject({ kind: z.literal("personalization-context-required"), ...nonTechnical }),
+    z.strictObject({ kind: z.literal("personalized-impact-unavailable"), ...nonTechnical }),
     z.strictObject({ kind: z.literal("policy-rejected"), ...nonTechnical }),
     z.strictObject({ kind: z.literal("cancelled"), ...nonTechnical }),
     z.strictObject({
@@ -77,6 +89,7 @@ export const BriefingRunOutcomeSchema: z.ZodType<BriefingRunOutcome> =
         "request-invalid",
         "contract-invalid",
         "context-failed",
+        "personalization-failed",
         "generation-failed",
         "script-failed",
         "session-invalid",
@@ -98,6 +111,8 @@ export const BriefingRunReceiptSchema: z.ZodType<BriefingRunReceipt> =
       "clarification-required",
       "insufficient-evidence",
       "generation-unavailable",
+      "personalization-context-required",
+      "personalized-impact-unavailable",
       "policy-rejected",
       "cancelled",
       "failed",
@@ -107,6 +122,11 @@ export const BriefingRunReceiptSchema: z.ZodType<BriefingRunReceipt> =
     explanationPlanFingerprint: Fingerprint.optional(),
     scriptFingerprint: Fingerprint.optional(),
     sessionFingerprint: Fingerprint.optional(),
+    personalizationRequested: z.literal(true).optional(),
+    personalizationUsed: z.literal(true).optional(),
+    exposureCount: z.number().int().nonnegative().optional(),
+    personalContextFingerprint: Fingerprint.optional(),
+    personalizedImpactAnalysisFingerprint: Fingerprint.optional(),
     evidenceCount: z.number().int().nonnegative().optional(),
     sceneCount: z.number().int().nonnegative().optional(),
     failureCategory: z.enum([
@@ -114,6 +134,7 @@ export const BriefingRunReceiptSchema: z.ZodType<BriefingRunReceipt> =
       "contract-invalid",
       "context-unavailable",
       "generation-unavailable",
+      "personalization-unavailable",
       "invalid-proposal",
       "script-invalid",
       "session-invalid",
@@ -136,6 +157,23 @@ export const BriefingRunReceiptSchema: z.ZodType<BriefingRunReceipt> =
     }
     if (receipt.outcomeKind !== "completed" && receipt.finalStage === "completed") {
       context.addIssue({ code: "custom", message: "Only completed outcomes may finish at completed." });
+    }
+    if (receipt.personalizationUsed && (
+      !receipt.personalizationRequested ||
+      receipt.exposureCount === undefined ||
+      !receipt.personalContextFingerprint ||
+      !receipt.personalizedImpactAnalysisFingerprint
+    )) {
+      context.addIssue({
+        code: "custom",
+        message: "Used personalization requires privacy-minimized reached lineage.",
+      });
+    }
+    if (receipt.personalizedImpactAnalysisFingerprint && !receipt.personalizationUsed) {
+      context.addIssue({
+        code: "custom",
+        message: "Impact analysis fingerprint requires personalizationUsed.",
+      });
     }
   });
 

@@ -11,12 +11,14 @@ import type {
   ValidatedExplanationPlan,
 } from "./models";
 import { ExplanationPlanSchema } from "./validation";
+import type { PersonalizedImpactPlanningContext } from "../personalization";
 
 export class ExplanationPlanValidator {
   validate(
     draft: unknown,
     contract: BriefingContract,
     contextPackage: EvidenceContextPackage,
+    personalizedImpact?: PersonalizedImpactPlanningContext,
   ): ExplanationPlanValidationResult {
     const parsed = ExplanationPlanSchema.safeParse(draft);
     if (!parsed.success) {
@@ -54,6 +56,7 @@ export class ExplanationPlanValidator {
     if (plan.contextPackageFingerprint !== contextPackage.fingerprint) {
       add("CONTEXT_REFERENCE_MISMATCH", "Context fingerprint does not match.", "contextPackageFingerprint");
     }
+    this.validatePersonalImpact(plan, personalizedImpact, add);
 
     const sectionIds = new Set<string>();
     const stepIds = new Set<string>();
@@ -122,6 +125,50 @@ export class ExplanationPlanValidator {
       issues,
       fingerprint: validated.fingerprint,
     };
+  }
+
+  private validatePersonalImpact(
+    plan: ExplanationPlanDraft,
+    planning: PersonalizedImpactPlanningContext | undefined,
+    add: (code: ExplanationPlanErrorCode, message: string, path: string, severity?: "error" | "warning" | "info", related?: Partial<ExplanationPlanValidationIssue>) => void,
+  ): void {
+    const steps = plan.sections.flatMap(({ steps }) => steps);
+    const bound = steps.filter(({ personalImpactBindings }) => personalImpactBindings !== undefined);
+    if (bound.length === 0) {
+      if (plan.personalContextFingerprint || plan.personalizedImpactAnalysisFingerprint) {
+        add("PERSONAL_IMPACT_LINEAGE_MISMATCH", "Personal impact lineage requires a bound step.", "personalizedImpactAnalysisFingerprint");
+      }
+      return;
+    }
+    if (!planning ||
+        plan.personalContextFingerprint !== planning.personalContextFingerprint ||
+        plan.personalizedImpactAnalysisFingerprint !== planning.analysisFingerprint ||
+        plan.contextPackageFingerprint !== planning.evidenceContextFingerprint) {
+      add("PERSONAL_IMPACT_LINEAGE_MISMATCH", "Personal impact lineage does not match the validated planning context.", "personalizedImpactAnalysisFingerprint");
+      return;
+    }
+    const exposures = new Set(planning.exposures.map(({ exposureId }) => exposureId));
+    const channels = new Map(planning.channels.map((channel) => [channel.channelId, channel]));
+    const assessments = new Set(planning.assessments.map(({ assessmentId }) => assessmentId));
+    const scenarios = new Set(planning.scenarios.map(({ scenarioId }) => scenarioId));
+    for (const step of bound) {
+      const binding = step.personalImpactBindings!;
+      if (binding.analysisFingerprint !== planning.analysisFingerprint ||
+          binding.exposureIds.some((id) => !exposures.has(id)) ||
+          binding.impactChannelIds.some((id) => !channels.has(id)) ||
+          binding.impactAssessmentIds.some((id) => !assessments.has(id)) ||
+          binding.scenarioIds.some((id) => !scenarios.has(id))) {
+        add("PERSONAL_IMPACT_REFERENCE_INVALID", "Personal impact binding contains a foreign reference.", "personalImpactBindings", "error", { relatedStepId: step.id });
+      }
+      if (binding.scenarioIds.length > 0 &&
+          (step.epistemicPolicy.preferredType !== "forecast" || !step.epistemicPolicy.requireAssumptions)) {
+        add("FORECAST_ASSUMPTION_MISSING", "Scenario-bound steps require forecast posture and assumptions.", "epistemicPolicy", "error", { relatedStepId: step.id });
+      }
+      const hasUnknown = binding.impactChannelIds.some((id) => channels.get(id)?.relation === "unknown");
+      if (hasUnknown && step.epistemicPolicy.preferredType !== "unknown") {
+        add("UNSUPPORTED_FACT_PROMOTION", "Unknown impact channels require unknown epistemic posture.", "epistemicPolicy.preferredType", "error", { relatedStepId: step.id });
+      }
+    }
   }
 
   private result(

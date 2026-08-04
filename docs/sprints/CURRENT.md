@@ -170,3 +170,17 @@ future renderer Sprint.
   Runtime, Plan, Script, Session, receipt, follow-up, and Web integration remain
   deferred to Sprint 16.3. See
   [Sprint 16.2 delivery](Sprint-16.2-Personalized-Impact-Channel-Scenario-Domain.md).
+
+## Sprint 16.3 implementation
+
+- Sprint 16.3 — Personalized Impact Runtime & Briefing Integration.
+
+  **Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+  Explicit intent activation, an optional `impact-analyzing` stage, a thin
+  coordinator, safe planning projection, structured-generation allowlists,
+  separate Plan/Script personal bindings, privacy-minimized reached lineage,
+  cancellation and stale-result compatibility, and deterministic personalized
+  Contract-to-Session integration are implemented. Non-personalized semantic
+  fingerprints remain unchanged. Session and Web UI remain unchanged. See
+  [Sprint 16.3 delivery](Sprint-16.3-Personalized-Impact-Runtime-Briefing-Integration.md).

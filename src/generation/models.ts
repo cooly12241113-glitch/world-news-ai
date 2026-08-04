@@ -6,6 +6,7 @@ import type {
   ExplanationPlanValidationResult, ExplanationStep,
   ExplanationVisualIntent, ValidatedExplanationPlan,
 } from "../explanation";
+import type { PersonalizedImpactPlanningContext } from "../personalization";
 
 export interface ProviderMetadata {
   providerId: string; adapterId: string; adapterVersion: string; modelId: string;
@@ -40,6 +41,7 @@ export interface ExplanationPlanGenerationInput {
   evidenceContextPackage: EvidenceContextPackage; generationPolicy: GenerationPolicy;
   providerSelection: ProviderSelection; generationBudget: StructuredGenerationBudget;
   requestedAt: string; requestId: string; abortSignal?: AbortSignal;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
 }
 
 export interface AllowedReferenceCatalog {
@@ -48,6 +50,13 @@ export interface AllowedReferenceCatalog {
   dataPointIds: string[]; entityIds: string[]; locationIds: string[];
   requiredSectionKinds: string[]; allowedVisualModes: VisualMode[];
   allowedEpistemicTypes: EpistemicType[];
+  personalImpact?: {
+    analysisFingerprint: string;
+    exposureIds: string[];
+    impactChannelIds: string[];
+    impactAssessmentIds: string[];
+    scenarioIds: string[];
+  };
 }
 
 export interface UntrustedEvidenceRecord {
@@ -74,6 +83,7 @@ export interface ExplanationPlanLlmRequestPackage {
   prohibitedBehaviors: string[]; proposalSchemaVersion: string;
   promptTemplate: PromptTemplateDefinition; generationBudget: StructuredGenerationBudget;
   requestFingerprint: string;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
 }
 
 export type ProposalSection = Omit<ExplanationPlanSection, "id" | "steps" | "visualIntents"> & {
@@ -173,6 +183,7 @@ export interface HydrationContext {
   contextPackage: EvidenceContextPackage; now: string;
   generator: { type: "llm"; id: string; version: string };
   planVersion: string; policyVersion: string;
+  personalizedImpactPlanningContext?: PersonalizedImpactPlanningContext;
 }
 
 export interface ProposalHydrationResult {
