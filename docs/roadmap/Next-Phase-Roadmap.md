@@ -83,8 +83,14 @@ start Sprint 15 implementation.
 
 ## Sprint 16 — Personalized Impact Analysis
 
+**Status: 16.0 DESIGN COMPLETE**
+
 Add consented, caller-scoped exposure/scenario analysis. Do not introduce
 direct buy/sell recommendations or inferred sensitive attributes.
+
+The compatibility audit and implementation contract are defined in
+[Sprint 16.0](../sprints/Sprint-16.0-Personalized-Impact-Analysis-Design.md).
+Sprint 16.1 is approved and ready for implementation.
 
 ## Cross-cutting prerequisites
 

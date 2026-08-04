@@ -130,3 +130,16 @@ Live GPT/search, true-append and browser-failure fixtures, and production
 backend integration remain unavailable. The existing MapLibre bundle-size
 warning remains accepted debt; dark vector maps and a 3D globe belong to a
 future renderer Sprint.
+
+## Sprint 16 design
+
+- Sprint 16.0 — Personalized Impact Analysis Design & Compatibility Audit.
+
+  **Status:** DESIGN COMPLETE
+
+  The consented, caller-scoped explicit-context, exposure, impact-channel,
+  scenario, provenance, identity, privacy, validation, pipeline, and follow-up
+  boundaries are defined without implementation. Production source, tests,
+  packages, dependencies, and migrations remain unchanged. The open design
+  questions are resolved and Sprint 16.1 is **READY FOR IMPLEMENTATION**. See
+  [Sprint 16.0 design](Sprint-16.0-Personalized-Impact-Analysis-Design.md).
