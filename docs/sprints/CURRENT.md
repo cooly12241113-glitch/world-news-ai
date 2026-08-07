@@ -211,5 +211,16 @@ presentation-only My Lens state. No persistent UserProfile, sensitive
 attribute inference, direct transaction recommendation, invented probability,
 or hidden personalization was introduced.
 
-Sprint 17 production implementation has not started. The next recommended
-step is Sprint 17.0 — Strategic Intelligence Compatibility Audit.
+## Sprint 17.0 compatibility audit
+
+**Status:** AUDIT COMPLETE / DESIGN COMPLETE / REVIEWED / COMPLETE
+
+The documentation-only Strategic Intelligence compatibility audit is complete.
+It records the A–AT requirement matrix, target layer map, reuse and
+anti-reimplementation decisions, security prerequisites, risk register,
+revalidated Sprint 17–28 sequence, and the exact Sprint 17.1 minimum scope.
+
+Sprint 17.1 — Universal Source Connector Contracts is **READY FOR IMPLEMENTATION**.
+Sprint 17 production implementation has not started. No connector, production
+source, test, dependency, provider, package, migration, scheduler, or UI change
+is included in Sprint 17.0.
