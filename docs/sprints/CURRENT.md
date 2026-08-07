@@ -224,3 +224,20 @@ Sprint 17.1 — Universal Source Connector Contracts is **READY FOR IMPLEMENTATI
 Sprint 17 production implementation has not started. No connector, production
 source, test, dependency, provider, package, migration, scheduler, or UI change
 is included in Sprint 17.0.
+
+## Sprint 17.1 implementation
+
+**Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+The provider/platform-neutral Source Connector contracts, strict schemas,
+semantic locator identity, opaque raw artifact reference, privacy-minimized
+success/failure outcomes, framework-neutral cancellation seam, deterministic
+offline fixture connector, and thin projection into the existing adaptive
+ingestion pipeline are implemented.
+
+No live connector, network call, credential, raw persistence, media processing,
+evidence/reliability logic, genealogy, package/dependency change, migration,
+or Web change is included. Automated validation passes with 77 test files / 791
+tests, typecheck, Web production build, and 0 production vulnerabilities. The
+existing development-toolchain moderate 5 audit findings remain. Sprint 17.2
+has not started.

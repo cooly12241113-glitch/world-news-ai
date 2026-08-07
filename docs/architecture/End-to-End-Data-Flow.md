@@ -10,7 +10,10 @@ GPT/search/backend integration is implied.
 
 ```mermaid
 flowchart TD
-  S["Source Input"] --> I["Adaptive Ingestion"]
+  C["Optional SourceConnector (fixture-only in Sprint 17.1)"] --> A["Validated Acquisition Result"]
+  A --> B["Acquisition-to-Ingestion Bridge"]
+  B --> S["IngestionRequest / Direct Source Input"]
+  S --> I["Adaptive Ingestion"]
   I -->|success| D["SourceDocument"]
   I -->|structured ingestion error| IF["No document stored"]
   D --> P["Persistent Ingestion"]
