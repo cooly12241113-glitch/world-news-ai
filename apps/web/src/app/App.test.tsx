@@ -10,7 +10,7 @@ describe("App manual briefing flow", () => {
     const start = await screen.findByRole("button", { name: "Start demo briefing" });
     expect(screen.getByPlaceholderText(/Ask about/)).not.toBeNull();
     fireEvent.click(start);
-    expect(screen.getByRole("button", { name: "Ask a question" })).not.toBeNull();
+    expect(await screen.findByRole("button", { name: "Ask a question" })).not.toBeNull();
     expect(screen.getByLabelText("Scene 1 of 7")).not.toBeNull();
     vi.useFakeTimers();
     vi.advanceTimersByTime(60 * 60 * 1000);

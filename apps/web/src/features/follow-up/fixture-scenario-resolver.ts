@@ -93,8 +93,10 @@ export function resolveFixtureScenario(
   context: FollowUpContext,
   script: ValidatedBriefingScript,
   decisionId: string,
+  decisionInput?: ReplanDecision,
+  replacementOverride?: ValidatedBriefingScript,
 ): FixtureScenarioResolution {
-  const decision = classifyFollowUp(request, context, {
+  const decision = decisionInput ?? classifyFollowUp(request, context, {
     decisionId,
     policyVersion: context.policyVersion,
   });
@@ -102,7 +104,8 @@ export function resolveFixtureScenario(
     decision,
     scenarioId: scenarioForScope[decision.scope],
     sourceScript: script,
-    replacementScript: replacementVariant(script, decision.scope, context.currentSceneIndex),
+    replacementScript: replacementOverride ??
+      replacementVariant(script, decision.scope, context.currentSceneIndex),
     appendUnavailable: decision.scope === "append-scenes",
   };
 }
@@ -158,7 +161,25 @@ export class BrowserFixtureReplanAdapter implements ReplanAdapter {
       return fingerprint({ ...base, outcome: "unsupported", reasonCode: "UNSUPPORTED_SYSTEM_ACTION" });
     }
     if (this.resolution.decision.scope === "answer-current-context") {
-      const evidence = request.followUpContext.visibleEvidenceIds[0];
+      const planning = this.resolution.sourceScript.personalizedImpactPlanningContext;
+      const codes = this.resolution.decision.matchedRuleCodes;
+      const personalExplanation = codes.includes("CURRENT_CONTEXT_PERSONAL_IMPACT_EXPLANATION");
+      const counterScenario = codes.includes("CURRENT_CONTEXT_VALIDATED_COUNTER_SCENARIO");
+      const relevantChannels = planning?.channels.filter((channel) =>
+        !counterScenario || planning.scenarios.some((scenario) =>
+          scenario.channelIds.includes(channel.channelId)
+        )
+      ) ?? [];
+      const allowed = new Set(Object.values(request.followUpContext.evidenceAllowlist).flat());
+      const evidence = personalExplanation || counterScenario
+        ? [...new Set(relevantChannels.flatMap(({ evidenceContextItemIds }) => evidenceContextItemIds))]
+          .filter((id) => allowed.has(id))
+        : request.followUpContext.visibleEvidenceIds.slice(0, 1);
+      const notes = personalExplanation && planning
+        ? personalImpactExplanation(planning)
+        : counterScenario && planning
+          ? validatedCounterScenario(planning)
+          : ["This is a deterministic fixture response."];
       return fingerprint({
         ...base,
         outcome: "current-context-answer",
@@ -167,11 +188,14 @@ export class BrowserFixtureReplanAdapter implements ReplanAdapter {
           followUpId: request.followUpRequest.followUpId,
           sessionId: request.sessionId,
           sceneId: request.currentSceneId,
-          answerType: "source-list",
-          evidenceBindings: evidence ? [evidence] : [],
-          statementTypes: evidence ? ["attributed-claim"] : ["unknown"],
-          uncertaintyNotes: ["This is a deterministic fixture response."],
-          missingEvidence: evidence ? [] : ["No visible allowlisted evidence."],
+          answerType: personalExplanation ? "uncertainty-explanation"
+            : counterScenario ? "evidence-summary" : "source-list",
+          evidenceBindings: evidence,
+          statementTypes: personalExplanation ? ["inference", "uncertainty"]
+            : counterScenario ? ["forecast", "uncertainty"]
+              : evidence.length ? ["attributed-claim"] : ["unknown"],
+          uncertaintyNotes: notes,
+          missingEvidence: evidence.length ? [] : ["No visible allowlisted evidence."],
         }, request.followUpContext.evidenceAllowlist),
       });
     }
@@ -220,4 +244,24 @@ export class BrowserFixtureReplanAdapter implements ReplanAdapter {
       ...sceneChanges,
     });
   }
+}
+
+function personalImpactExplanation(
+  planning: NonNullable<ValidatedBriefingScript["personalizedImpactPlanningContext"]>,
+): string[] {
+  const exposureById = new Map(planning.exposures.map((item) => [item.exposureId, item.canonicalSubject]));
+  return planning.channels.map((channel) => {
+    const exposures = channel.exposureIds.map((id) => exposureById.get(id)).filter(Boolean).join(", ");
+    return `You provided ${exposures}. ${channel.mechanism} This remains a conditional ${channel.epistemicType}; ${channel.uncertainty.statement}`;
+  });
+}
+
+function validatedCounterScenario(
+  planning: NonNullable<ValidatedBriefingScript["personalizedImpactPlanningContext"]>,
+): string[] {
+  const conditions = new Map(planning.conditions.map((item) => [item.conditionId, item.statement]));
+  return planning.scenarios.map((scenario) => {
+    const counters = scenario.counterSignalConditionIds.map((id) => conditions.get(id)).filter(Boolean).join("; ");
+    return `Validated ${scenario.kind} scenario over ${scenario.horizon.amount} ${scenario.horizon.unit}: counter-signals are ${counters}. ${scenario.uncertainty.statement}`;
+  });
 }

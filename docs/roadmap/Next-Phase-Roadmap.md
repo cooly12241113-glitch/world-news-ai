@@ -106,6 +106,56 @@ Plan/Script bindings, runtime lineage, and deterministic Contract-to-Session
 tests without adding Web UI. See
 [Sprint 16.3](../sprints/Sprint-16.3-Personalized-Impact-Runtime-Briefing-Integration.md).
 
+Sprint 16.4 My Lens presentation and existing-Composer follow-up integration
+is **IMPLEMENTED / REVIEWED / BROWSER ACCEPTED / COMPLETE**. It consumes only the safe
+personalized projection already carried by a validated Script and leaves
+ordinary briefing semantics unchanged. See
+[Sprint 16.4](../sprints/Sprint-16.4-My-Lens-Presentation-Follow-up.md).
+
+## Milestone 03 — Personalized Intelligence Baseline (Complete)
+
+Sprint 16.0–16.4 are accepted as the privacy-minimized personalized
+intelligence baseline. See
+[Milestone 03](../milestones/Milestone-03-Personalized-Intelligence-Baseline.md).
+
+## Strategic Intelligence North Star — Candidate Architecture Plan
+
+The following sequence is planning only. It does not authorize production
+implementation, providers, ingestion, persistence, or an Explore redesign.
+
+1. Sprint 17 — Source Intelligence Foundation
+2. Sprint 18 — Media & OSINT Intelligence
+3. Sprint 19 — Competing Hypothesis & Evidence Verification
+4. Sprint 20 — Analysis Depth Router
+5. Sprint 21 — Advisory Council Foundation / Blind Analysis
+6. Sprint 22 — Cross Examination / Revision / Red Team
+7. Sprint 23 — Strategic Scenario Engine (Base / Worse / Severe / Tail-risk)
+8. Sprint 24 — Early Warning Engine
+9. Sprint 25 — War Room / Council Live
+10. Sprint 26 — Multi-Model Council
+11. Sprint 27 — Explore / Global Intelligence UI
+12. Sprint 28 — Operational Intelligence / Monitoring
+
+### Candidate design principles
+
+- Evidence Reliability remains separate from political or ideological value.
+- User values belong in a separate Value/Risk Evaluation layer.
+- Existing fact/claim/inference/forecast/unknown posture remains authoritative.
+  Confirmed, strong-inference, plausible-hypothesis, weak-signal, and
+  speculation may be evaluated later as an orthogonal Hypothesis Strength
+  axis; they do not replace epistemic posture.
+- Numerical scenario probability requires a calibrated basis. Early strategic
+  scenarios prefer qualitative or confidence-band expression.
+- Preparedness and risk mitigation remain separate from direct transaction
+  recommendations.
+- Council Live exposes only publishable structured `CouncilStatement` output,
+  never hidden chain-of-thought.
+- Source acquisition is independent of LLM browsing and uses a dedicated
+  Source Connector / ingestion architecture.
+
+The next recommended activity is Sprint 17.0 — Strategic Intelligence
+Compatibility Audit, not Sprint 17 production implementation.
+
 ## Cross-cutting prerequisites
 
 Before unrestricted production ingestion: DNS-resolution SSRF controls,

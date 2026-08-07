@@ -13,6 +13,22 @@ const classify = (text: string, locale: "ko" | "en" = "en") =>
     policyVersion: "classifier-v1",
   });
 
+const classifyPersonalized = (text: string) => {
+  const context = followUpContext();
+  context.personalizedImpact = {
+    personalContextFingerprint: "personal-context-fingerprint",
+    analysisFingerprint: "analysis-fingerprint",
+    exposureIds: ["exposure-1"],
+    impactChannelIds: ["channel-1"],
+    impactAssessmentIds: ["assessment-1"],
+    scenarioIds: ["scenario-1"],
+  };
+  return classifyFollowUp(followUpRequest(text, "ko"), context, {
+    decisionId: "decision-personalized",
+    policyVersion: "classifier-v1",
+  });
+};
+
 describe("FollowUpRequest", () => {
   it.each([
     ["출처를 보여줘", "ko" as const],
@@ -113,5 +129,16 @@ describe("deterministic follow-up classification", () => {
 
   it("falls back to clarification instead of guessing", () => {
     expect(classify("please make it better").scope).toBe("clarification-required");
+  });
+
+  it.each([
+    ["달러 보유가 없다고 가정해줘", "rebuild-entire-briefing", "FULL_REBUILD_PERSONAL_CONTEXT_CHANGE"],
+    ["개인화 정보는 빼고 다시 설명해줘", "rebuild-entire-briefing", "FULL_REBUILD_REMOVE_PERSONALIZATION"],
+    ["왜 나한테 영향이 있다는 거야?", "answer-current-context", "CURRENT_CONTEXT_PERSONAL_IMPACT_EXPLANATION"],
+    ["반대 시나리오도 보여줘", "answer-current-context", "CURRENT_CONTEXT_VALIDATED_COUNTER_SCENARIO"],
+  ])("classifies personalized follow-up: %s", (text, scope, code) => {
+    const decision = classifyPersonalized(text);
+    expect(decision.scope).toBe(scope);
+    expect(decision.matchedRuleCodes).toEqual([code]);
   });
 });

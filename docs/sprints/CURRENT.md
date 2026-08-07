@@ -2,14 +2,15 @@
 
 ## Current Milestone
 
-Milestone 02 — Interactive Briefing Integration Audit
+Milestone 03 — Personalized Intelligence Baseline
 
 **Status:** IMPLEMENTED / AUDIT COMPLETE / BROWSER ACCEPTED / FINAL COMPLETE
 
-Sprint 10–14 integration, identity, provenance, epistemic posture,
-Session/Script/Player/Web atomic application, follow-up/replan, map/motion,
-accessibility, and favicon delivery are audited and accepted. The fixture-only
-baseline has 67 test files and at least 652 passing tests.
+Sprint 16.0–16.4 explicit consent, request scope, exposure/evidence provenance,
+impact/scenario semantics, deterministic identity, runtime integration, My
+Lens presentation, and personalized follow-up replacement are audited and
+accepted. The fixture-only baseline has 75 test files and 746 passing tests.
+See [Milestone 03](../milestones/Milestone-03-Personalized-Intelligence-Baseline.md).
 
 ## Completed delivery
 
@@ -184,3 +185,31 @@ future renderer Sprint.
   Contract-to-Session integration are implemented. Non-personalized semantic
   fingerprints remain unchanged. Session and Web UI remain unchanged. See
   [Sprint 16.3 delivery](Sprint-16.3-Personalized-Impact-Runtime-Briefing-Integration.md).
+
+## Sprint 16.4 implementation
+
+- Sprint 16.4 — My Lens Personalized Impact Presentation & Follow-up.
+
+  **Status:** IMPLEMENTED / REVIEWED / BROWSER ACCEPTED / COMPLETE
+
+  The existing AnalysisPanel conditionally presents safe Script-carried
+  exposure, impact-path, scenario, and uncertainty semantics as My Lens.
+  Ordinary briefings expose no personalization UI. Lens state remains
+  presentation-only, and bound scenes use the existing Composer and atomic
+  follow-up replacement path. No persistence, profile inference, live provider,
+  recommendation, ranking, or probability feature is introduced. See
+  [Sprint 16.4 delivery](Sprint-16.4-My-Lens-Presentation-Follow-up.md).
+
+## Sprint 16 final status
+
+**Status:** IMPLEMENTED / REVIEWED / BROWSER ACCEPTED / FINAL COMPLETE
+
+Sprint 16.0–16.4 preserve explicit consent, caller/request scope, separated
+evidence and exposure provenance, deterministic identity, cancellation/stale
+protection, raw-context minimization, ordinary briefing compatibility, and
+presentation-only My Lens state. No persistent UserProfile, sensitive
+attribute inference, direct transaction recommendation, invented probability,
+or hidden personalization was introduced.
+
+Sprint 17 production implementation has not started. The next recommended
+step is Sprint 17.0 — Strategic Intelligence Compatibility Audit.

@@ -37,6 +37,14 @@ export interface FollowUpContext {
   selectedAnalysisTab: AnalysisTab;
   manualMapViewStatus: ManualMapViewState["status"];
   priorFollowUpId?: string;
+  personalizedImpact?: {
+    personalContextFingerprint: string;
+    analysisFingerprint: string;
+    exposureIds: string[];
+    impactChannelIds: string[];
+    impactAssessmentIds: string[];
+    scenarioIds: string[];
+  };
   policyVersion: string;
 }
 
@@ -81,6 +89,14 @@ export const FollowUpContextSchema: z.ZodType<FollowUpContext> = z
       "inactive", "active", "returning-to-briefing",
     ]),
     priorFollowUpId: Id.optional(),
+    personalizedImpact: z.strictObject({
+      personalContextFingerprint: Id,
+      analysisFingerprint: Id,
+      exposureIds: UniqueIds.min(1),
+      impactChannelIds: UniqueIds.min(1),
+      impactAssessmentIds: UniqueIds.min(1),
+      scenarioIds: UniqueIds,
+    }).optional(),
     policyVersion: Id,
   })
   .superRefine((context, refinement) => {

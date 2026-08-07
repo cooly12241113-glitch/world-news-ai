@@ -2,6 +2,7 @@ import type { ExplanationPlanDraft, ExplanationStepKind, PlanSectionKind } from 
 import type { EvidenceContextPackage } from "@world-news-ai/context";
 import {
   proposalFromExplanationPlan,
+  type ExplanationPlanGenerationInput,
   type ExplanationPlanProposal,
   type ProposalVisualIntent,
 } from "@world-news-ai/generation";
@@ -26,12 +27,13 @@ const stepKinds: ExplanationStepKind[] = [
 export function createCanonicalMapImpactProposal(
   plan: ExplanationPlanDraft,
   context: EvidenceContextPackage,
+  personalizedImpact?: ExplanationPlanGenerationInput["personalizedImpactPlanningContext"],
 ): ExplanationPlanProposal {
   const proposal = proposalFromExplanationPlan(plan);
   if (proposal.sections.length < middle.length) {
     throw new Error("Canonical map-impact fixture requires at least five plan sections.");
   }
-  proposal.answerStrategy = "trace-impact";
+  proposal.answerStrategy = personalizedImpact ? "personalize-impact" : "trace-impact";
   const dataPointIds = [...new Set(context.selectedItems.flatMap(({ dataPointIds }) => dataPointIds))];
   const firstSectionByGroup = new Map<number, number>();
   proposal.sections.forEach((section, index) => {
@@ -95,7 +97,52 @@ export function createCanonicalMapImpactProposal(
       semantic.objective,
     )];
   });
+  if (personalizedImpact) {
+    for (const visual of proposal.visualIntents) visual.requiredness = "preferred";
+    bindPersonalizedImpact(proposal, personalizedImpact);
+  }
   return proposal;
+}
+
+function bindPersonalizedImpact(
+  proposal: ExplanationPlanProposal,
+  planning: NonNullable<ExplanationPlanGenerationInput["personalizedImpactPlanningContext"]>,
+): void {
+  const channelStep = proposal.sections.flatMap(({ steps }) => steps)
+    .find(({ kind }) => kind === "explain-mechanism");
+  const scenarioStep = proposal.sections.flatMap(({ steps }) => steps)
+    .find(({ kind }) => kind === "expose-uncertainty");
+  if (!channelStep || !scenarioStep) throw new Error("Personalized fixture steps are unavailable.");
+  channelStep.kind = "trace-impact-channel";
+  channelStep.outputRequirement.outputType = "impact-link";
+  channelStep.outputRequirement.allowedEpistemicTypes = ["inference"];
+  channelStep.epistemicPolicy = {
+    ...channelStep.epistemicPolicy,
+    allowedTypes: ["inference"], preferredType: "inference",
+    allowInference: true, allowForecast: false, requireAssumptions: false,
+  };
+  channelStep.personalImpactBindings = {
+    analysisFingerprint: planning.analysisFingerprint,
+    exposureIds: planning.exposures.map(({ exposureId }) => exposureId),
+    impactChannelIds: planning.channels.map(({ channelId }) => channelId),
+    impactAssessmentIds: planning.assessments.map(({ assessmentId }) => assessmentId),
+    scenarioIds: [],
+  };
+  scenarioStep.kind = "define-scenario";
+  scenarioStep.outputRequirement.outputType = "scenario";
+  scenarioStep.outputRequirement.allowedEpistemicTypes = ["forecast"];
+  scenarioStep.epistemicPolicy = {
+    ...scenarioStep.epistemicPolicy,
+    allowedTypes: ["forecast"], preferredType: "forecast",
+    allowInference: false, allowForecast: true, requireAssumptions: true,
+  };
+  scenarioStep.personalImpactBindings = {
+    analysisFingerprint: planning.analysisFingerprint,
+    exposureIds: planning.scenarios.flatMap(({ affectedExposureIds }) => affectedExposureIds),
+    impactChannelIds: planning.scenarios.flatMap(({ channelIds }) => channelIds),
+    impactAssessmentIds: [],
+    scenarioIds: planning.scenarios.map(({ scenarioId }) => scenarioId),
+  };
 }
 
 function visualIntent(

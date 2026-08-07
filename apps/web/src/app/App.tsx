@@ -162,11 +162,16 @@ function ReadyBriefingApp({ demoId, onDemoChange, script, session }: ReadyBriefi
         <SceneProgress current={player.currentSceneIndex} total={briefing.scenes.length} />
         {mapScene && <SceneCaption scene={scene} />}
         <AnalysisPanel scene={scene} open={panelOpen}
+          briefing={briefing}
           onToggle={() => setPanelOpen((value) => !value)}
           followUp={followUp.viewModel}
           onClarification={followUp.selectClarificationOption}
           onRetry={followUp.retryFollowUp}
-          onDismiss={followUp.dismissOutcome} />
+          onDismiss={followUp.dismissOutcome}
+          onMyLensFollowUp={() => {
+            followUp.updateDraft("What conditions would change this personalized impact path?");
+            openComposer();
+          }} />
         <MapConflictPrompt visible={player.mapConflict}
           onKeep={() => {
             dispatch({ type: "keep-user-map-view" });

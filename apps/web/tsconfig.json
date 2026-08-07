@@ -17,7 +17,9 @@
       "@world-news-ai/context": ["../../src/context/index.ts"],
       "@world-news-ai/explanation": ["../../src/explanation/index.ts"],
       "@world-news-ai/generation": ["../../src/generation/index.ts"],
-      "@world-news-ai/script": ["../../src/script/index.ts"]
+      "@world-news-ai/script": ["../../src/script/index.ts"],
+      "@world-news-ai/personalization": ["../../src/personalization/index.ts"],
+      "@world-news-ai/application-personalized-impact": ["../../src/application/personalized-impact/index.ts"]
     },
     "noEmit": true
   },

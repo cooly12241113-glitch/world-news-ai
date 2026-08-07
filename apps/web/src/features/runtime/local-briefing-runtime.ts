@@ -21,8 +21,15 @@ import {
   RuleBasedBriefingScriptCompiler,
   type PresentationMode,
 } from "@world-news-ai/script";
+import type { PersonalImpactContext } from "@world-news-ai/personalization";
 import { withBriefingSessionFingerprint } from "@world-news-ai/session";
+import { PersonalizedImpactAnalyzer } from "@world-news-ai/personalization";
+import { PersonalizedImpactCoordinator } from "@world-news-ai/application-personalized-impact";
 import { createCanonicalMapImpactProposal } from "./canonical-map-impact-proposal";
+import {
+  createLocalPersonalImpactContext,
+  localPersonalizedImpactPolicy,
+} from "./local-personalized-impact-fixture";
 import {
   createLocalFixtureDocuments,
   createLocalFixtureDataPoint,
@@ -51,7 +58,10 @@ export function createLocalBriefingRuntime(
   adapters: BrowserRuntimeAdapters = browserRuntimeAdapters,
 ) {
   return {
-    start(mode: PresentationMode = "auto"): LocalBriefingRuntimeHandle {
+    start(
+      mode: PresentationMode = "auto",
+      personalized: boolean | PersonalImpactContext = false,
+    ): LocalBriefingRuntimeHandle {
       const runId = adapters.nextRunId();
       const abortController = new AbortController();
       const cancellation: BriefingRunCancellation = {
@@ -59,9 +69,13 @@ export function createLocalBriefingRuntime(
       };
       const service = createService(runId, adapters, abortController.signal);
       const now = adapters.now();
+      const personalImpactContext = personalized === true
+        ? createLocalPersonalImpactContext()
+        : personalized || undefined;
       const request: CreateBriefingRequest = {
-        question: createLocalFixtureQuestion(now),
+        question: createLocalFixtureQuestion(now, Boolean(personalImpactContext)),
         presentationPreference: presentationPreference(mode),
+        ...(personalImpactContext ? { personalImpactContext } : {}),
       };
       return {
         runId,
@@ -92,6 +106,7 @@ function createService(runId: string, adapters: BrowserRuntimeAdapters, signal: 
         proposal: createCanonicalMapImpactProposal(
           built.plan,
           generationInput.evidenceContextPackage,
+          generationInput.personalizedImpactPlanningContext,
         ),
         providerResponseId: `provider-response:${runId}`,
       };
@@ -123,6 +138,9 @@ function createService(runId: string, adapters: BrowserRuntimeAdapters, signal: 
       now: asDate,
       sleeper: async () => undefined,
     }),
+    personalizedImpactCoordinator: new PersonalizedImpactCoordinator(
+      new PersonalizedImpactAnalyzer(localPersonalizedImpactPolicy),
+    ),
     scriptCompiler: new RuleBasedBriefingScriptCompiler(asDate),
     createContextRequest(request, contract): ContextBuildRequest {
       return {
@@ -140,7 +158,7 @@ function createService(runId: string, adapters: BrowserRuntimeAdapters, signal: 
         retrievalPolicyVersion: "retrieval:local-fixture-v1",
       };
     },
-    createGenerationInput(request, contract, contextPackage) {
+    createGenerationInput(request, contract, contextPackage, personalizedImpactPlanningContext) {
       generationInput = {
         question: request.question,
         briefingContract: contract,
@@ -166,6 +184,7 @@ function createService(runId: string, adapters: BrowserRuntimeAdapters, signal: 
         requestedAt: request.question.submittedAt,
         requestId: `generation-request:${runId}`,
         abortSignal: signal,
+        ...(personalizedImpactPlanningContext ? { personalizedImpactPlanningContext } : {}),
       };
       return generationInput;
     },

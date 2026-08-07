@@ -54,4 +54,26 @@ describe("local briefing runtime", () => {
     const result = await handle.result;
     expect(result.outcome.kind).toBe("cancelled");
   });
+
+  it("builds a valid personalized Script only for the explicit My Lens demo", async () => {
+    const runtime = createLocalBriefingRuntime({
+      nextRunId: () => "run:personalized-local-test",
+      now: () => "2026-08-05T00:00:00.000Z",
+    });
+    const ordinary = await runtime.start().result;
+    const personalized = await runtime.start("auto", true).result;
+    expect(ordinary.outcome.kind).toBe("completed");
+    expect(personalized.outcome.kind, JSON.stringify(personalized)).toBe("completed");
+    if (ordinary.outcome.kind !== "completed" || personalized.outcome.kind !== "completed") {
+      throw new Error("Expected both fixture runs to complete.");
+    }
+    expect(ordinary.outcome.script.personalizedImpactPlanningContext).toBeUndefined();
+    expect(personalized.outcome.script.personalizedImpactPlanningContext).toBeDefined();
+    expect(personalized.outcome.script.scenes.flatMap(
+      ({ personalImpactBindings }) => personalImpactBindings ?? [],
+    ).length).toBeGreaterThan(0);
+    expect(personalized.outcome.session.scriptFingerprint)
+      .toBe(personalized.outcome.script.fingerprint);
+    expect(JSON.stringify(personalized.receipt)).not.toMatch(/USD|semiconductor|consent/u);
+  });
 });

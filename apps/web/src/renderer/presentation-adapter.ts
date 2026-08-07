@@ -22,6 +22,7 @@ export interface RenderableScene {
   citations: BriefingScene["citationCues"];
   uncertainties: BriefingScene["uncertaintyCues"];
   layout: BriefingScene["layoutDirective"];
+  personalImpactBindings: NonNullable<BriefingScene["personalImpactBindings"]>;
 }
 
 export interface RenderableBriefing {
@@ -33,6 +34,9 @@ export interface RenderableBriefing {
   playbackPolicy: ValidatedBriefingScript["playbackPolicy"];
   interactionPolicy: ValidatedBriefingScript["interactionPolicy"];
   accessibilityPolicy: ValidatedBriefingScript["accessibilityPolicy"];
+  personalContextFingerprint?: string;
+  personalizedImpactAnalysisFingerprint?: string;
+  personalizedImpactPlanningContext?: ValidatedBriefingScript["personalizedImpactPlanningContext"];
 }
 
 const surface = (scene: BriefingScene): RenderSurfaceKind => {
@@ -67,6 +71,7 @@ export function adaptBriefingScript(
       citations: scene.citationCues,
       uncertainties: scene.uncertaintyCues,
       layout: scene.layoutDirective,
+      personalImpactBindings: scene.personalImpactBindings ?? [],
     }));
   if (scenes.some((scene, index) => scene.order !== index)) {
     return rendererFailure("INVALID_SCRIPT", "Scene order is not contiguous.");
@@ -82,6 +87,15 @@ export function adaptBriefingScript(
       playbackPolicy: script.playbackPolicy,
       interactionPolicy: script.interactionPolicy,
       accessibilityPolicy: script.accessibilityPolicy,
+      ...(script.personalContextFingerprint ? {
+        personalContextFingerprint: script.personalContextFingerprint,
+      } : {}),
+      ...(script.personalizedImpactAnalysisFingerprint ? {
+        personalizedImpactAnalysisFingerprint: script.personalizedImpactAnalysisFingerprint,
+      } : {}),
+      ...(script.personalizedImpactPlanningContext ? {
+        personalizedImpactPlanningContext: script.personalizedImpactPlanningContext,
+      } : {}),
     },
     warnings: scenes.filter(({ primarySurface }) => primarySurface === "unsupported")
       .map(({ id }) => `Unsupported surface in ${id}`),

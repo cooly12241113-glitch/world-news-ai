@@ -4,7 +4,12 @@ import {
   type FollowUpExecutionOutcome,
   type FollowUpExecutionRequest,
 } from "@world-news-ai/application-follow-up";
-import type { EvidenceAllowlist, FollowUpContext, FollowUpRequest } from "@world-news-ai/follow-up";
+import {
+  classifyFollowUp,
+  type EvidenceAllowlist,
+  type FollowUpContext,
+  type FollowUpRequest,
+} from "@world-news-ai/follow-up";
 import {
   reduceBriefingSession,
   type BriefingSession,
@@ -30,6 +35,8 @@ import type {
   FollowUpViewModel,
 } from "./follow-up-ui-state";
 import { createFollowUpViewModel } from "./follow-up-view-model";
+import { createLocalBriefingRuntime } from "../runtime/local-briefing-runtime";
+import { createLocalPersonalImpactContext } from "../runtime/local-personalized-impact-fixture";
 
 const MAX_DRAFT_LENGTH = 800;
 const unique = (values: string[]) => [...new Set(values)];
@@ -229,7 +236,8 @@ export function useFollowUpSessionController(
       );
       const request: FollowUpRequest = {
         followUpId, sessionId: executionSession.sessionId,
-        parentQuestionId: executionSession.currentQuestionId, text: normalized, locale: "en",
+        parentQuestionId: executionSession.currentQuestionId, text: normalized,
+        locale: /[가-힣]/u.test(normalized) ? "ko" : "en",
         currentSceneId: executionSession.sceneCursor.sceneId,
         currentSceneIndex: executionSession.sceneCursor.sceneIndex,
         expectedSessionFingerprint: executionSession.semanticFingerprint,
@@ -254,18 +262,55 @@ export function useFollowUpSessionController(
         selectedAnalysisTab: executionSession.selectedAnalysisTab,
         manualMapViewStatus: executionSession.manualMapViewState.status,
         ...(executionSession.followUpParentId ? { priorFollowUpId: executionSession.followUpParentId } : {}),
+        ...(script.personalContextFingerprint &&
+          script.personalizedImpactAnalysisFingerprint &&
+          script.personalizedImpactPlanningContext ? {
+            personalizedImpact: {
+              personalContextFingerprint: script.personalContextFingerprint,
+              analysisFingerprint: script.personalizedImpactAnalysisFingerprint,
+              exposureIds: script.personalizedImpactPlanningContext.exposures.map(({ exposureId }) => exposureId),
+              impactChannelIds: script.personalizedImpactPlanningContext.channels.map(({ channelId }) => channelId),
+              impactAssessmentIds: script.personalizedImpactPlanningContext.assessments.map(({ assessmentId }) => assessmentId),
+              scenarioIds: script.personalizedImpactPlanningContext.scenarios.map(({ scenarioId }) => scenarioId),
+            },
+          } : {}),
         policyVersion: executionSession.policyVersion,
       };
+      const classifierPolicy = {
+        decisionId: runtime.nextId("decision"),
+        policyVersion: context.policyVersion,
+      };
+      const decision = classifyFollowUp(request, context, classifierPolicy);
+      const personalContextChange = decision.matchedRuleCodes.includes(
+        "FULL_REBUILD_PERSONAL_CONTEXT_CHANGE",
+      );
+      const removePersonalization = decision.matchedRuleCodes.includes(
+        "FULL_REBUILD_REMOVE_PERSONALIZATION",
+      );
+      let replacementOverride: ValidatedBriefingScript | undefined;
+      if (personalContextChange || removePersonalization) {
+        const replacement = await createLocalBriefingRuntime({
+          nextRunId: () => runtime.nextId("follow-up-run"),
+          now: runtime.now,
+        }).start("auto", personalContextChange
+          ? createLocalPersonalImpactContext({ excludeCurrency: "USD" })
+          : false).result;
+        if (replacement.outcome.kind !== "completed") {
+          throw new Error("Personalized fixture replacement did not complete.");
+        }
+        replacementOverride = replacement.outcome.script;
+      }
       const resolution = resolveFixtureScenario(
-        request, context, script, runtime.nextId("decision"),
+        request, context, script, classifierPolicy.decisionId, decision,
+        replacementOverride,
       );
       const execution: FollowUpExecutionRequest = {
         executionId: runtime.nextId("execution"), operationId,
         sessionId: executionSession.sessionId, followUpRequest: request,
         followUpContext: context,
         classifierPolicy: {
-          decisionId: resolution.decision.decisionId,
-          policyVersion: resolution.decision.policyVersion,
+          decisionId: classifierPolicy.decisionId,
+          policyVersion: classifierPolicy.policyVersion,
         },
         fixtureScenarioId: resolution.scenarioId,
         ...(resolution.appendUnavailable

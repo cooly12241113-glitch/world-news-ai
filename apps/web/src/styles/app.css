@@ -111,6 +111,28 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .citation-list { padding: 0; list-style: none; }
 .citation-list li { padding: 10px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
 .citation-list span { color: var(--emphasis); font-weight: 750; }
+.my-lens h3 { margin: 18px 0 8px; color: var(--text-primary); font-size: 13px; }
+.my-lens-intro, .lens-boundary { font-size: 13px; }
+.exposure-list { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; list-style: none; }
+.exposure-list li {
+  display: grid; gap: 1px; padding: 7px 10px; border: 1px solid var(--border);
+  border-radius: 10px; background: rgba(255,255,255,.035);
+}
+.exposure-list li.active { border-color: var(--emphasis); background: rgba(85,214,190,.08); }
+.exposure-list strong { color: var(--text-primary); font-size: 12px; }
+.exposure-list span, .lens-label { color: var(--emphasis); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.lens-boundary { padding: 10px; border-left: 3px solid var(--border); }
+.lens-card { margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.025); }
+.lens-card p { margin: 8px 0; }
+.lens-card dl { margin: 8px 0; }
+.lens-card dl div { display: grid; grid-template-columns: 68px 1fr; gap: 8px; }
+.lens-card dt { color: var(--text-secondary); }
+.lens-card dd { margin: 0; color: var(--text-primary); }
+.lens-condition, .lens-counter { padding-left: 9px; border-left: 2px solid var(--warning); font-size: 12px; }
+.lens-counter { border-left-color: var(--emphasis); }
+.lens-unknown { padding: 1px 10px 8px; border-radius: 10px; background: rgba(248,193,92,.06); }
+.lens-unknown ul { padding-left: 18px; font-size: 12px; }
+.lens-follow-up { width: 100%; margin-top: 12px; border-color: var(--emphasis); }
 .scene-caption {
   position: absolute; z-index: 15; left: 50%; bottom: 94px; transform: translateX(-50%);
   width: min(680px, calc(100vw - 48px)); text-align: center; pointer-events: none;

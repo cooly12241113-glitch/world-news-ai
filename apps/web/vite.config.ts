@@ -20,6 +20,8 @@ export default defineConfig({
       "@world-news-ai/explanation": fileURLToPath(new URL("../../src/explanation/index.ts", import.meta.url)),
       "@world-news-ai/generation": fileURLToPath(new URL("../../src/generation/index.ts", import.meta.url)),
       "@world-news-ai/script": fileURLToPath(new URL("../../src/script/index.ts", import.meta.url)),
+      "@world-news-ai/personalization": fileURLToPath(new URL("../../src/personalization/index.ts", import.meta.url)),
+      "@world-news-ai/application-personalized-impact": fileURLToPath(new URL("../../src/application/personalized-impact/index.ts", import.meta.url)),
     },
   },
   build: { outDir: "dist", emptyOutDir: true },

@@ -18,7 +18,8 @@ export interface FollowUpAnswerPlan {
   answerType: (typeof FOLLOW_UP_ANSWER_TYPES)[number];
   evidenceBindings: string[];
   statementTypes: Array<
-    "confirmed-fact" | "attributed-claim" | "uncertainty" | "unknown"
+    "confirmed-fact" | "attributed-claim" | "inference" | "forecast" |
+    "uncertainty" | "unknown"
   >;
   uncertaintyNotes: string[];
   missingEvidence: string[];
@@ -35,7 +36,8 @@ export const FollowUpAnswerPlanSchema: z.ZodType<FollowUpAnswerPlan> =
     answerType: z.enum(FOLLOW_UP_ANSWER_TYPES),
     evidenceBindings: z.array(Id),
     statementTypes: z.array(z.enum([
-      "confirmed-fact", "attributed-claim", "uncertainty", "unknown",
+      "confirmed-fact", "attributed-claim", "inference", "forecast",
+      "uncertainty", "unknown",
     ])),
     uncertaintyNotes: z.array(Id),
     missingEvidence: z.array(Id),

@@ -73,6 +73,10 @@ function Harness({
     <span data-testid="operation">{controller.latestOperationIdentity ?? "none"}</span>
     <span data-testid="session-status">{controller.session.status}</span>
     <span data-testid="manual-map">{controller.session.manualMapViewState.status}</span>
+    <span data-testid="personal-exposures">{
+      controller.script.personalizedImpactPlanningContext?.exposures
+        .map(({ canonicalSubject }) => canonicalSubject).join(",") ?? "none"
+    }</span>
   </div>;
 }
 
@@ -237,5 +241,40 @@ describe("follow-up session controller", () => {
     keep.focus();
     await user.keyboard(" ");
     expect(onSelect).toHaveBeenLastCalledWith("keep-current-briefing");
+  });
+
+  it("rebuilds changed personal context and removes personalization without stale reuse", async () => {
+    const bootstrap = await createLocalBriefingRuntime({
+      nextRunId: () => "run:personalized-follow-up",
+      now: () => "2026-08-05T00:00:00.000Z",
+    }).start("auto", true).result;
+    if (bootstrap.outcome.kind !== "completed") throw new Error("Expected personalized fixture.");
+    render(<Harness runtime={deterministicRuntime()} initial={{
+      script: bootstrap.outcome.script,
+      session: bootstrap.outcome.session,
+    }} />);
+    const originalScript = screen.getByTestId("script").textContent;
+
+    await submit("달러 보유가 없다고 가정해줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("replacement-applied");
+    expect(screen.getByTestId("script").textContent).not.toBe(originalScript);
+    expect(screen.getByTestId("personal-exposures").textContent).toBe("KR,semiconductor");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await submit("왜 나한테 영향이 있다는 거야?");
+    expect(screen.getByTestId("outcome").textContent).toBe("current-context-answer");
+    expect(screen.getByText(/You provided KR/)).not.toBeNull();
+    expect(screen.getByText(/conditional inference/)).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await submit("반대 시나리오도 보여줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("current-context-answer");
+    expect(screen.getByText(/Validated baseline scenario/)).not.toBeNull();
+    expect(screen.getByText(/not a probability forecast/)).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await submit("개인화 정보는 빼고 다시 설명해줘");
+    expect(screen.getByTestId("outcome").textContent).toBe("replacement-applied");
+    expect(screen.getByTestId("personal-exposures").textContent).toBe("none");
   });
 });

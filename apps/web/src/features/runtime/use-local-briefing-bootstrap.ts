@@ -12,7 +12,7 @@ export function useLocalBriefingBootstrap(resetKey: string): BootstrapState {
     const mode = resetKey === "fact-check" ? "document-led"
       : resetKey === "static" ? "static"
         : resetKey === "reduced" ? "reduced-motion" : "auto";
-    const handle = runtime.start(mode);
+    const handle = runtime.start(mode, resetKey === "personalized-impact");
     controller.replace(handle);
     void handle.result.then((result) => {
       if (controller.accepts(result)) setState(completedBootstrapState(result));

@@ -68,6 +68,47 @@ const AMBIGUOUS = [
   /그\s*사람.*왜|그것만.*줄여|저거.*다시|그게\s*뭐야/iu,
 ];
 
+const PERSONALIZED_RULES: Array<{
+  scope: "answer-current-context" | "rebuild-entire-briefing";
+  code: FollowUpRuleCode;
+  expressions: RegExp[];
+  requiresScenario?: boolean;
+}> = [
+  {
+    scope: "rebuild-entire-briefing",
+    code: "FULL_REBUILD_REMOVE_PERSONALIZATION",
+    expressions: [
+      /(?:remove|without|exclude)\s+(?:my\s+)?personal(?:ization|\s+information|\s+context)/iu,
+      /개인화\s*정보(?:는|를)?\s*(?:빼|제외)|개인\s*정보(?:는|를)?\s*(?:빼|제외)/iu,
+    ],
+  },
+  {
+    scope: "rebuild-entire-briefing",
+    code: "FULL_REBUILD_PERSONAL_CONTEXT_CHANGE",
+    expressions: [
+      /assume\s+(?:that\s+)?i\s+(?:do\s+not|don't)\s+(?:hold|have|own)\s+usd/iu,
+      /달러\s*보유(?:가|는)?\s*없(?:다고|는\s*것으로)|usd\s*보유(?:가|는)?\s*없/iu,
+    ],
+  },
+  {
+    scope: "answer-current-context",
+    code: "CURRENT_CONTEXT_PERSONAL_IMPACT_EXPLANATION",
+    expressions: [
+      /why\s+(?:does|would|could)\s+(?:this|it)\s+(?:affect|impact)\s+me/iu,
+      /왜\s*(?:나한테|내게|나에게)\s*(?:영향|관련)/iu,
+    ],
+  },
+  {
+    scope: "answer-current-context",
+    code: "CURRENT_CONTEXT_VALIDATED_COUNTER_SCENARIO",
+    expressions: [
+      /(?:show|explain)\s+(?:the\s+)?(?:opposite|counter)\s+scenario/iu,
+      /반대\s*시나리오(?:도)?\s*(?:보여|설명)/iu,
+    ],
+    requiresScenario: true,
+  },
+];
+
 function matches(text: string, rule: Rule): boolean {
   return rule.expressions.some((expression) => expression.test(text));
 }
@@ -89,6 +130,31 @@ export function classifyFollowUp(
   }
 
   const text = request.text;
+  const personalizedRule = context.personalizedImpact && PERSONALIZED_RULES.find((rule) =>
+    (!rule.requiresScenario || context.personalizedImpact!.scenarioIds.length > 0) &&
+    rule.expressions.some((expression) => expression.test(text))
+  );
+  if (personalizedRule) {
+    const replacement = personalizedRule.scope === "rebuild-entire-briefing";
+    const decisionWithoutFingerprint: Omit<ReplanDecision, "semanticFingerprint"> = {
+      decisionId: policy.decisionId,
+      followUpId: request.followUpId,
+      scope: personalizedRule.scope,
+      confidenceBand: "high",
+      matchedRuleCodes: [personalizedRule.code],
+      preservesCurrentScript: !replacement,
+      requiresReplacementScript: replacement,
+      requiresNewEvidence: false,
+      ...(replacement
+        ? { suggestedSceneMappingPolicy: "restart-at-opening" as const }
+        : {}),
+      policyVersion: policy.policyVersion,
+    };
+    return {
+      ...decisionWithoutFingerprint,
+      semanticFingerprint: replanDecisionFingerprint(decisionWithoutFingerprint),
+    };
+  }
   const matchedScopes = (Object.keys(RULES) as Array<keyof typeof RULES>)
     .filter((scope) => matches(text, RULES[scope]));
   let scope: ReplanDecision["scope"];

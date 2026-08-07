@@ -6,16 +6,20 @@ import { canonicalMapLocationIds } from "../../fixtures/canonical-map-impact";
 export const LOCAL_FIXTURE_EVENT_ID = "event:semiconductor-supply";
 export const LOCAL_FIXTURE_DOCUMENT_ID = "document:local-primary";
 
-export function createLocalFixtureQuestion(now: string): BriefingQuestion {
+export function createLocalFixtureQuestion(now: string, personalized = false): BriefingQuestion {
   return {
     id: "question:local-briefing",
-    text: "How could East Asian technology policy affect the semiconductor supply chain?",
+    text: personalized
+      ? "How could East Asian technology policy affect my explicit KR, USD, and semiconductor exposures?"
+      : "How could East Asian technology policy affect the semiconductor supply chain?",
     language: "en",
     submittedAt: now,
     referencedEventIds: [LOCAL_FIXTURE_EVENT_ID],
     referencedEntityIds: canonicalMapLocationIds.map((id) => `entity:${id}`),
-    userProvidedContext: { locations: canonicalMapLocationIds },
-    personalizationRequested: false,
+    userProvidedContext: personalized ? {
+      locations: ["KR"], industries: ["semiconductor"], portfolioHoldings: ["USD"],
+    } : { locations: canonicalMapLocationIds },
+    personalizationRequested: personalized,
   };
 }
 
