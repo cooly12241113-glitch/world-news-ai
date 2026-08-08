@@ -220,10 +220,10 @@ It records the A–AT requirement matrix, target layer map, reuse and
 anti-reimplementation decisions, security prerequisites, risk register,
 revalidated Sprint 17–28 sequence, and the exact Sprint 17.1 minimum scope.
 
-Sprint 17.1 — Universal Source Connector Contracts is **READY FOR IMPLEMENTATION**.
-Sprint 17 production implementation has not started. No connector, production
-source, test, dependency, provider, package, migration, scheduler, or UI change
-is included in Sprint 17.0.
+Sprint 17.1 — Universal Source Connector Contracts was **READY FOR
+IMPLEMENTATION** at this audit checkpoint and is subsequently complete below.
+Sprint 17.0 itself introduced no connector, production source, test, dependency,
+provider, package, migration, scheduler, or UI change.
 
 ## Sprint 17.1 implementation
 
@@ -241,3 +241,22 @@ or Web change is included. Automated validation passes with 77 test files / 791
 tests, typecheck, Web production build, and 0 production vulnerabilities. The
 existing development-toolchain moderate 5 audit findings remain. Sprint 17.2
 has not started.
+
+## Sprint 17.2A implementation
+
+**Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+Raw artifact lifecycle, retention, deletion, redaction, encryption requirement,
+access classification, governance attachment, credential reference/scope,
+source-account consent, availability-only resolver port, access decision,
+operational audit, tombstone, semantic identity, prompt-injection posture, and
+fail-closed policy evaluation contracts are implemented.
+
+No network runtime, live connector, credential value, secret store, encryption
+implementation, raw blob persistence, migration, direct dependency, evidence
+logic, or Web change is included. Automated validation passes with 79 test files
+/ 845 tests, typecheck, Web production build, and zero vulnerabilities in both
+full and production audits. The approved lockfile-only remediation resolves
+PostCSS `8.5.26` and nanoid `3.3.18` through the existing Vite dependency graph;
+`package.json` is unchanged. Sprint 17.2B, 17.2C, and 17.3 have not started.
+The independent Q4 security review is complete.

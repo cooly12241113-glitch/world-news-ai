@@ -159,15 +159,19 @@ preserve the candidate Sprint 17–28 dependency order while splitting Sprint 17
 into reviewable gates:
 
 1. Sprint 17.1 — Universal Source Connector Contracts (**IMPLEMENTED / REVIEWED / COMPLETE**)
-2. Sprint 17.2 — Raw Artifact, Access Policy & Connector Security Design
-3. Sprint 17.3 — Web/RSS/Official/User-Submitted Connector Adapters
-4. Sprint 17.4 — Source Genealogy & Reliability Foundation
+2. Sprint 17.2A — Raw Artifact Governance & Credential Boundaries
+   (**IMPLEMENTED / REVIEWED / COMPLETE**)
+3. Sprint 17.2B — Safe Network Acquisition Runtime
+4. Sprint 17.2C — Durable Raw Artifact Persistence
+5. Sprint 17.3 — Web/RSS/Official/User-Submitted Connector Adapters
+6. Sprint 17.4 — Source Genealogy & Reliability Foundation
 
 Production connector implementation must not precede the Sprint 17.2 raw-data,
 DNS/egress, credential-isolation, retention, and redaction decisions. Sprint
 17.1 remains contract-only: it adds strict acquisition contracts, an offline
 fixture, and an adapter seam into existing ingestion, but no live connector.
-Sprint 17.2 has not started.
+Sprint 17.2A implements governance contracts only. Sprint 17.2B, 17.2C, and
+all live connector work have not started.
 
 ## Cross-cutting prerequisites
 

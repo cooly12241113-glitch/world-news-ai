@@ -10,6 +10,7 @@ complete within the fixture-only boundary.
 | `domain` | Pure event/evidence contracts and URL identity policy | typed records → typed records | none | no | additive domain types | storage, HTTP, UI, LLM |
 | `validation` | Runtime domain boundary | unknown → validated domain record | domain, Zod | no | new schemas | normalization |
 | `source-connector` | Platform-neutral source acquisition contract | typed locator/request → acquired text/reference or safe failure | domain URL identity, ingestion request type, Zod; crypto for semantic identity | no | connector port, locator union, bridge | live network, credentials, raw storage, media processing, evidence |
+| `source-governance` | Raw artifact lifecycle and credential-reference policy | raw reference + policy + operation context → fail-closed access decision | source-connector contracts, validation, crypto for semantic policy identity | no | policy evaluator, availability-only credential resolver port | network enforcement, secrets, encryption, raw storage, deletion execution |
 | `ingestion` | Adaptive source conversion | URL/raw content → SourceDocument | domain, validation, Cheerio, injected fetch | no | capability registry, fetch port | discovery, scheduling |
 | `persistence` | Durable ingestion lifecycle | ingestion request → stored/duplicate/revision | ingestion, validation, `node:sqlite` adapter | memory/SQLite | repository/UoW ports | knowledge graph store |
 | `dossier` | Evidence assessment aggregate | event + referenced records → revision | domain, validation | memory/SQLite | repository/UoW ports | prose generation, NLP contradiction |
@@ -31,6 +32,7 @@ complete within the fixture-only boundary.
 flowchart LR
   D["domain"] --> V["validation"]
   D --> SC["source-connector"]
+  SC --> SG["source-governance"]
   SC --> I["ingestion"]
   D --> I["ingestion"]
   V --> I
@@ -80,6 +82,9 @@ Module `index.ts` files export their public contracts and services:
 - Source connectors acquire content behind a strict platform-neutral port. The
   bridge projects validated text/HTML acquisition into the existing
   `IngestionRequest`; it does not replace normalization or persistence.
+- Source governance attaches lifecycle policy by artifact/policy identity and
+  evaluates access fail-closed. It does not resolve secrets, encrypt bytes, or
+  persist/delete raw content.
 - Persistence and dossier application services depend on repository/UoW ports.
 - Context depends on `EvidenceCandidateProvider`, not SQLite.
 - Future AI analysis implements `QuestionIntentAnalyzer`.
