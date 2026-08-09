@@ -6,6 +6,8 @@
 
 **Sprint 17.2B-1: IMPLEMENTED / REVIEWED / COMPLETE**
 
+**Sprint 17.2B-2: IMPLEMENTED / REVIEWED / COMPLETE**
+
 ## 17.2B-1 scope
 
 This increment establishes only the pre-acquisition authorization, target
@@ -109,15 +111,92 @@ test and adds no dependency.
 
 ## Remaining work
 
-17.2B-2 must add redirect-by-redirect reauthorization and re-resolution,
-bounded retry policy, rate/concurrency gates, cancellation/deadline behavior,
-and safe failure mapping into the Sprint 17.1 outcome taxonomy without reusing
-an approval across a changed authority.
-
 17.2B-3 must add bounded streaming response acquisition, content-type/size
 limits, decompression safeguards, privacy-minimized attempt audit, connector
 runtime integration, and deterministic end-to-end failure tests. Durable raw
 storage remains Sprint 17.2C.
+
+## 17.2B-2 safe request lifecycle
+
+Every actual HTTP GET attempt begins from the original acquisition input and
+performs fresh credential/consent authorization, fresh URL validation, pre-DNS
+rate admission, fresh complete-set DNS/IP validation, creation of a new
+`ApprovedEgressTarget`, post-approval network-concurrency admission, and a new
+isolated pinned connection. No approval or socket is reused by a retry or
+redirect. A concurrency lease is released as soon as the response head is
+accepted or the attempt fails.
+
+The built-in gate uses those split phases. A legacy gate exposing only combined
+`admit` semantics instead holds one conservative lease continuously from its
+pre-DNS admission through DNS, target approval, pinned transport, and response
+head. It releases that lease exactly once on every success, failure, redirect,
+retry, timeout, or cancellation path; each later attempt obtains a new lease.
+This compatibility mode may hold concurrency during DNS but never runs
+transport after releasing its permit.
+
+Redirect handling is manual for 301, 302, 303, 307, and 308. Relative locations
+are resolved against the current URL, then pass through the complete lifecycle
+again. The default hop limit is five, normalized target identity detects loops,
+HTTPS-to-HTTP downgrade is denied, and cross-origin redirects receive no
+authorization or cookie header forwarding because the runtime accepts no such
+headers.
+
+The default lifecycle limits are three attempts per target, a 30-second overall
+deadline, a 10-second attempt timeout, 100-millisecond bounded retry backoff,
+a 2-second maximum retry delay, and a 16-KiB absolute response-header ceiling.
+Runtime policy may lower but never raise that header ceiling. Only DNS,
+pinned-transport, timeout, HTTP 429, and HTTP 502/503/504 failures retry. TLS,
+peer mismatch, target-policy denial, malformed headers, and cancellation fail
+closed without retry. Delta-seconds `Retry-After` is clamped; date forms are not
+interpreted. The overall deadline always dominates retry delay and attempt
+timeouts. One absolute overall deadline is created at acquisition start and is
+never reset; it covers authorization, URL/rate processing, DNS, approval,
+concurrency admission, connect/TLS, response head, redirects, and retry delay.
+The attempt timeout covers only pinned connect/TLS and response-head wait.
+
+DNS itself is not claimed to be abortable. A reusable async boundary races its
+promise against cancellation and the absolute overall deadline. Once either
+boundary wins, the lifecycle stops awaiting DNS; late resolution or rejection
+is consumed and ignored, cannot reach IP approval or transport, and cannot
+become success.
+
+An in-memory admission gate separately enforces connector and normalized-origin
+fixed-window rates before DNS and active-network concurrency after target
+approval. Rate quota is consumed even if later DNS or transport fails; it is
+not refunded. Expired rate buckets are pruned on admission. Connector and
+origin bucket maps have validated capacities of 64 and 4,096 by default; when
+only active buckets fill capacity, a new key fails closed as
+`RATE_LIMIT_STATE_CAPACITY_EXHAUSTED` and maps to `rate-limited` without DNS.
+Active buckets are never evicted to create bypassable fresh quota.
+
+The response-head transport
+retains only status, Location, Retry-After, Content-Type, and Content-Length,
+then destroys the response stream without buffering body bytes. All lifecycle
+reasons map explicitly into the authoritative Sprint 17.1 failure outcomes;
+public failures omit native errors and remove query/fragment data from Web
+locators.
+
+17.2B-2 adds no full-body acquisition, decompression, persistence, migration,
+dependency, live connector, external network test, Web, or LLM behavior.
+
+Loop fingerprints normalize percent encodings only for RFC unreserved
+characters and normalize hex case for retained encodings. Reserved characters
+such as encoded `/` are deliberately not decoded; the finite redirect limit
+remains the second defense against other URI-equivalence edge cases.
+
+## 17.2B-2 validation
+
+- New test files: 6 (plus one shared test helper), including the retained
+  independent lifecycle security review
+- New tests: 70
+- Targeted security/governance/connector suite: 15 files / 279 tests passed
+- Full suite: 90 files / 1,025 tests passed
+- skipped/only/todo: 0
+- Typecheck and Web production build: passed
+- Full and production npm audits: 0 vulnerabilities
+- External network tests: 0
+- Package/dependency changes: none
+- Migration changes: none; SQLite remains v2
 
 ## Validation
 

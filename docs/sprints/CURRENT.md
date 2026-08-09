@@ -290,4 +290,22 @@ is included. See
 The independent review's credential-kind mismatch precedence finding is
 patched: authoritative prohibited-source policy is now evaluated before all
 consent and credential semantics. Reviewer adversarial coverage and the final
-Q4 validation pass. Sprint 17.2B-2 has not started.
+Q4 validation pass.
+
+**Sprint 17.2B-2:** IMPLEMENTED / REVIEWED / COMPLETE
+
+Sprint 17.2B-2 adds a safe request lifecycle around that approved-target proof:
+every redirect and retry performs fresh authorization, full-set DNS/IP
+validation, target approval, and pinned connection. Manual bounded redirects,
+cancellation, finite overall/attempt deadlines, bounded retry, separate
+connector/origin rate and concurrency gates, response-head-only processing,
+and explicit Sprint 17.1 failure mapping are implemented. The independent Q4
+findings are patched: DNS is lifecycle-detached on cancellation/deadline,
+rate admission precedes DNS, active rate-bucket state has fail-closed capacity,
+and Node parsing enforces an absolute 16-KiB response-header ceiling.
+Combined-only admission compatibility conservatively retains one lease from
+pre-DNS admission through response-head completion so transport is never
+unprotected. Full-body streaming,
+decompression safeguards, privacy-minimized attempt audit, connector runtime
+integration, persistence, migrations, dependencies, live connectors, Web, and
+LLM behavior remain outside this increment and 17.2B-3 remains pending.

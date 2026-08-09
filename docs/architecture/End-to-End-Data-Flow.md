@@ -10,10 +10,15 @@ GPT/search/backend integration is implied.
 
 ```mermaid
 flowchart TD
-  PA["Pre-acquisition authorization"] --> TV["URL + complete DNS/IP validation"]
+  PA["Pre-acquisition authorization"] --> UV["URL validation"]
+  UV --> RG["Pre-DNS connector + origin rate gate"]
+  RG --> TV["Deadline/cancel-bound complete DNS/IP validation"]
   TV --> ET["ApprovedEgressTarget"]
-  ET --> PT["Pinned Node transport + peer equality"]
-  PT -. "17.2B-2/3 integration pending" .-> C["SourceConnector"]
+  ET --> CG["Post-approval network concurrency lease"]
+  CG --> PT["Fresh pinned GET + peer equality"]
+  PT --> RH["Bounded response head only"]
+  RH -->|redirect / bounded retry| PA
+  RH -. "17.2B-3 body integration pending" .-> C["SourceConnector"]
   C --> AQ["Validated Acquisition Result"]
   AQ -. "future governed raw operation" .-> G["Raw Governance Policy Evaluation"]
   AQ --> B["Acquisition-to-Ingestion Bridge"]
@@ -78,6 +83,18 @@ present in its summary/body source.
 
 ## Failure semantics
 
+- Every network attempt receives fresh authorization, DNS/IP approval, and an
+  isolated pinned connection; redirects and retries never reuse approval.
+- Rate quota is consumed before DNS and bounded bucket state fails closed;
+  network concurrency is acquired only after target approval.
+- A combined-only compatibility gate conservatively holds one active lease
+  from pre-DNS admission through response-head completion.
+- The overall deadline detaches lifecycle progress from non-abortable DNS;
+  late resolver completion is ignored and cannot produce approval or transport.
+- Cancellation and finite attempt/overall deadlines stop before the next
+  security-sensitive step, while admission leases cover only active attempts.
+- Response heads are bounded and privacy-minimized lifecycle failures map into
+  the Sprint 17.1 outcome taxonomy; response bodies remain deferred to 17.2B-3.
 - Ingestion never returns an invalid SourceDocument.
 - Persistence transactions roll back partial writes.
 - Dossier validation rejects broken references and invalid classifications.

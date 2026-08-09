@@ -19,7 +19,8 @@ export const approveEgressTarget = async (
 ): Promise<ApprovedEgressTarget> => {
   const target = validateNetworkTarget(input);
   const resolved = target.literalAddress === undefined
-    ? await resolver.resolve(target.originalHostname).catch(() => {
+    ? await resolver.resolve(target.originalHostname).catch((error: unknown) => {
+      if (error instanceof TargetSecurityError) throw error;
       throw new TargetSecurityError("DNS_RESOLUTION_FAILED");
     })
     : [{
