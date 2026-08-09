@@ -1,5 +1,12 @@
 # Current Project Status
 
+## Product direction
+
+The authoritative long-term product identity and decision principles are
+defined in the
+[Strategic Intelligence Product Charter](../product/Strategic-Intelligence-Product-Charter.md).
+Sprint scope must remain consistent with that Charter.
+
 ## Current Milestone
 
 Milestone 03 — Personalized Intelligence Baseline

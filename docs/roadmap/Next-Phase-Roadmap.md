@@ -120,6 +120,10 @@ intelligence baseline. See
 
 ## Strategic Intelligence North Star — Candidate Architecture Plan
 
+The [Strategic Intelligence Product Charter](../product/Strategic-Intelligence-Product-Charter.md)
+is the authoritative product-direction constraint for this candidate roadmap.
+The sequence below plans delivery; it does not redefine product identity.
+
 The following sequence is planning only. It does not authorize production
 implementation, providers, ingestion, persistence, or an Explore redesign.
 

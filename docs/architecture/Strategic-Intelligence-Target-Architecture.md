@@ -8,6 +8,11 @@ This document records the Sprint 17.0 compatibility target. It does not
 authorize a production connector, strategic model, provider call, scheduler,
 or UI implementation.
 
+Architecture decisions in this document are subordinate to the
+[Strategic Intelligence Product Charter](../product/Strategic-Intelligence-Product-Charter.md),
+which defines the product identity, Korea-centered prioritization, evidence
+principles, and presentation boundaries.
+
 ## Layer map
 
 ```mermaid
@@ -89,4 +94,3 @@ flowchart TD
 - CouncilStatement is not chain-of-thought.
 - Multi-provider availability is not agent independence.
 - Reposts are not independent corroboration.
-
