@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IdSchema, ISODateStringSchema, NonEmptyStringSchema } from "../validation/common";
 import {
   createRawArtifactId,
+  CredentialRequirementSchema,
   RawArtifactReferenceSchema,
   SourceAccessPolicySchema,
   SourceConnectorIdSchema,
@@ -28,6 +29,8 @@ import {
   type RawArtifactTombstone,
   type RetentionDuration,
   type SourceAccessDecision,
+  type SourceAcquisitionAuthorizationDecision,
+  type SourceAcquisitionAuthorizationInput,
   type SourceAccountAccessConsent,
 } from "./models";
 
@@ -170,6 +173,32 @@ z.ZodType<CredentialReferenceAvailability> = z.union([
   z.strictObject({ status: z.literal("unavailable"), reasonCode: ReasonCodeSchema }),
   z.strictObject({ status: z.literal("denied"), reasonCode: ReasonCodeSchema }),
 ]);
+
+export const SourceAcquisitionAuthorizationInputSchema:
+z.ZodType<SourceAcquisitionAuthorizationInput> = z.strictObject({
+  connectorId: SourceConnectorIdSchema,
+  sourceAccessPolicy: SourceAccessPolicySchema,
+  credentialRequirement: CredentialRequirementSchema,
+  credentialReference: CredentialReferenceSchema.optional(),
+  credentialAvailability: CredentialReferenceAvailabilitySchema.optional(),
+  sourceAccountConsent: SourceAccountAccessConsentSchema.optional(),
+}).superRefine((value, context) => {
+  if (value.credentialAvailability !== undefined &&
+      value.credentialReference === undefined) {
+    context.addIssue({
+      code: "custom",
+      path: ["credentialAvailability"],
+      message: "Credential availability requires a credential reference.",
+    });
+  }
+});
+
+export const SourceAcquisitionAuthorizationDecisionSchema:
+z.ZodType<SourceAcquisitionAuthorizationDecision> = z.strictObject({
+  status: z.enum(SOURCE_ACCESS_DECISION_STATUSES),
+  reasonCode: ReasonCodeSchema,
+  connectorId: SourceConnectorIdSchema,
+});
 
 export const RawArtifactOperationContextSchema:
 z.ZodType<RawArtifactOperationContext> = z.strictObject({

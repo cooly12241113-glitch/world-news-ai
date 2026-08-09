@@ -1,4 +1,5 @@
 import type {
+  CredentialRequirement,
   CredentialRequirementKind,
   RawArtifactReference,
   SourceAccessPolicy,
@@ -109,6 +110,21 @@ export interface CredentialReferenceAvailabilityResolver {
   resolveAvailability(
     reference: CredentialReference,
   ): Promise<CredentialReferenceAvailability>;
+}
+
+export interface SourceAcquisitionAuthorizationInput {
+  connectorId: SourceConnectorId;
+  sourceAccessPolicy: SourceAccessPolicy;
+  credentialRequirement: CredentialRequirement;
+  credentialReference?: CredentialReference;
+  credentialAvailability?: CredentialReferenceAvailability;
+  sourceAccountConsent?: SourceAccountAccessConsent;
+}
+
+export interface SourceAcquisitionAuthorizationDecision {
+  status: SourceAccessDecisionStatus;
+  reasonCode: string;
+  connectorId: SourceConnectorId;
 }
 
 export const RAW_ARTIFACT_OPERATIONS = [

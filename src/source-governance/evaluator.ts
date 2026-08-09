@@ -13,6 +13,7 @@ import {
   RawArtifactPolicyEvaluationInputSchema,
   SourceAccessDecisionSchema,
 } from "./validation";
+import { authorizeCredentialAndConsent } from "./authorization";
 
 const decision = (
   status: SourceAccessDecisionStatus,
@@ -55,8 +56,24 @@ export class RawArtifactPolicyEvaluator {
         value.governance.policyFingerprint !== value.policy.semanticFingerprint) {
       return decision("denied", "GOVERNANCE_REFERENCE_MISMATCH", value.context.operation, value);
     }
-    if (value.context.sourceAccessPolicy.access === "prohibited") {
-      return decision("prohibited", "SOURCE_ACCESS_PROHIBITED", value.context.operation, value);
+    const accessAuthorization = authorizeCredentialAndConsent({
+      connectorId: value.context.connectorId,
+      sourceAccessPolicy: value.context.sourceAccessPolicy,
+      credentialReference: value.context.credentialReference,
+      credentialAvailability: value.context.credentialAvailability,
+      sourceAccountConsent: value.context.sourceAccountConsent,
+      credentialRequired:
+        value.policy.accessClass === "consented-private-source" ||
+        value.policy.accessClass === "restricted-operational",
+      consentRequired: value.policy.accessClass === "consented-private-source",
+    });
+    if (accessAuthorization.status === "prohibited") {
+      return decision(
+        accessAuthorization.status,
+        accessAuthorization.reasonCode,
+        value.context.operation,
+        value,
+      );
     }
     if (value.context.operation === "delete" &&
         value.policy.retention.kind === "legal-hold") {
@@ -68,60 +85,10 @@ export class RawArtifactPolicyEvaluator {
          value.policy.redaction === "discard-after-normalization")) {
       return decision("denied", "RAW_PERSISTENCE_NOT_ALLOWED", value.context.operation, value);
     }
-    const consentRequired =
-      value.context.sourceAccessPolicy.access === "authenticated-explicit-consent" ||
-      value.policy.accessClass === "consented-private-source" ||
-      value.context.credentialReference?.scope.consentScope === "explicit-source-access";
-    if (consentRequired && value.context.sourceAccountConsent?.granted !== true) {
+    if (accessAuthorization.status !== "allowed") {
       return decision(
-        "explicit-consent-required",
-        "SOURCE_ACCOUNT_CONSENT_REQUIRED",
-        value.context.operation,
-        value,
-      );
-    }
-    const credentialRequired =
-      value.context.sourceAccessPolicy.access === "authenticated-explicit-consent" ||
-      value.policy.accessClass === "consented-private-source" ||
-      value.policy.accessClass === "restricted-operational";
-    if (credentialRequired && value.context.credentialReference === undefined) {
-      return decision(
-        "credential-required",
-        "CREDENTIAL_REFERENCE_REQUIRED",
-        value.context.operation,
-        value,
-      );
-    }
-    if (value.context.credentialReference !== undefined &&
-        value.context.credentialReference.connectorId !== value.context.connectorId) {
-      return decision(
-        "denied",
-        "CREDENTIAL_CONNECTOR_SCOPE_MISMATCH",
-        value.context.operation,
-        value,
-      );
-    }
-    if (value.context.credentialReference !== undefined &&
-        value.context.credentialAvailability === undefined) {
-      return decision(
-        "credential-required",
-        "CREDENTIAL_AVAILABILITY_REQUIRED",
-        value.context.operation,
-        value,
-      );
-    }
-    if (value.context.credentialAvailability?.status === "unavailable") {
-      return decision(
-        "credential-required",
-        "CREDENTIAL_REFERENCE_UNAVAILABLE",
-        value.context.operation,
-        value,
-      );
-    }
-    if (value.context.credentialAvailability?.status === "denied") {
-      return decision(
-        "denied",
-        "CREDENTIAL_REFERENCE_ACCESS_DENIED",
+        accessAuthorization.status,
+        accessAuthorization.reasonCode,
         value.context.operation,
         value,
       );

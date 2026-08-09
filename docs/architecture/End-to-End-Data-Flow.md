@@ -10,9 +10,13 @@ GPT/search/backend integration is implied.
 
 ```mermaid
 flowchart TD
-  C["Optional SourceConnector (fixture-only in Sprint 17.1)"] --> A["Validated Acquisition Result"]
-  A -. "future governed raw operation" .-> G["Raw Governance Policy Evaluation"]
-  A --> B["Acquisition-to-Ingestion Bridge"]
+  PA["Pre-acquisition authorization"] --> TV["URL + complete DNS/IP validation"]
+  TV --> ET["ApprovedEgressTarget"]
+  ET --> PT["Pinned Node transport + peer equality"]
+  PT -. "17.2B-2/3 integration pending" .-> C["SourceConnector"]
+  C --> AQ["Validated Acquisition Result"]
+  AQ -. "future governed raw operation" .-> G["Raw Governance Policy Evaluation"]
+  AQ --> B["Acquisition-to-Ingestion Bridge"]
   B --> S["IngestionRequest / Direct Source Input"]
   S --> I["Adaptive Ingestion"]
   I -->|success| D["SourceDocument"]

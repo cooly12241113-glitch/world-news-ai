@@ -85,6 +85,11 @@ Module `index.ts` files export their public contracts and services:
 - Source governance attaches lifecycle policy by artifact/policy identity and
   evaluates access fail-closed. It does not resolve secrets, encrypt bytes, or
   persist/delete raw content.
+- Source acquisition security authorizes access before any raw artifact exists,
+  validates the complete DNS/IP target set, and issues an immutable approved
+  egress capability. Node transport must use only its pinned address, preserve
+  original-host HTTP/TLS identity, disable connection reuse, and verify the
+  connected peer address before accepting a response.
 - Persistence and dossier application services depend on repository/UoW ports.
 - Context depends on `EvidenceCandidateProvider`, not SQLite.
 - Future AI analysis implements `QuestionIntentAnalyzer`.

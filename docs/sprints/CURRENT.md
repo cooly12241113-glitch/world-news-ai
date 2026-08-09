@@ -260,3 +260,27 @@ full and production audits. The approved lockfile-only remediation resolves
 PostCSS `8.5.26` and nanoid `3.3.18` through the existing Vite dependency graph;
 `package.json` is unchanged. Sprint 17.2B, 17.2C, and 17.3 have not started.
 The independent Q4 security review is complete.
+
+## Sprint 17.2B implementation
+
+**Sprint 17.2B overall:** IN PROGRESS
+
+**Sprint 17.2B-1:** IMPLEMENTED / REVIEWED / COMPLETE
+
+Sprint 17.2B-1 adds shared pre-acquisition credential/consent authorization,
+strict HTTP(S) default-port target validation, deterministic global-unicast IP
+classification, fail-closed full-set DNS validation, immutable
+`ApprovedEgressTarget`, and a Node pinned-transport feasibility proof. The
+approved address is injected through custom lookup and verified against the
+actual socket peer; HTTPS retains original-host SNI, certificate validation,
+and hostname validation, while `agent:false` prevents connection reuse.
+
+No external network test, redirect/retry/rate/concurrency runtime, full response
+runtime, persistence, migration, dependency, live connector, Web, or LLM change
+is included. See
+[Sprint 17.2B delivery](Sprint-17.2B-Safe-Network-Acquisition-Runtime.md).
+
+The independent review's credential-kind mismatch precedence finding is
+patched: authoritative prohibited-source policy is now evaluated before all
+consent and credential semantics. Reviewer adversarial coverage and the final
+Q4 validation pass. Sprint 17.2B-2 has not started.
