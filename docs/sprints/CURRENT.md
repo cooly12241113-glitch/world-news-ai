@@ -355,3 +355,37 @@ The final independent Q4 re-review passed with 32 targeted test files / 476
 tests and 96 full-suite test files / 1,116 tests. Typecheck, Web production
 build, full audit, and production audit all pass.
 Sprint 17.3 has not started.
+
+## Milestone 04 — Secure Acquisition Foundation
+
+**Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+The legacy ingestion resolver no longer uses global `fetch` or owns redirects,
+retries, response headers, body limits, or timeouts. `InputResolver` and the
+default `IngestionPipeline` now process only already-materialized content;
+URL-only input fails closed with `SAFE_ACQUISITION_REQUIRED` and performs zero
+network calls. `SafeNetworkIngestionService` composes the sole supported URL
+path through `SafeNetworkAcquisitionRuntime`, the existing SourceConnector
+adapter and bridge, and then the content-only pipeline. It preserves SSRF/DNS,
+pinning, redirect, body/decompression, deadline/cancellation, hash, and
+no-refetch boundaries without making raw persistence mandatory.
+
+No live connector or Sprint 17.3 implementation is included. Sprint 17.3 is
+**NOT STARTED**.
+
+The final Q5 findings are patched without starting Sprint 17.3. A narrow
+`ProductionAcquisitionOrchestrator` now executes one safe acquisition and
+branches the exact bounded bytes/hash to optional governed raw persistence and
+the existing ingestion bridge. Persistence denial/failure remains visible as a
+structured partial failure while normalized ingestion stays lifecycle-
+independent. A TypeScript-AST architecture guard grants module-level low-level
+networking imports only to the pinned and response-head safe transports. Pure
+classification utilities receive only exact named `node:net/isIP` permissions;
+namespace/default/mixed imports remain forbidden. The guard also covers
+fetch/import/require aliases, dynamic imports, sockets, and common clients.
+
+The final independent Q5 audit passed with 35 targeted test files / 528 tests
+and 99 full-suite test files / 1,168 tests. Typecheck, Web production build,
+full audit, and production audit pass. Findings are BLOCKER 0 / HIGH 0 /
+MEDIUM 0 / LOW 0. See
+[Milestone 04](../milestones/Milestone-04-Secure-Acquisition-Foundation.md).

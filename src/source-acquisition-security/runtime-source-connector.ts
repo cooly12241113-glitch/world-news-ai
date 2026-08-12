@@ -6,6 +6,8 @@ import {
   createSourceIdentity,
   type ConnectorCapability,
   type SourceAcquisitionRequest,
+  type SourceAcquisitionFailure,
+  type SourceAcquisitionSuccess,
   type SourceAcquisitionResult,
   type SourceConnector,
   type SourceConnectorExecutionContext,
@@ -13,11 +15,20 @@ import {
 import type {
   SafeNetworkAcquisitionInput,
   SafeNetworkAcquisitionResult,
+  SafeNetworkAcquisitionSuccess,
 } from "./lifecycle-models";
 
 export interface SafeAcquisitionExecutor {
   execute(input: SafeNetworkAcquisitionInput): Promise<SafeNetworkAcquisitionResult>;
 }
+
+export type DetailedSafeAcquisitionResult =
+  | {
+      success: true;
+      boundedAcquisition: SafeNetworkAcquisitionSuccess;
+      sourceAcquisition: SourceAcquisitionSuccess;
+    }
+  | { success: false; sourceAcquisition: SourceAcquisitionFailure };
 
 export class SafeRuntimeFixtureConnector implements SourceConnector {
   readonly capability: ConnectorCapability = ConnectorCapabilitySchema.parse({
@@ -40,9 +51,17 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
     request: SourceAcquisitionRequest,
     context: SourceConnectorExecutionContext = {},
   ): Promise<SourceAcquisitionResult> {
+    const detailed = await this.acquireDetailed(request, context);
+    return detailed.sourceAcquisition;
+  }
+
+  async acquireDetailed(
+    request: SourceAcquisitionRequest,
+    context: SourceConnectorExecutionContext = {},
+  ): Promise<DetailedSafeAcquisitionResult> {
     const parsed = SourceAcquisitionRequestSchema.safeParse(request);
     if (!parsed.success) {
-      return {
+      return { success: false, sourceAcquisition: {
         success: false,
         connectorId: "web",
         locator: request.locator,
@@ -50,7 +69,7 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
         outcome: "failed",
         retryable: false,
         reasonCode: "INVALID_ACQUISITION_REQUEST",
-      };
+      } };
     }
     const validated = parsed.data;
     const acquired = await this.runtime.execute({
@@ -58,9 +77,9 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
       credentialRequirement: this.capability.credentialRequirement,
       cancellation: context.cancellation,
     });
-    if (!acquired.success) return acquired;
+    if (!acquired.success) return { success: false, sourceAcquisition: acquired };
     if (acquired.body === undefined) {
-      return {
+      return { success: false, sourceAcquisition: {
         success: false,
         connectorId: "web",
         locator: validated.locator,
@@ -68,10 +87,10 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
         outcome: "failed",
         retryable: false,
         reasonCode: "RESPONSE_BODY_REQUIRED",
-      };
+      } };
     }
     const sourceIdentity = createSourceIdentity(validated.locator);
-    const result: SourceAcquisitionResult = {
+    const result: SourceAcquisitionSuccess = {
       success: true,
       connectorId: "web",
       locator: validated.locator,
@@ -93,6 +112,10 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
         attempt: acquired.attemptNumber,
       },
     };
-    return SourceAcquisitionResultSchema.parse(result);
+    return {
+      success: true,
+      boundedAcquisition: acquired,
+      sourceAcquisition: SourceAcquisitionResultSchema.parse(result) as SourceAcquisitionSuccess,
+    };
   }
 }

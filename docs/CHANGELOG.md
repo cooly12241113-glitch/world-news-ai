@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Patched the Milestone 04 production network bypass: ingestion is now
+  materialized-content-only, URL-only pipeline requests fail closed, and the
+  supported URL path composes the existing safe acquisition runtime, connector
+  bridge, and pipeline exactly once without global-fetch fallback or refetch.
+- Added the Milestone 04 production acquisition orchestrator, preserving one
+  bounded acquisition across optional governed raw persistence and ingestion,
+  plus an AST-based per-module network-capability allowlist with alias and
+  imported-client self-tests.
+- Narrowed non-I/O `node:net` architecture exceptions from file/module scope to
+  exact named `isIP` imports; namespace, default, mixed, require, dynamic, and
+  socket-capable imports now fail closed outside the two safe transports.
+- Completed the independent Milestone 04 Q5 audit with no remaining BLOCKER,
+  HIGH, MEDIUM, or LOW findings; Sprint 17.3 remains not started.
+
 - Implemented Sprint 17.2C durable raw artifact persistence with SQLite schema
   v3, immutable decoded-byte blobs, independent source/acquisition/governance
   lineage, byte-verified deduplication, atomic audit, and restart durability.

@@ -22,8 +22,10 @@ flowchart TD
   BR --> MV["MIME/content-kind validated acquisition"]
   MV --> C["SourceConnector adapter"]
   C --> AQ["Validated Acquisition Result"]
-  AQ -. "future governed raw operation" .-> G["Raw Governance Policy Evaluation"]
-  AQ --> B["Acquisition-to-Ingestion Bridge"]
+  AQ --> O["Production Acquisition Orchestrator"]
+  O -. "optional governed raw persistence" .-> G["Raw Governance Policy Evaluation"]
+  O --> B
+  B["Acquisition-to-Ingestion Bridge"]
   B --> S["IngestionRequest / Direct Source Input"]
   S --> I["Adaptive Ingestion"]
   I -->|success| D["SourceDocument"]
@@ -66,6 +68,56 @@ flowchart TD
   BP --> F["Map / Chart / Document / Evidence Surface"]
 ```
 
+`IngestionPipeline` and `InputResolver` are materialized-content boundaries,
+not network clients. A URL locator alone is rejected with
+`SAFE_ACQUISITION_REQUIRED`. `SafeNetworkIngestionService` is the public
+URL-to-document composition: it executes the existing safe runtime once,
+projects its validated body through `SourceAcquisitionIngestionBridge`, and
+passes that content to the pipeline without refetching.
+
+`ProductionAcquisitionOrchestrator` is the authoritative combined application
+boundary. It consumes one `SafeNetworkAcquisitionRuntime` result and reuses its
+exact decoded bytes and SHA-256 for optional `RawArtifactPersistenceService`,
+while the existing validated text projection goes through
+`SourceAcquisitionIngestionBridge`. It never refetches, decompresses, decodes,
+rehashes normalized content, or regenerates acquisition identity. Redirect and
+retry attempts remain network audit events; only the terminal acquisition ID
+becomes one acquisition occurrence.
+
+Raw persistence is separately governed and never mandatory for ingestion.
+When requested persistence is denied or fails, ingestion may still finish, but
+the combined result is a bounded `stage: persistence` partial failure carrying
+the distinct persistence and ingestion results. RawArtifact and SourceDocument
+lifecycles remain independent.
+
+## Production network authority allowlist
+
+Only these modules perform network I/O:
+
+- `src/source-acquisition-security/pinned-transport.ts`
+- `src/source-acquisition-security/response-head-transport.ts`
+
+Three pure validation modules receive a symbol-level exception only for the
+named `node:net/isIP` import: `ip-classifier.ts`, `url-validator.ts`, and the
+legacy content URL validator `ingestion/url-policy.ts`. They do not receive a
+module-level `node:net` permission. Other named symbols, mixed imports,
+namespace/default imports, `require`, and dynamic imports fail closed, so these
+modules cannot acquire socket authority.
+
+A TypeScript-AST architecture test scans every production TypeScript module in
+ingestion, source connectors, safe acquisition, and acquisition orchestration.
+Broad low-level modules are permitted only in the two explicit safe transport
+files, with a per-file set of modules each transport genuinely uses. Everywhere
+else the guard rejects `fetch` references, static or dynamic imports and
+`require` aliases of Node HTTP/HTTPS/net/TLS/dgram, and common direct clients,
+except for the exact symbol-level `isIP` permissions above. Even broad-authority
+files cannot add global fetch or an unapproved client. Test fixture servers are
+excluded. Adding a new authority therefore requires a deliberate allowlist and
+architecture review.
+
+Acquisition text remains UTF-8-only. Broader charset support is a future
+connector concern and does not relax this security boundary.
+
 ## Provenance chain
 
 ```text
@@ -101,7 +153,10 @@ present in its summary/body source.
   applies encoded/decoded ceilings, decompression, idle/cancel/deadline checks,
   MIME/content-kind policy, and incremental decoded-byte hashing.
 - The connector adapter uses the existing SourceAcquisitionResult and bridge;
-  durable raw storage remains exclusively deferred to Sprint 17.2C.
+  governed durable raw storage is optional and remains a separate Sprint 17.2C
+  branch from the same bounded result.
+- No ingestion resolver or default pipeline constructor opens a URL. All
+  production URL acquisition passes through the approved-target safe runtime.
 - Ingestion never returns an invalid SourceDocument.
 - Persistence transactions roll back partial writes.
 - Dossier validation rejects broken references and invalid classifications.

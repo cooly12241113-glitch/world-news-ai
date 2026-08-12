@@ -12,3 +12,4 @@ export * from "./response-head-transport";
 export * from "./safe-runtime";
 export * from "./bounded-body";
 export * from "./runtime-source-connector";
+export * from "./safe-network-ingestion";

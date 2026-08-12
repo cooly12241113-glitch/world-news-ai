@@ -171,6 +171,7 @@ export type IngestionErrorCode =
   | "INVALID_INPUT"
   | "INVALID_URL"
   | "UNSAFE_URL"
+  | "SAFE_ACQUISITION_REQUIRED"
   | "FETCH_FAILED"
   | "FETCH_TIMEOUT"
   | "HTTP_STATUS_ERROR"

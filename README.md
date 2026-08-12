@@ -71,7 +71,7 @@ architecture decision and [Sprint-04](docs/sprints/Sprint-04.md) for scope.
 
 ## Adaptive ingestion
 
-Sprint 05 adds a source-agnostic pipeline for public HTTP(S) URLs and raw text:
+The adaptive ingestion pipeline processes already-materialized HTML and text:
 
 ```text
 IngestionRequest → Resolve → Probe → Select capability → Extract
@@ -81,6 +81,22 @@ IngestionRequest → Resolve → Probe → Select capability → Extract
 Generic static HTML and plain text are processed. JSON, XML, RSS, and Atom are
 detected for future capabilities. The registry selects handlers by score,
 priority, then stable ID and contains no publisher-specific rules.
+
+`IngestionPipeline` has no network authority. A URL-only `IngestionRequest`
+fails closed with `SAFE_ACQUISITION_REQUIRED`; it never falls back to global
+`fetch`. Network-backed ingestion must use
+`SafeNetworkAcquisitionRuntime → SafeNetworkIngestionService`, which projects
+the single bounded, validated acquisition through the existing connector
+bridge as materialized content. Plain text, supplied HTML, and deterministic
+fixtures remain network-free.
+
+Production flows that also request durable raw storage use
+`ProductionAcquisitionOrchestrator`. It executes the safe runtime once, then
+branches that same validated result to optional governed raw persistence and
+the existing ingestion bridge. Persistence is optional. A requested
+persistence denial or storage failure does not erase a successfully created
+SourceDocument, but the combined result is explicitly a persistence-stage
+partial failure rather than an ambiguous success.
 
 See [ADR-005](docs/architecture/ADR-005-adaptive-source-ingestion.md) and
 [Sprint-05](docs/sprints/Sprint-05.md).
@@ -124,6 +140,10 @@ const service = new PersistentIngestionService(
   storage,
 );
 ```
+
+This default construction accepts supplied content only. It does not open URLs.
+Callers handling URL sources must first use the safe acquisition composition
+described above; ingestion then consumes those exact bytes without refetching.
 
 See [ADR-006](docs/architecture/ADR-006-persistent-ingestion-storage.md),
 [Persistence Architecture](docs/architecture/Persistence-Architecture.md), and
