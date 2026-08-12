@@ -39,6 +39,16 @@ const OUTCOME_BY_REASON: Readonly<Record<string, SourceAcquisitionFailureOutcome
     OVERALL_DEADLINE_EXCEEDED: "unavailable",
     PINNED_TRANSPORT_FAILED: "unavailable",
     HTTP_TRANSIENT_FAILURE: "unavailable",
+    RESPONSE_BODY_TOO_LARGE: "failed",
+    ENCODED_BODY_TOO_LARGE: "failed",
+    DECOMPRESSED_BODY_TOO_LARGE: "failed",
+    CONTENT_TYPE_NOT_ALLOWED: "unsupported",
+    CONTENT_KIND_MISMATCH: "unsupported",
+    CONTENT_ENCODING_NOT_ALLOWED: "unsupported",
+    CHARACTER_ENCODING_NOT_ALLOWED: "unsupported",
+    DECOMPRESSION_FAILED: "failed",
+    BODY_IDLE_TIMEOUT: "unavailable",
+    RESPONSE_STREAM_FAILED: "unavailable",
   });
 
 const RETRYABLE_PUBLIC_REASONS = new Set([

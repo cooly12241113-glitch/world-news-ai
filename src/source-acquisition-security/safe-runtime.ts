@@ -4,11 +4,13 @@ import { SourceAcquisitionAuthorizer } from "../source-governance";
 import { InMemoryAcquisitionAdmissionGate } from "./admission";
 import { approveEgressTarget } from "./egress-target";
 import { createLifecycleFailure } from "./failure-mapping";
+import { acquireBoundedBody } from "./bounded-body";
 import type {
   AcquisitionAdmissionGate,
   AdmissionDecision,
   AdmissionLease,
   AdmissionPolicy,
+  AcquisitionAttemptAuditSink,
   CancellationAwareSleeper,
   MonotonicClock,
   PinnedResponseHeadTransport,
@@ -16,11 +18,16 @@ import type {
   SafeNetworkAcquisitionInput,
   SafeNetworkAcquisitionResult,
   SafeResponseHead,
+  SafePinnedResponse,
+  SafeAcquisitionAttemptAudit,
 } from "./lifecycle-models";
 import {
   DEFAULT_ADMISSION_POLICY,
   DEFAULT_SAFE_LIFECYCLE_POLICY,
   HARD_MAX_RESPONSE_HEADER_BYTES,
+  HARD_MAX_ENCODED_BODY_BYTES,
+  HARD_MAX_DECODED_BODY_BYTES,
+  HARD_MAX_BODY_IDLE_TIMEOUT_MS,
 } from "./lifecycle-models";
 import {
   TargetSecurityError,
@@ -60,7 +67,13 @@ export const validateSafeLifecyclePolicy = (policy: SafeLifecyclePolicy): void =
       policy.retryBaseDelayMs > policy.maxRetryDelayMs ||
       policy.maxRetryDelayMs > 30_000 ||
       !positiveInteger(policy.maxHeaderSizeBytes) ||
-      policy.maxHeaderSizeBytes > HARD_MAX_RESPONSE_HEADER_BYTES) {
+      policy.maxHeaderSizeBytes > HARD_MAX_RESPONSE_HEADER_BYTES ||
+      !positiveInteger(policy.maxEncodedBodyBytes) ||
+      policy.maxEncodedBodyBytes > HARD_MAX_ENCODED_BODY_BYTES ||
+      !positiveInteger(policy.maxDecodedBodyBytes) ||
+      policy.maxDecodedBodyBytes > HARD_MAX_DECODED_BODY_BYTES ||
+      !positiveInteger(policy.bodyIdleTimeoutMs) ||
+      policy.bodyIdleTimeoutMs > HARD_MAX_BODY_IDLE_TIMEOUT_MS) {
     throw new Error("INVALID_SAFE_LIFECYCLE_POLICY");
   }
 };
@@ -101,6 +114,7 @@ interface SafeNetworkAcquisitionRuntimeDependencies {
   clock?: MonotonicClock;
   sleeper?: CancellationAwareSleeper;
   policy?: SafeLifecyclePolicy;
+  auditSink?: AcquisitionAttemptAuditSink;
 }
 
 export class SafeNetworkAcquisitionRuntime {
@@ -111,6 +125,7 @@ export class SafeNetworkAcquisitionRuntime {
   readonly #clock: MonotonicClock;
   readonly #sleeper: CancellationAwareSleeper;
   readonly #policy: SafeLifecyclePolicy;
+  readonly #auditSink?: AcquisitionAttemptAuditSink;
 
   constructor(dependencies: SafeNetworkAcquisitionRuntimeDependencies) {
     this.#resolver = dependencies.resolver;
@@ -126,6 +141,7 @@ export class SafeNetworkAcquisitionRuntime {
       ...DEFAULT_SAFE_LIFECYCLE_POLICY,
       ...dependencies.policy,
     };
+    this.#auditSink = dependencies.auditSink;
     validateSafeLifecyclePolicy(this.#policy);
   }
 
@@ -144,6 +160,7 @@ export class SafeNetworkAcquisitionRuntime {
     let currentUrl = request.locator.url;
     let redirectHop = 0;
     const visitedTargets = new Set<string>();
+    const audit: SafeAcquisitionAttemptAudit[] = [];
 
     while (true) {
       let attemptNumber = 0;
@@ -267,20 +284,37 @@ export class SafeNetworkAcquisitionRuntime {
         }
 
         let responseHead: SafeResponseHead;
+        let pinnedResponse: SafePinnedResponse | undefined;
         try {
           const beforeConnect = this.#checkpoint(
             input,
             request,
             overallDeadlineAtMs,
           );
-          if (beforeConnect !== undefined) return beforeConnect;
+          if (beforeConnect !== undefined) {
+            admission.lease.release();
+            return beforeConnect;
+          }
           const remainingMs = overallDeadlineAtMs - this.#clock.nowMs();
-          responseHead = await this.#transport.requestHead(approved, {
+          const transportContext = {
             timeoutMs: Math.min(this.#policy.attemptTimeoutMs, remainingMs),
             maxHeaderSizeBytes: this.#policy.maxHeaderSizeBytes,
             cancellation: input.cancellation,
-          });
+          };
+          if (this.#transport.requestResponse !== undefined) {
+            pinnedResponse = await this.#transport.requestResponse(
+              approved,
+              transportContext,
+            );
+            responseHead = pinnedResponse.head;
+          } else {
+            responseHead = await this.#transport.requestHead(
+              approved,
+              transportContext,
+            );
+          }
         } catch (error) {
+          admission.lease.release();
           const reasonCode = cancellationRequested(input)
             ? "ACQUISITION_CANCELLED"
             : this.#safeReason(error);
@@ -293,67 +327,142 @@ export class SafeNetworkAcquisitionRuntime {
           );
           if (retry === "retry") continue;
           return retry ?? createLifecycleFailure(request, reasonCode);
-        } finally {
-          admission.lease.release();
         }
 
-        const afterTransport = this.#checkpoint(
-          input,
-          request,
-          overallDeadlineAtMs,
-        );
-        if (afterTransport !== undefined) return afterTransport;
-
-        if (REDIRECT_STATUSES.has(responseHead.statusCode)) {
-          const redirected = this.#redirectTarget(
-            currentUrl,
-            validated,
-            responseHead,
-            request,
-            redirectHop,
-          );
-          if ("success" in redirected) return redirected;
-          const beforeRedirect = this.#checkpoint(
+        try {
+          const afterTransport = this.#checkpoint(
             input,
             request,
             overallDeadlineAtMs,
           );
-          if (beforeRedirect !== undefined) return beforeRedirect;
-          currentUrl = redirected.url;
-          redirectHop += 1;
-          break;
-        }
+          if (afterTransport !== undefined) {
+            pinnedResponse?.destroy();
+            return afterTransport;
+          }
 
-        if (RETRYABLE_HTTP_STATUSES.has(responseHead.statusCode)) {
-          const reasonCode = responseHead.statusCode === 429
-            ? "HTTP_RATE_LIMITED"
-            : "HTTP_TRANSIENT_FAILURE";
-          const retry = await this.#retryIfPermitted(
-            input,
-            request,
-            reasonCode,
+          if (REDIRECT_STATUSES.has(responseHead.statusCode)) {
+            pinnedResponse?.destroy();
+            const redirected = this.#redirectTarget(
+              currentUrl,
+              validated,
+              responseHead,
+              request,
+              redirectHop,
+            );
+            if ("success" in redirected) return redirected;
+            this.#recordAudit(audit, {
+              connectorId: request.connectorId,
+              scheme: approved.scheme,
+              hostname: approved.originalHostname,
+              port: approved.effectivePort,
+              attemptNumber,
+              redirectHop,
+              outcome: "redirected",
+              encodedBytes: 0,
+              decodedBytes: 0,
+            });
+            const beforeRedirect = this.#checkpoint(
+              input,
+              request,
+              overallDeadlineAtMs,
+            );
+            if (beforeRedirect !== undefined) return beforeRedirect;
+            currentUrl = redirected.url;
+            redirectHop += 1;
+            break;
+          }
+
+          if (RETRYABLE_HTTP_STATUSES.has(responseHead.statusCode)) {
+            pinnedResponse?.destroy();
+            const reasonCode = responseHead.statusCode === 429
+              ? "HTTP_RATE_LIMITED"
+              : "HTTP_TRANSIENT_FAILURE";
+            const retry = await this.#retryIfPermitted(
+              input,
+              request,
+              reasonCode,
+              attemptNumber,
+              overallDeadlineAtMs,
+              responseHead.retryAfter,
+            );
+            if (retry === "retry") {
+              this.#recordAudit(audit, {
+                connectorId: request.connectorId,
+                scheme: approved.scheme,
+                hostname: approved.originalHostname,
+                port: approved.effectivePort,
+                attemptNumber,
+                redirectHop,
+                outcome: "retrying",
+                reasonCode,
+                encodedBytes: 0,
+                decodedBytes: 0,
+              });
+              continue;
+            }
+            return retry ?? createLifecycleFailure(request, reasonCode);
+          }
+
+          const body = pinnedResponse === undefined
+            ? undefined
+            : await acquireBoundedBody({
+              stream: pinnedResponse.body,
+              head: responseHead,
+              request,
+              policy: this.#policy,
+              cancellation: input.cancellation,
+              overallDeadlineAtMs,
+              clock: this.#clock,
+            });
+          if (body !== undefined) {
+            this.#recordAudit(audit, {
+              connectorId: request.connectorId,
+              scheme: approved.scheme,
+              hostname: approved.originalHostname,
+              port: approved.effectivePort,
+              attemptNumber,
+              redirectHop,
+              outcome: "succeeded",
+              contentType: body.mediaType,
+              encodedBytes: body.encodedBytesReceived,
+              decodedBytes: body.decodedBytesProduced,
+              contentHash: body.decodedSha256,
+            });
+          }
+          return {
+            success: true,
+            connectorId: request.connectorId,
+            requestId: request.requestId,
+            finalTarget: {
+              scheme: approved.scheme,
+              hostname: approved.originalHostname,
+              port: approved.effectivePort,
+              targetFingerprint: approved.approvalFingerprint,
+            },
+            statusCode: responseHead.statusCode,
             attemptNumber,
-            overallDeadlineAtMs,
-            responseHead.retryAfter,
-          );
-          if (retry === "retry") continue;
-          return retry ?? createLifecycleFailure(request, reasonCode);
-        }
-
-        return {
-          success: true,
-          connectorId: request.connectorId,
-          requestId: request.requestId,
-          finalTarget: {
+            redirectHop,
+            ...(body === undefined ? {} : { body, audit: [...audit] }),
+          };
+        } catch (error) {
+          pinnedResponse?.destroy();
+          const reasonCode = this.#safeReason(error);
+          this.#recordAudit(audit, {
+            connectorId: request.connectorId,
             scheme: approved.scheme,
             hostname: approved.originalHostname,
             port: approved.effectivePort,
-            targetFingerprint: approved.approvalFingerprint,
-          },
-          statusCode: responseHead.statusCode,
-          attemptNumber,
-          redirectHop,
-        };
+            attemptNumber,
+            redirectHop,
+            outcome: "failed",
+            reasonCode,
+            encodedBytes: 0,
+            decodedBytes: 0,
+          });
+          return createLifecycleFailure(request, reasonCode);
+        } finally {
+          admission.lease.release();
+        }
       }
     }
   }
@@ -440,6 +549,18 @@ export class SafeNetworkAcquisitionRuntime {
     return error instanceof TargetSecurityError
       ? error.reasonCode
       : "PINNED_TRANSPORT_FAILED";
+  }
+
+  #recordAudit(
+    audit: SafeAcquisitionAttemptAudit[],
+    event: SafeAcquisitionAttemptAudit,
+  ): void {
+    audit.push(Object.freeze({ ...event }));
+    try {
+      this.#auditSink?.record(Object.freeze({ ...event }));
+    } catch {
+      // Operational audit adapters are isolated from acquisition completion.
+    }
   }
 }
 

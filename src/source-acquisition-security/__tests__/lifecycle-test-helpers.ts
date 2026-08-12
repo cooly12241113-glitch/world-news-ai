@@ -114,5 +114,8 @@ export const lifecyclePolicy = (
   retryBaseDelayMs: 10,
   maxRetryDelayMs: 100,
   maxHeaderSizeBytes: 8_192,
+  maxEncodedBodyBytes: 2 * 1_024 * 1_024,
+  maxDecodedBodyBytes: 5 * 1_024 * 1_024,
+  bodyIdleTimeoutMs: 1_000,
   ...overrides,
 });

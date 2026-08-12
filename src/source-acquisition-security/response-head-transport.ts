@@ -10,6 +10,7 @@ import {
 import type {
   PinnedResponseHeadTransport,
   ResponseHeadAttemptContext,
+  SafePinnedResponse,
   SafeResponseHead,
 } from "./lifecycle-models";
 import { HARD_MAX_RESPONSE_HEADER_BYTES } from "./lifecycle-models";
@@ -39,10 +40,19 @@ const parseContentLength = (value: string | undefined): number | undefined => {
 
 export class NodePinnedResponseHeadTransport
 implements PinnedResponseHeadTransport {
-  requestHead(
+  async requestHead(
     target: ApprovedEgressTarget,
     context: ResponseHeadAttemptContext,
   ): Promise<SafeResponseHead> {
+    const response = await this.requestResponse(target, context);
+    response.destroy();
+    return response.head;
+  }
+
+  requestResponse(
+    target: ApprovedEgressTarget,
+    context: ResponseHeadAttemptContext,
+  ): Promise<SafePinnedResponse> {
     if (!Number.isInteger(context.maxHeaderSizeBytes) ||
         context.maxHeaderSizeBytes <= 0 ||
         context.maxHeaderSizeBytes > HARD_MAX_RESPONSE_HEADER_BYTES) {
@@ -90,23 +100,32 @@ implements PinnedResponseHeadTransport {
             const location = boundedHeader(response.headers.location, 2_048);
             const retryAfter = boundedHeader(response.headers["retry-after"], 128);
             const contentType = boundedHeader(response.headers["content-type"], 256);
+            const contentEncoding = boundedHeader(
+              response.headers["content-encoding"],
+              64,
+            );
             const contentLength = parseContentLength(boundedHeader(
               response.headers["content-length"],
               32,
             ));
             const statusCode = response.statusCode;
-            response.destroy();
             if (statusCode === undefined || statusCode < 100 || statusCode > 599) {
               throw new TargetSecurityError("RESPONSE_HEADERS_INVALID");
             }
             settled = true;
             cleanup();
-            resolve({
+            const head = {
               statusCode,
               ...(location === undefined ? {} : { location }),
               ...(retryAfter === undefined ? {} : { retryAfter }),
               ...(contentType === undefined ? {} : { contentType }),
               ...(contentLength === undefined ? {} : { contentLength }),
+              ...(contentEncoding === undefined ? {} : { contentEncoding }),
+            };
+            resolve({
+              head,
+              body: response,
+              destroy: () => response.destroy(),
             });
           } catch (error) {
             response.destroy();
@@ -128,7 +147,7 @@ implements PinnedResponseHeadTransport {
       request.once("error", (error) => {
         if (settled) return;
         const code = "code" in error ? String(error.code) : "";
-        finishFailure(code === "HPE_HEADER_OVERFLOW"
+        finishFailure(code.startsWith("HPE_")
           ? new TargetSecurityError("RESPONSE_HEADERS_INVALID")
           : code.includes("CERT") || code.startsWith("ERR_TLS")
             ? new TargetSecurityError("TLS_VALIDATION_FAILED")

@@ -270,7 +270,7 @@ The independent Q4 security review is complete.
 
 ## Sprint 17.2B implementation
 
-**Sprint 17.2B overall:** IN PROGRESS
+**Sprint 17.2B overall:** IMPLEMENTED / REVIEWED / COMPLETE
 
 **Sprint 17.2B-1:** IMPLEMENTED / REVIEWED / COMPLETE
 
@@ -308,4 +308,23 @@ pre-DNS admission through response-head completion so transport is never
 unprotected. Full-body streaming,
 decompression safeguards, privacy-minimized attempt audit, connector runtime
 integration, persistence, migrations, dependencies, live connectors, Web, and
-LLM behavior remain outside this increment and 17.2B-3 remains pending.
+LLM behavior remain outside this increment.
+
+**Sprint 17.2B-3:** IMPLEMENTED / REVIEWED / COMPLETE
+
+The safe runtime now performs bounded response-body streaming with independent
+encoded/decoded byte ceilings, identity/gzip/deflate/Brotli handling,
+compression-bomb defense, explicit textual MIME and UTF-8 policy, body-idle and
+absolute overall deadline enforcement, cancellation-safe pipeline cleanup, and
+incremental decoded-byte SHA-256 hashing. Split and combined admission leases
+remain active through complete body validation. Privacy-minimized bounded
+attempt events and a deterministic runtime connector adapter integrate through
+the existing SourceAcquisitionResult and ingestion bridge contracts.
+The independent audit-privacy finding is patched: canonical MIME is recorded
+only after successful validation, while failure/retry events omit raw
+Content-Type and all other unvalidated response-header values.
+
+Durable raw persistence, migrations, encryption, secrets/OAuth, live
+connectors, real retrieval, evidence/LLM logic, and Web/Globe work remain out of
+scope. Sprint 17.2C has not started. Sprint 17.2B is implemented, independently
+reviewed, and complete.

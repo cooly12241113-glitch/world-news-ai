@@ -105,6 +105,27 @@ describe("response-head-only pinned transport", () => {
     expect(mocked.response.listenerCount("data")).toBe(0);
   });
 
+  it("keeps the body stream open only for the explicit full-response API", async () => {
+    const target = await approvedHttpTarget();
+    const mocked = mockHttpResponse(200, {
+      "content-type": "text/plain",
+      "content-encoding": "gzip",
+      "content-length": "12",
+    });
+    const response = await new NodePinnedResponseHeadTransport().requestResponse(
+      target,
+      { timeoutMs: 1_000, maxHeaderSizeBytes: 4_096 },
+    );
+    expect(response.head).toMatchObject({
+      contentType: "text/plain",
+      contentEncoding: "gzip",
+      contentLength: 12,
+    });
+    expect(mocked.response.destroy).not.toHaveBeenCalled();
+    response.destroy();
+    expect(mocked.response.destroy).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     { location: "x".repeat(2_049) },
     { "content-length": "-1" },
@@ -178,6 +199,25 @@ describe("response-head-only pinned transport", () => {
     expect(failure).toMatchObject({ reasonCode: "RESPONSE_HEADERS_INVALID" });
     expect(JSON.stringify(failure)).not.toContain("attacker-controlled");
   });
+
+  it("maps conflicting Content-Length parser ambiguity to a safe header failure", async () => {
+    const target = await approvedHttpTarget();
+    vi.spyOn(http, "request").mockImplementation(((_options, _callback) => {
+      const request = new EventEmitter() as http.ClientRequest;
+      request.destroy = vi.fn() as typeof request.destroy;
+      request.end = vi.fn(() => {
+        request.emit("error", Object.assign(new Error("Parse Error"), {
+          code: "HPE_UNEXPECTED_CONTENT_LENGTH",
+        }));
+        return request;
+      }) as typeof request.end;
+      return request;
+    }) as typeof http.request);
+    await expect(new NodePinnedResponseHeadTransport().requestResponse(target, {
+      timeoutMs: 1_000,
+      maxHeaderSizeBytes: 4_096,
+    })).rejects.toMatchObject({ reasonCode: "RESPONSE_HEADERS_INVALID" });
+  });
 });
 
 const requestRawHeaderFixture = async (
@@ -234,5 +274,13 @@ describe("actual Node response-header parser bound", () => {
       `X-Small-${index}: ${"v".repeat(16)}`);
     const result = await requestRawHeaderFixture(headers, 1_024);
     expect(result).toMatchObject({ code: "HPE_HEADER_OVERFLOW" });
+  });
+
+  it("rejects conflicting duplicate Content-Length at the Node parser", async () => {
+    const result = await requestRawHeaderFixture([
+      "Content-Length: 1",
+      "Content-Length: 2",
+    ], 4_096);
+    expect(result).toMatchObject({ code: "HPE_UNEXPECTED_CONTENT_LENGTH" });
   });
 });

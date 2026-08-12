@@ -2,7 +2,7 @@
 
 ## Status
 
-**Sprint 17.2B overall: IN PROGRESS**
+**Sprint 17.2B overall: IMPLEMENTED / REVIEWED / COMPLETE**
 
 **Sprint 17.2B-1: IMPLEMENTED / REVIEWED / COMPLETE**
 
@@ -111,10 +111,8 @@ test and adds no dependency.
 
 ## Remaining work
 
-17.2B-3 must add bounded streaming response acquisition, content-type/size
-limits, decompression safeguards, privacy-minimized attempt audit, connector
-runtime integration, and deterministic end-to-end failure tests. Durable raw
-storage remains Sprint 17.2C.
+Durable raw storage remains Sprint 17.2C. It must not be introduced into the
+network runtime or connector adapter.
 
 ## 17.2B-2 safe request lifecycle
 
@@ -191,6 +189,92 @@ remains the second defense against other URI-equivalence edge cases.
 - New tests: 70
 - Targeted security/governance/connector suite: 15 files / 279 tests passed
 - Full suite: 90 files / 1,025 tests passed
+- skipped/only/todo: 0
+- Typecheck and Web production build: passed
+- Full and production npm audits: 0 vulnerabilities
+- External network tests: 0
+- Package/dependency changes: none
+- Migration changes: none; SQLite remains v2
+
+## 17.2B-3 bounded response acquisition
+
+**Sprint 17.2B-3: IMPLEMENTED / REVIEWED / COMPLETE**
+
+The pinned transport now has an explicit full-response API that returns the
+validated response head and live body stream without weakening the existing
+head-only API. Redirect and retry responses are destroyed without body
+buffering. A terminal response is processed while the same split concurrency
+lease—or conservative combined-gate lease—remains active through streaming,
+decompression, validation, hashing, and terminal result creation. Every exit
+releases the lease exactly once.
+
+`Content-Length` is only an early encoded-size rejection hint. Missing length
+is allowed, conflicting or malformed lengths fail at the bounded Node parser,
+and actual streamed bytes remain authoritative. The operational defaults are
+2 MiB encoded and 5 MiB decoded; absolute policy ceilings are 8 MiB encoded and
+16 MiB decoded. These are resource-safety defaults, not claims about all future
+source sizes. Values must be positive finite integers within those ceilings.
+The collector uses Node `pipeline`, preserves stream backpressure, increments
+counters before retaining chunks, and stores no more than the decoded limit.
+
+The content-encoding allowlist is `identity`, `gzip`, `deflate`, and `br` using
+Node built-ins. Stacked and unknown encodings fail closed. Encoded transport
+bytes and decoded output bytes are counted independently; crossing either
+limit destroys the response and decompressor, preventing compression bombs.
+Decoded bytes are incrementally SHA-256 hashed, and that exact decoded-byte
+hash becomes the bounded artifact content hash.
+
+The MIME allowlist is `text/html`, `text/plain`, `application/json`,
+`application/xml`, `text/xml`, `application/rss+xml`, and
+`application/atom+xml`. MIME comparison is case-insensitive and accepts only a
+UTF-8 charset parameter. Missing, malformed, binary, or other MIME values fail
+closed without sniffing. `html` requests require HTML; `text` requests accept
+the listed non-HTML textual families. Existing inline acquisition and ingestion
+support remains limited to text and HTML. Bytes are decoded once with a fatal
+UTF-8 decoder; no universal charset transcoder or silent legacy-charset guess
+is introduced.
+
+The default body-idle timeout is five seconds, with a 60-second hard policy
+ceiling. Each encoded body chunk resets only the idle timer. The one absolute
+overall deadline from acquisition start never resets and spans the complete
+body and decompression pipeline, so slow trickles cannot extend acquisition.
+Cancellation, deadline, idle timeout, size violation, stream error, or zlib
+error destroys all pipeline stages and cannot promote partial bytes.
+
+Attempt audit is a caller-injected sink plus a bounded result-attached success
+view. Cardinality is bounded by existing redirect/attempt limits. Events contain
+only connector, scheme, hostname, port, attempt/hop, safe outcome/reason, safe
+MIME, byte counts, and success hash. They contain no body, raw query, Location,
+arbitrary headers, credentials, native exception, stack, or socket detail, and
+there is no global or durable audit log.
+
+The independent privacy review established a stricter metadata rule: response
+header values are never copied directly into audit. Canonical MIME appears only
+after successful MIME validation (`Text/HTML; Charset=UTF-8` becomes
+`text/html`). Failed or retrying attempts omit `contentType`; malformed,
+unsupported, or secret-bearing MIME parameters therefore cannot cross the
+audit boundary. Raw Content-Encoding, Retry-After, Location, and charset
+parameters are likewise absent.
+
+`SafeRuntimeFixtureConnector` adapts bounded runtime success and existing
+failure results into the authoritative Sprint 17.1 `SourceAcquisitionResult`.
+Its deterministic tests pass that result through the existing
+`SourceAcquisitionIngestionBridge`; no second ingestion path, raw persistence,
+live connector, or external network call is introduced.
+
+Body/resource/MIME/encoding/decompression failures are non-retryable and map
+explicitly to the existing top-level taxonomy. Cancellation remains
+`cancelled`; idle/deadline/stream infrastructure failures are `unavailable`;
+unsupported MIME, kind, charset, or encoding are `unsupported`; bounded-size
+and decompression integrity failures are `failed`. Native stream/zlib messages
+never become public reason codes.
+
+## 17.2B-3 validation
+
+- New test files: 4, including the retained independent body security review
+- New tests: 51
+- Targeted security/governance/connector suite: 19 files / 330 tests passed
+- Full suite: 94 files / 1,076 tests passed
 - skipped/only/todo: 0
 - Typecheck and Web production build: passed
 - Full and production npm audits: 0 vulnerabilities

@@ -18,7 +18,9 @@ flowchart TD
   CG --> PT["Fresh pinned GET + peer equality"]
   PT --> RH["Bounded response head only"]
   RH -->|redirect / bounded retry| PA
-  RH -. "17.2B-3 body integration pending" .-> C["SourceConnector"]
+  RH -->|terminal response| BR["Bounded encoded/decoded stream + SHA-256"]
+  BR --> MV["MIME/content-kind validated acquisition"]
+  MV --> C["SourceConnector adapter"]
   C --> AQ["Validated Acquisition Result"]
   AQ -. "future governed raw operation" .-> G["Raw Governance Policy Evaluation"]
   AQ --> B["Acquisition-to-Ingestion Bridge"]
@@ -94,7 +96,12 @@ present in its summary/body source.
 - Cancellation and finite attempt/overall deadlines stop before the next
   security-sensitive step, while admission leases cover only active attempts.
 - Response heads are bounded and privacy-minimized lifecycle failures map into
-  the Sprint 17.1 outcome taxonomy; response bodies remain deferred to 17.2B-3.
+  the Sprint 17.1 outcome taxonomy.
+- Terminal bodies retain the active concurrency lease while Node pipeline
+  applies encoded/decoded ceilings, decompression, idle/cancel/deadline checks,
+  MIME/content-kind policy, and incremental decoded-byte hashing.
+- The connector adapter uses the existing SourceAcquisitionResult and bridge;
+  durable raw storage remains exclusively deferred to Sprint 17.2C.
 - Ingestion never returns an invalid SourceDocument.
 - Persistence transactions roll back partial writes.
 - Dossier validation rejects broken references and invalid classifications.
