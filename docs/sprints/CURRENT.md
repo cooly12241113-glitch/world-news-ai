@@ -265,7 +265,8 @@ logic, or Web change is included. Automated validation passes with 79 test files
 / 845 tests, typecheck, Web production build, and zero vulnerabilities in both
 full and production audits. The approved lockfile-only remediation resolves
 PostCSS `8.5.26` and nanoid `3.3.18` through the existing Vite dependency graph;
-`package.json` is unchanged. Sprint 17.2B, 17.2C, and 17.3 have not started.
+`package.json` is unchanged. At that checkpoint, Sprint 17.2B, 17.2C, and 17.3
+had not started.
 The independent Q4 security review is complete.
 
 ## Sprint 17.2B implementation
@@ -324,7 +325,33 @@ The independent audit-privacy finding is patched: canonical MIME is recorded
 only after successful validation, while failure/retry events omit raw
 Content-Type and all other unvalidated response-header values.
 
-Durable raw persistence, migrations, encryption, secrets/OAuth, live
-connectors, real retrieval, evidence/LLM logic, and Web/Globe work remain out of
-scope. Sprint 17.2C has not started. Sprint 17.2B is implemented, independently
-reviewed, and complete.
+Durable raw persistence was outside Sprint 17.2B and is addressed separately
+below. Encryption implementation, secrets/OAuth, live connectors, real
+retrieval, evidence/LLM logic, and Web/Globe work remain out of scope. Sprint
+17.2B is implemented, independently reviewed, and complete.
+
+## Sprint 17.2C implementation
+
+**Status:** IMPLEMENTED / REVIEWED / COMPLETE
+
+Durable raw artifact persistence now reuses SQLite and the existing migration
+runner at schema v3. Immutable decoded-body bytes, separate source identity and
+1:N acquisition-occurrence lineage, governance identity, deterministic
+retention, legal-hold-safe
+deletion, minimal tombstones, governed reads, physical deduplication with byte
+comparison, transaction rollback, restart durability, and privacy-minimized
+persistence audit are implemented. Ephemeral, not-persisted,
+discard-after-normalization, unsupported sensitive-field redaction, and
+unproven encryption requirements fail closed.
+
+`RawArtifact` remains distinct from `SourceDocument`; deleting either does not
+implicitly delete the other. No live connector, external request, scheduler,
+secret/OAuth store, evidence/reliability/genealogy, LLM, or Web/Globe feature is
+included. The independent review's acquisition-lineage finding is patched:
+same-source/same-content observations reuse one RawArtifact while distinct
+globally unique acquisition IDs are preserved transactionally. See
+[Sprint 17.2C delivery](Sprint-17.2C-Durable-Raw-Artifact-Persistence.md).
+The final independent Q4 re-review passed with 32 targeted test files / 476
+tests and 96 full-suite test files / 1,116 tests. Typecheck, Web production
+build, full audit, and production audit all pass.
+Sprint 17.3 has not started.

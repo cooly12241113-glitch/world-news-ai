@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { PersistenceError } from "./errors";
 
-export const LATEST_SCHEMA_VERSION = 2;
+export const LATEST_SCHEMA_VERSION = 3;
 
 const MIGRATION_1 = `
   CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -112,6 +112,62 @@ const MIGRATION_2 = `
     ON dossier_revisions(event_id);
 `;
 
+const MIGRATION_3 = `
+  CREATE TABLE raw_artifact_blobs (
+    content_hash TEXT PRIMARY KEY,
+    byte_length INTEGER NOT NULL CHECK(byte_length >= 0),
+    body BLOB NOT NULL
+  );
+  CREATE TABLE raw_artifacts (
+    artifact_id TEXT PRIMARY KEY,
+    source_identity TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    content_kind TEXT NOT NULL,
+    media_type TEXT NOT NULL,
+    governance_record_id TEXT NOT NULL UNIQUE,
+    policy_id TEXT NOT NULL,
+    policy_fingerprint TEXT NOT NULL,
+    redaction_posture TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT,
+    legal_hold_authority_id TEXT,
+    status TEXT NOT NULL CHECK(status IN ('active', 'deleted')),
+    FOREIGN KEY(content_hash) REFERENCES raw_artifact_blobs(content_hash)
+  );
+  CREATE INDEX idx_raw_artifacts_content_hash ON raw_artifacts(content_hash);
+  CREATE INDEX idx_raw_artifacts_expiry ON raw_artifacts(status, expires_at);
+  CREATE TABLE raw_artifact_acquisitions (
+    acquisition_id TEXT PRIMARY KEY,
+    artifact_id TEXT NOT NULL,
+    occurred_at TEXT NOT NULL,
+    FOREIGN KEY(artifact_id) REFERENCES raw_artifacts(artifact_id)
+      ON DELETE CASCADE
+  );
+  CREATE INDEX idx_raw_artifact_acquisitions_artifact_id
+    ON raw_artifact_acquisitions(artifact_id);
+  CREATE TABLE raw_artifact_tombstones (
+    artifact_id TEXT PRIMARY KEY,
+    source_identity TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    policy_id TEXT NOT NULL,
+    policy_fingerprint TEXT NOT NULL,
+    deletion_reason TEXT NOT NULL,
+    normalized_document_action TEXT NOT NULL,
+    deleted_at TEXT NOT NULL
+  );
+  CREATE TABLE raw_persistence_audit_events (
+    event_id TEXT PRIMARY KEY,
+    artifact_id TEXT NOT NULL,
+    source_identity TEXT NOT NULL,
+    policy_id TEXT NOT NULL,
+    policy_fingerprint TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    reason_code TEXT NOT NULL,
+    occurred_at TEXT NOT NULL
+  );
+`;
+
 export const getSchemaVersion = (database: DatabaseSync): number => {
   database.exec(
     "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)",
@@ -164,6 +220,12 @@ export const runMigrations = (
           "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
         )
         .run(2, now);
+    }
+    if (current < 3) {
+      database.exec(MIGRATION_3);
+      database
+        .prepare("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)")
+        .run(3, now);
     }
     database.exec("COMMIT");
     return LATEST_SCHEMA_VERSION;

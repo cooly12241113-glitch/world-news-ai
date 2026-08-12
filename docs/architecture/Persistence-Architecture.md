@@ -20,6 +20,10 @@ flowchart TD
 Application code depends on repository interfaces, not SQLite. The adapters
 implement the same `PersistenceRepositories` and `UnitOfWork` contracts.
 
+Durable raw acquisition uses a separate narrow application boundary over the
+same SQLite database and migration runner. It deliberately does not merge raw
+bytes into the normalized-document repositories.
+
 ## Data model
 
 ### `source_documents`
@@ -56,6 +60,25 @@ Stores the ordered history for one canonical URL. `(canonical_url,
 revision_number)` is unique. Revision 1 has no previous document; later
 revisions reference the preceding stored document.
 
+### Durable raw artifacts (schema v3)
+
+- `raw_artifact_blobs`: immutable decoded-body bytes keyed by SHA-256;
+- `raw_artifacts`: source/content identity plus governance/retention state;
+- `raw_artifact_acquisitions`: globally unique acquisition occurrences in a
+  1:N relationship with an artifact;
+- `raw_artifact_tombstones`: minimal deletion lineage, never content;
+- `raw_persistence_audit_events`: bounded lifecycle decisions and outcomes.
+
+Physical blob reuse requires byte-for-byte equality as well as equal hash and
+length. It never merges logical source, acquisition, or policy lineage. Same
+artifact/same acquisition is an idempotent replay; same artifact/new
+acquisition creates a new occurrence; one acquisition ID cannot bind to two
+artifacts. Occurrence writes and their audit are inside the artifact
+transaction, and raw deletion cascades occurrence rows without adding them to
+the minimal tombstone. A governed service is
+the public read boundary; the low-level repository is adapter infrastructure.
+Raw deletion and normalized `SourceDocument` deletion are independent.
+
 ## Repository ports
 
 - `SourceDocumentRepository`
@@ -84,6 +107,8 @@ Migration behavior:
 - older supported database: apply pending versions transactionally;
 - newer database: fail with `MIGRATION_FAILED`;
 - failed migration: rollback.
+
+Schema v3 is forward-only and preserves v1/v2 ingestion and dossier data.
 
 The application must close the adapter during shutdown:
 
@@ -121,4 +146,9 @@ Distributed locking and multi-server coordination are outside Sprint 06.
 - persisted identity URLs retain ordinary query identity while removing
   tracking/sensitive parameters; observation URLs redact sensitive values;
 - low-level database errors and connection details are not returned;
-- no delete API or automatic retention engine is included.
+- normalized SourceDocument persistence has no delete API or automatic
+  retention engine.
+
+For raw artifacts, expiry discovery and deletion are explicit lifecycle seams,
+legal hold prevents every ordinary deletion trigger, and encryption/redaction
+requirements fail closed when no proven implementation exists.

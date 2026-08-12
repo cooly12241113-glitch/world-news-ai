@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Implemented Sprint 17.2C durable raw artifact persistence with SQLite schema
+  v3, immutable decoded-byte blobs, independent source/acquisition/governance
+  lineage, byte-verified deduplication, atomic audit, and restart durability.
+- Added governance-before-persist/read/delete, deterministic expiry discovery,
+  legal-hold-safe idempotent tombstoning, privacy-minimized audit, hash/size
+  validation, crash rollback, and SourceDocument lifecycle independence.
+- Kept unsupported encryption and content redaction fail-closed; added no
+  dependency, live connector, external network, scheduler, evidence, LLM, or
+  Web/Globe behavior.
+- Patched the independent review's acquisition-lineage finding by moving the
+  globally unique acquisition identity from the RawArtifact row into a 1:N
+  occurrence relation with atomic replay, conflict, restart, and delete/FK
+  semantics.
+- Completed the final independent Q4 re-review with the acquisition-lineage
+  repair verified and all targeted, full-suite, typecheck, build, and audit
+  gates passing.
+
 - Completed Sprint 15 runtime orchestration from `CreateBriefingRequest` through
   Contract, Context, structured generation, ExplanationPlan, Script, Session,
   and the existing Web presentation and follow-up UI.

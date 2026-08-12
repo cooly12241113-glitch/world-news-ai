@@ -14,6 +14,7 @@ import {
   type DossierUnitOfWork,
 } from "../index";
 import { dossierInputFixture } from "./fixtures";
+import { LATEST_SCHEMA_VERSION } from "../../persistence";
 
 const buildRevision = (): DossierRevision => {
   const result = new EventDossierBuilder(
@@ -144,7 +145,7 @@ describe("dossier persistence integration", () => {
     }
   });
 
-  it("upgrades a version-1 database to migration version 2 safely", () => {
+  it("upgrades a version-1 database to the latest migration safely", () => {
     const path = join(tmpdir(), `world-news-migration-${randomUUID()}.sqlite`);
     try {
       const database = new DatabaseSync(path);
@@ -162,7 +163,7 @@ describe("dossier persistence integration", () => {
       const row = check
         .prepare("SELECT MAX(version) AS version FROM schema_migrations")
         .get();
-      expect(row?.version).toBe(2);
+      expect(row?.version).toBe(LATEST_SCHEMA_VERSION);
       check.close();
       adapter.close();
     } finally {
