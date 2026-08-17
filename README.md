@@ -102,9 +102,10 @@ persistence denial or storage failure does not erase a successfully created
 SourceDocument, but the combined result is explicitly a persistence-stage
 partial failure rather than an ambiguous success.
 
-Milestone 04 supplies the secure acquisition foundation but no live Web or RSS
-connector. Sprint 17.3A aligns the future connector contract and injection seam;
-actual live HTML and feed acquisition remain deferred to Sprint 17.3B/17.3C.
+Milestone 04 supplies the secure acquisition foundation. Sprint 17.3A aligns
+the connector contract and injection seam, and Sprint 17.3B implements the live
+Web HTML connector over that foundation. Live RSS/Atom feed acquisition remains
+deferred to Sprint 17.3C.
 
 See [ADR-005](docs/architecture/ADR-005-adaptive-source-ingestion.md) and
 [Sprint-05](docs/sprints/Sprint-05.md).
@@ -290,3 +291,65 @@ existing MapLibre bundle-size warning is accepted debt; dark vector maps and a
 - [Briefing Session State Machine](docs/architecture/Briefing-Session-State-Machine.md)
 - [Follow-up and Replanning Contract](docs/architecture/Follow-up-and-Replanning-Contract.md)
 - [Sprint 14 Implementation Matrix](docs/architecture/Sprint-14-Implementation-Matrix.md)
+
+## Live Web HTML acquisition
+
+Sprint 17.3B adds a public-only, strict-UTF-8 `text/html` connector over the
+existing safe network runtime. It performs one acquisition and can branch the
+same bounded bytes and SHA-256 to optional governed raw persistence and the
+existing materialized-content ingestion pipeline. The connector has no direct
+network or browser authority; RSS/Atom remains unimplemented.
+
+An external acceptance run is opt-in only:
+
+```powershell
+$env:LIVE_WEB_URL = "https://public.example/article"
+npm.cmd run accept:live-web
+```
+
+`LIVE_WEB_URL` is mandatory. Missing, empty, or whitespace-only input is a
+failed invocation with exit code 2. The acceptance specification uses a
+dedicated `*.acceptance.ts` name and exact-path Vitest config; the ordinary
+`npm.cmd test` configuration explicitly excludes it even if the environment
+already contains `LIVE_WEB_URL`. The default automated suite therefore cannot
+discover this external path and makes zero external Internet calls. Sprint
+17.3B has passed a separately authorized real-public-HTML end-to-end acceptance
+through the production safe acquisition path with persistence disabled and is
+final complete. See
+[Sprint 17.3B](docs/sprints/Sprint-17.3B-Live-Web-HTML-Connector.md).
+
+The acceptance history is intentionally retained: the simple example page
+reached 2xx `text/html`, produced hash and acquisition identity, then ended at
+`ingestion / EMPTY_CONTENT` without a `SourceDocument`; the White House article
+ended at `acquisition / HTTP_ACCESS_DENIED` before `GenericHtmlCapability`; and
+the first IANA attempt produced `unknown / ACCEPTANCE_DIAGNOSTIC_MISSING`
+because passing-test console interception hid its marker. After the dedicated
+marker-capture repair, the final IANA rerun passed with 2xx `text/html`, the
+`web` connector, hash, acquisition identity, and `SourceDocument`, with
+persistence off and no refetch or redecode.
+
+Acceptance failures report only `stage` and a reason from an explicit finite
+stage-specific allowlist. Domain failures describe the bounded production
+stage, such as `acquisition / HTTP_ACCESS_DENIED` or
+`ingestion / EMPTY_CONTENT`. Acceptance-protocol failures instead describe why
+the parent could not consume a trustworthy child result: missing, ambiguous,
+malformed, oversized, child-failed, spawn-failed, or invalid-success. They do
+not identify the underlying website or network cause. Child output-buffer
+exhaustion (`ENOBUFS`) is classified as diagnostic oversized and is never
+treated as process-creation failure or parsed for a truncated marker. Actual
+spawn failure is limited to a narrow structured error-code allowlist.
+Deterministic precedence is buffer exhaustion, true spawn failure, marker
+ambiguity, marker size/shape failure, valid bounded domain diagnostic, then
+child-exit fallback. A success marker must contain exactly the ten approved
+keys and values; additional, missing, nested, or mistyped fields cause
+`ACCEPTANCE_SUCCESS_INVALID`. Success output is restricted to approved
+connector/HTTP-class/MIME categories and yes/no continuity results.
+Raw child stdout/stderr, page content, headers, URLs, native errors, paths, and
+stacks are never forwarded by the runner.
+
+The dedicated acceptance Vitest config disables console interception so the
+single bounded marker from a passing test reaches the parent's private stdout
+capture. The default Vitest config was changed only to structurally exclude
+`*.acceptance.ts`; it does not enable the interception bypass, and ambient
+`LIVE_WEB_URL` cannot activate live acceptance in the default suite. All
+non-marker child output is still discarded by the parent before rendering.

@@ -404,3 +404,64 @@ success to 2xx, and lets `ProductionAcquisitionOrchestrator` receive a trusted
 detailed-safe connector without breaking its legacy runtime constructor path.
 It adds no live connector, feed parser, external request, dependency, or
 migration. See [Sprint 17.3A](Sprint-17.3A-Baseline-Alignment-Live-Contract-Gate.md).
+
+## Sprint 17.3B implementation
+
+**Status:** IMPLEMENTED / MAKER VALIDATED / REVIEWED / REAL-WORLD ACCEPTANCE PASS / FINAL COMPLETE
+
+Sprint 17.3B adds the first live connector vertical slice. The thin
+`LiveWebSourceConnector` accepts explicit public Web/HTML requests and delegates
+exactly once to the existing safe runtime; it owns no independent network or
+HTML parsing authority. The production orchestrator reuses the same bounded
+decoded bytes, SHA-256, and acquisition identity for optional governed raw
+persistence and the existing materialized-content-only ingestion bridge.
+
+Only strict UTF-8 `text/html` is supported. There is no RSS/Atom implementation,
+browser rendering, authentication, refetch, new dependency, or migration.
+Automated validation is deterministic and offline. A privacy-minimized
+`LIVE_WEB_URL` path is prepared for separately authorized manual acceptance but
+is structurally excluded from default test discovery. The final separately
+authorized real-world IANA rerun passed the end-to-end production safe path
+with persistence disabled.
+The variable is mandatory for the dedicated command; missing/blank input exits
+non-zero rather than reporting a skipped success. See
+[Sprint 17.3B](Sprint-17.3B-Live-Web-HTML-Connector.md).
+
+The acceptance runner now separates finite domain failures from finite
+parent/child protocol failures. Missing, ambiguous, malformed, oversized,
+child-failed, spawn-failed, and invalid-success outcomes receive explicit
+`unknown / ACCEPTANCE_*` classifications without exposing raw child output.
+Structured `ENOBUFS` is diagnostic oversized and bypasses parsing of truncated
+stdout; only narrowly recognized process-creation codes are spawn failures.
+The precedence is buffer exhaustion, true spawn failure, marker ambiguity,
+marker size/shape failure, valid bounded domain diagnostic, then child-exit
+fallback; therefore a valid `ingestion / EMPTY_CONTENT` remains authoritative
+even when the child exits non-zero. Success requires the exact approved
+ten-key schema with no additions or omissions.
+
+The confirmed remaining harness defect was Vitest console interception hiding
+the test body's marker from parent-captured stdout when the test passed. Only
+the dedicated acceptance config now disables interception. A deterministic
+injected-success regression proves child status 0, exactly one captured marker,
+and final bounded PASS while hostile surrounding output remains discarded. The
+default config was modified only to structurally exclude `*.acceptance.ts`; it
+does not enable the interception bypass.
+
+The chronological real-world record is: the simple example page reached 2xx
+`text/html`, produced hash and acquisition identity, then failed at
+`ingestion / EMPTY_CONTENT` without a `SourceDocument`; the White House article
+failed at `acquisition / HTTP_ACCESS_DENIED` before `GenericHtmlCapability`;
+the first IANA attempt returned
+`unknown / ACCEPTANCE_DIAGNOSTIC_MISSING` because passing-test console
+interception hid the marker and therefore established no IANA/network/product
+failure. After the dedicated interception repair, the final IANA rerun passed:
+external network yes, terminal class 2xx, canonical `text/html`, connector
+`web`, hash yes, acquisition identity yes, `SourceDocument` yes, persistence
+off, refetch/redecode no/no. Sprint 17.3 overall remains in progress because
+RSS/Atom is still pending Sprint 17.3C.
+
+Maker validation passed 4 focused files / 87 tests, 30 integrated files / 509
+tests, and 104 full-suite files / 1,273 tests. Typecheck, Web typecheck/build,
+full audit, production audit, architecture authority, skipped/only/todo, and
+diff gates pass. The existing Vite large-chunk warning remains unrelated LOW
+debt.

@@ -170,7 +170,8 @@ into reviewable gates:
 4. Sprint 17.2C — Durable Raw Artifact Persistence
    (**IMPLEMENTED / REVIEWED / COMPLETE**)
 5. Sprint 17.3 — Web/RSS/Official/User-Submitted Connector Adapters
-   (**IN PROGRESS — contract/composition gate only; live connectors not implemented**)
+   (**IN PROGRESS — Sprint 17.3A complete; Sprint 17.3B live Web HTML final
+   complete; RSS/Atom not implemented**)
 6. Sprint 17.4 — Source Genealogy & Reliability Foundation
 
 Production connector implementation must not precede the Sprint 17.2 raw-data,
@@ -178,8 +179,9 @@ DNS/egress, credential-isolation, retention, and redaction decisions. Sprint
 17.1 remains contract-only: it adds strict acquisition contracts, an offline
 fixture, and an adapter seam into existing ingestion, but no live connector.
 Sprint 17.2A, 17.2B, and 17.2C are complete, and Milestone 04 is complete.
-Sprint 17.3A aligns the live connector contract and safe composition seam only;
-live Web/RSS acquisition remains unimplemented until Sprint 17.3B/17.3C.
+Sprint 17.3A aligns the live connector contract and safe composition seam.
+Sprint 17.3B implements the public static HTML vertical slice over that seam;
+RSS/Atom acquisition remains unimplemented until Sprint 17.3C.
 
 ## Cross-cutting prerequisites
 

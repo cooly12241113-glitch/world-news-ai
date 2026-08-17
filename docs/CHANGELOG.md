@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+- Implemented Sprint 17.3B `LiveWebSourceConnector` as a zero-authority
+  Web/HTML adapter over the existing safe runtime, with exact one-acquisition
+  continuity through optional governed raw persistence and existing HTML
+  ingestion.
+- Added deterministic offline Web connector/vertical-slice regression tests
+  and a privacy-minimized, persistence-off `LIVE_WEB_URL` manual acceptance
+  path. No external acceptance is run by default.
+- Closed the Sprint 17.3B manual-acceptance isolation finding: default Vitest
+  structurally excludes the dedicated acceptance specification, its exact-path
+  config cannot fall back to ordinary discovery, and missing/blank
+  `LIVE_WEB_URL` now exits non-zero instead of producing a false PASS.
+- Added privacy-safe bounded acceptance diagnostics: failures expose only a
+  closed stage and existing bounded reason code, successes expose only approved
+  categorical/yes-no metadata, and all raw child output remains suppressed.
+- Closed the diagnostic re-review findings by replacing uppercase-shape reason
+  validation with finite stage-specific allowlists and rejecting zero,
+  multiple, duplicated, oversized, malformed, or ambiguous markers.
+- Replaced the acceptance runner's undifferentiated protocol fallback with a
+  finite protocol-reason set for missing/ambiguous/malformed/oversized markers,
+  child exit/spawn failure, and invalid success metadata. Valid bounded domain
+  failures retain precedence over child exit status; raw child output remains
+  suppressed.
+- Corrected acceptance child-process classification so structured `ENOBUFS`
+  becomes diagnostic oversized without parsing truncated stdout, while only a
+  narrow process-creation error set becomes child-spawn-failed. Success markers
+  now require the exact approved ten-key schema with no additional properties.
+- Fixed passing acceptance marker capture by disabling console interception
+  only in the dedicated live-Web Vitest config. An injected no-network harness
+  regression proves status 0 produces exactly one marker and a bounded PASS;
+  the parent continues discarding all non-marker child output.
+- Completed the authorized real-world IANA rerun through the production safe
+  Web path: 2xx, canonical `text/html`, connector `web`, content hash,
+  acquisition identity, and `SourceDocument` all passed with persistence off
+  and no refetch or redecode. Sprint 17.3B is final complete; RSS/Atom
+  remains pending Sprint 17.3C.
 - Implemented Sprint 17.3A contract/composition gating without adding a live
   connector: `rss` may use the strict Web locator, safe-runtime connector
   capability is configurable, terminal HTTP success is 2xx-only, and the
