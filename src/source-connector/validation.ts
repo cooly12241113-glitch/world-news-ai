@@ -70,8 +70,10 @@ z.ZodType<SourceAcquisitionRequest> = z.strictObject({
   requestedContentKind: SourceContentKindSchema.optional(),
   accessPolicy: SourceAccessPolicySchema,
 }).superRefine((request, context) => {
+  const usesWebLocator = request.connectorId === "web" ||
+    request.connectorId === "rss";
   const compatible =
-    (request.connectorId === "web" && request.locator.kind === "web") ||
+    (usesWebLocator && request.locator.kind === "web") ||
     (request.connectorId === "user-submitted" &&
       request.locator.kind === "user-submitted");
   if (!compatible) {

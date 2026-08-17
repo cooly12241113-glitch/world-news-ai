@@ -76,8 +76,19 @@ describe("source connector contracts", () => {
     }).success).toBe(true);
   });
 
+  it("accepts an RSS connector with the existing Web locator contract", () => {
+    expect(SourceAcquisitionRequestSchema.safeParse({
+      requestId: "request-rss",
+      connectorId: "rss",
+      locator: { kind: "web", url: "https://example.com/feed.xml" },
+      requestedContentKind: "text",
+      accessPolicy: { access: "public-only" },
+    }).success).toBe(true);
+  });
+
   it.each([
     ["reddit", { kind: "web", url: "https://example.com/post" }],
+    ["rss", { kind: "user-submitted", submissionId: "submission-rss" }],
     ["web", { kind: "user-submitted", submissionId: "submission-1" }],
     ["user-submitted", { kind: "web", url: "https://example.com/input" }],
   ])("rejects incompatible connector %s and locator combinations", (connectorId, locator) => {

@@ -9,15 +9,16 @@ Sprint scope must remain consistent with that Charter.
 
 ## Current Milestone
 
-Milestone 03 — Personalized Intelligence Baseline
+Milestone 04 — Secure Acquisition Foundation
 
-**Status:** IMPLEMENTED / AUDIT COMPLETE / BROWSER ACCEPTED / FINAL COMPLETE
+**Status:** IMPLEMENTED / REVIEWED / COMPLETE
 
-Sprint 16.0–16.4 explicit consent, request scope, exposure/evidence provenance,
-impact/scenario semantics, deterministic identity, runtime integration, My
-Lens presentation, and personalized follow-up replacement are audited and
-accepted. The fixture-only baseline has 75 test files and 746 passing tests.
-See [Milestone 03](../milestones/Milestone-03-Personalized-Intelligence-Baseline.md).
+Sprint 17.1–17.2C and the final network-bypass, production-orchestration, and
+network-authority guard repairs are independently reviewed and complete. The
+secure acquisition baseline has 99 test files and 1,168 passing tests. See
+[Milestone 04](../milestones/Milestone-04-Secure-Acquisition-Foundation.md).
+Sprint 17.3 is **IN PROGRESS**; Sprint 17.3A aligns contracts and composition
+only and does not implement a live Web or RSS connector.
 
 ## Completed delivery
 
@@ -33,11 +34,11 @@ See [Milestone 03](../milestones/Milestone-03-Personalized-Intelligence-Baseline
 
 ## Baseline state
 
-- Foundation predecessor: `c4ead239ae29f7312f4ee61d847ac959215808aa`
-- Baseline commit: `af50333f857b5f990741fff83176efbad36a250d`
-- SQLite migration version: 2
-- Test files: 51 passing
-- Tests: 484 passing
+- Foundation predecessor: `3c84d0aa718c591e6e97018450ca25f3df981c28`
+- Baseline commit: `b1dbca649ef84433eb6936d958129bb8d07c329d`
+- SQLite migration version: 3
+- Test files: 99 passing
+- Tests: 1,168 passing
 - Integration scenarios: 4 offline deterministic scenarios
 - External network/API/LLM calls in integration tests: none
 - Architecture baseline: [System Architecture Baseline](../architecture/System-Architecture-Baseline.md)
@@ -354,7 +355,8 @@ globally unique acquisition IDs are preserved transactionally. See
 The final independent Q4 re-review passed with 32 targeted test files / 476
 tests and 96 full-suite test files / 1,116 tests. Typecheck, Web production
 build, full audit, and production audit all pass.
-Sprint 17.3 has not started.
+At the Sprint 17.2C completion checkpoint, Sprint 17.3 had not started. It is
+now in progress through the contract-only Sprint 17.3A increment below.
 
 ## Milestone 04 — Secure Acquisition Foundation
 
@@ -370,8 +372,9 @@ adapter and bridge, and then the content-only pipeline. It preserves SSRF/DNS,
 pinning, redirect, body/decompression, deadline/cancellation, hash, and
 no-refetch boundaries without making raw persistence mandatory.
 
-No live connector or Sprint 17.3 implementation is included. Sprint 17.3 is
-**NOT STARTED**.
+The completed Milestone 04 baseline includes no live connector. Subsequent
+Sprint 17.3A work below changes only contracts and composition; live Web/RSS
+acquisition remains unimplemented.
 
 The final Q5 findings are patched without starting Sprint 17.3. A narrow
 `ProductionAcquisitionOrchestrator` now executes one safe acquisition and
@@ -389,3 +392,15 @@ and 99 full-suite test files / 1,168 tests. Typecheck, Web production build,
 full audit, and production audit pass. Findings are BLOCKER 0 / HIGH 0 /
 MEDIUM 0 / LOW 0. See
 [Milestone 04](../milestones/Milestone-04-Secure-Acquisition-Foundation.md).
+
+## Sprint 17.3A implementation
+
+**Status:** IMPLEMENTED / INDEPENDENTLY REVIEWED / FINAL COMPLETE
+
+Sprint 17.3A permits the existing `rss` connector identity to use the strict
+Web locator, adds a configurable connector adapter over the sole safe runtime,
+retains `SafeRuntimeFixtureConnector` compatibility, gates terminal HTTP
+success to 2xx, and lets `ProductionAcquisitionOrchestrator` receive a trusted
+detailed-safe connector without breaking its legacy runtime constructor path.
+It adds no live connector, feed parser, external request, dependency, or
+migration. See [Sprint 17.3A](Sprint-17.3A-Baseline-Alignment-Live-Contract-Gate.md).

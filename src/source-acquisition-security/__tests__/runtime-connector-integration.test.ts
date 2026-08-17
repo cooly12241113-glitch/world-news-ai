@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   SafeNetworkAcquisitionRuntime,
   SafeRuntimeFixtureConnector,
+  SafeRuntimeSourceConnector,
   type AcquisitionAttemptAuditSink,
   type PinnedResponseHeadTransport,
   type SafeAcquisitionAttemptAudit,
@@ -74,6 +75,75 @@ describe("safe runtime connector integration", () => {
       outcome: "unsupported",
       reasonCode: "CONTENT_TYPE_NOT_ALLOWED",
     });
+  });
+
+  it("supports a configurable RSS capability without adding network authority", async () => {
+    const transport = bodyTransport(
+      "<?xml version=\"1.0\"?><rss><channel><title>Feed</title></channel></rss>",
+      "application/rss+xml",
+    );
+    const runtime = new SafeNetworkAcquisitionRuntime({
+      resolver: new FakeResolver().set("a.example", "8.8.8.8"),
+      transport,
+      policy: lifecyclePolicy(),
+    });
+    const connector = new SafeRuntimeSourceConnector(runtime, {
+      capability: {
+        connectorId: "rss",
+        connectorVersion: "contract-gate-1",
+        supportedContentKinds: ["text"],
+        credentialRequirement: { kind: "none" },
+        paginationSupport: "none",
+        incrementalFetchSupport: false,
+        canonicalLocatorSupport: false,
+        timestampSupport: true,
+      },
+      now: () => "2026-08-17T00:00:00.000Z",
+    });
+    const result = await connector.acquire({
+      requestId: "rss-contract-gate",
+      connectorId: "rss",
+      locator: { kind: "web", url: "https://a.example/feed.xml" },
+      requestedContentKind: "text",
+      accessPolicy: { access: "public-only" },
+    });
+
+    expect(result).toMatchObject({
+      success: true,
+      connectorId: "rss",
+      acquisitionId: "safe-acquisition:rss-contract-gate",
+      rawArtifact: {
+        contentKind: "text",
+        mediaType: "application/rss+xml",
+      },
+      trace: { connectorVersion: "contract-gate-1" },
+    });
+    expect(transport.requestResponse).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects connector capability mismatch before executing the safe runtime", async () => {
+    const executor = { execute: vi.fn() };
+    const connector = new SafeRuntimeSourceConnector(executor, {
+      capability: {
+        connectorId: "rss",
+        connectorVersion: "contract-gate-1",
+        supportedContentKinds: ["text"],
+        credentialRequirement: { kind: "none" },
+        paginationSupport: "none",
+        incrementalFetchSupport: false,
+        canonicalLocatorSupport: false,
+        timestampSupport: true,
+      },
+    });
+    const result = await connector.acquire(lifecycleInput().request);
+
+    expect(result).toMatchObject({
+      success: false,
+      connectorId: "rss",
+      outcome: "unsupported",
+      reasonCode: "TARGET_UNSUPPORTED",
+    });
+    expect(executor.execute).not.toHaveBeenCalled();
   });
 
   it("emits bounded privacy-minimized audit without query, body, or native errors", async () => {

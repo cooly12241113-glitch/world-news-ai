@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
+import { IngestionPipeline } from "../../ingestion";
 import {
   createRawArtifactLifecyclePolicy,
   type RawArtifactLifecyclePolicy,
@@ -15,6 +16,7 @@ import {
 } from "../../raw-persistence";
 import {
   SafeNetworkAcquisitionRuntime,
+  SafeRuntimeFixtureConnector,
   type PinnedResponseHeadTransport,
   type SafeResponseHead,
 } from "../../source-acquisition-security";
@@ -85,6 +87,75 @@ const rawService = (store: SqliteRawArtifactAdapter) =>
   });
 
 describe("production acquisition orchestration", () => {
+  it("accepts an injected detailed-safe connector and invokes acquisition once", async () => {
+    const transport = new Transport([{
+      head: { statusCode: 200, contentType: "text/plain" }, body: article(),
+    }]);
+    const connector = new SafeRuntimeFixtureConnector(
+      runtime(transport),
+      () => now.toISOString(),
+    );
+    const acquireDetailed = vi.spyOn(connector, "acquireDetailed");
+
+    const result = await new ProductionAcquisitionOrchestrator(connector)
+      .execute({ acquisition: request("injected"), bridgeOptions: hints });
+
+    expect(result).toMatchObject({
+      success: true,
+      acquisition: {
+        acquisitionId: "safe-acquisition:injected",
+        rawArtifact: {
+          contentHash: createHash("sha256").update(article()).digest("hex"),
+          byteLength: Buffer.byteLength(article()),
+        },
+      },
+    });
+    expect(acquireDetailed).toHaveBeenCalledTimes(1);
+    expect(transport.requestResponse).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [401, "authentication-required"],
+    [403, "access-denied"],
+    [404, "unavailable"],
+  ] as const)(
+    "never invokes persistence or ingestion after terminal HTTP %i",
+    async (statusCode, outcome) => {
+      const transport = new Transport([{
+        head: { statusCode, contentType: "text/plain" },
+        body: "PRIVATE NON-SUCCESS BODY",
+      }]);
+      const connector = new SafeRuntimeFixtureConnector(runtime(transport));
+      const persist = vi.fn(() => ({
+        success: false as const,
+        reasonCode: "SHOULD_NOT_RUN",
+      }));
+      const pipeline = new IngestionPipeline();
+      const ingest = vi.spyOn(pipeline, "ingest");
+
+      const result = await new ProductionAcquisitionOrchestrator(connector, {
+        pipeline,
+      }).execute({
+        acquisition: request(`status-${statusCode}`),
+        bridgeOptions: hints,
+        rawPersistence: {
+          service: { persist },
+          policy: policy(),
+          context,
+        },
+      });
+
+      expect(result).toMatchObject({
+        success: false,
+        stage: "acquisition",
+        acquisition: { outcome },
+      });
+      expect(persist).not.toHaveBeenCalled();
+      expect(ingest).not.toHaveBeenCalled();
+      expect(transport.requestResponse).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it("reuses one bounded result for governed persistence and SourceDocument", async () => {
     const path = pathForTest();
     const store = new SqliteRawArtifactAdapter(path);

@@ -5,6 +5,7 @@ import {
 } from "../raw-persistence";
 import { SourceAcquisitionIngestionBridge } from "../source-connector";
 import {
+  type DetailedSafeSourceConnector,
   SafeNetworkAcquisitionRuntime,
   SafeRuntimeFixtureConnector,
 } from "../source-acquisition-security";
@@ -30,19 +31,23 @@ const acquisitionSummary = (
  * optional governed raw persistence and materialized-content ingestion.
  */
 export class ProductionAcquisitionOrchestrator {
-  readonly #connector: SafeRuntimeFixtureConnector;
+  readonly #connector: DetailedSafeSourceConnector;
   readonly #bridge: SourceAcquisitionIngestionBridge;
   readonly #pipeline: IngestionPipeline;
 
   constructor(
-    runtime: SafeNetworkAcquisitionRuntime,
+    acquisitionSource:
+      | SafeNetworkAcquisitionRuntime
+      | DetailedSafeSourceConnector,
     options: {
       bridge?: SourceAcquisitionIngestionBridge;
       pipeline?: IngestionPipeline;
       now?: () => string;
     } = {},
   ) {
-    this.#connector = new SafeRuntimeFixtureConnector(runtime, options.now);
+    this.#connector = "acquireDetailed" in acquisitionSource
+      ? acquisitionSource
+      : new SafeRuntimeFixtureConnector(acquisitionSource, options.now);
     this.#bridge = options.bridge ?? new SourceAcquisitionIngestionBridge();
     this.#pipeline = options.pipeline ?? new IngestionPipeline();
   }

@@ -2,6 +2,7 @@ import {
   ConnectorCapabilitySchema,
   SourceAcquisitionRequestSchema,
   SourceAcquisitionResultSchema,
+  assessConnectorInvocation,
   createRawArtifactId,
   createSourceIdentity,
   type ConnectorCapability,
@@ -17,6 +18,7 @@ import type {
   SafeNetworkAcquisitionResult,
   SafeNetworkAcquisitionSuccess,
 } from "./lifecycle-models";
+import { privacyMinimizedLocator } from "./failure-mapping";
 
 export interface SafeAcquisitionExecutor {
   execute(input: SafeNetworkAcquisitionInput): Promise<SafeNetworkAcquisitionResult>;
@@ -30,22 +32,33 @@ export type DetailedSafeAcquisitionResult =
     }
   | { success: false; sourceAcquisition: SourceAcquisitionFailure };
 
-export class SafeRuntimeFixtureConnector implements SourceConnector {
-  readonly capability: ConnectorCapability = ConnectorCapabilitySchema.parse({
-    connectorId: "web",
-    connectorVersion: "safe-runtime-fixture-1",
-    supportedContentKinds: ["text", "html"],
-    credentialRequirement: { kind: "none" },
-    paginationSupport: "none",
-    incrementalFetchSupport: false,
-    canonicalLocatorSupport: false,
-    timestampSupport: true,
-  });
+export interface DetailedSafeSourceConnector extends SourceConnector {
+  acquireDetailed(
+    request: SourceAcquisitionRequest,
+    context?: SourceConnectorExecutionContext,
+  ): Promise<DetailedSafeAcquisitionResult>;
+}
+
+export interface SafeRuntimeSourceConnectorOptions {
+  capability: ConnectorCapability;
+  now?: () => string;
+}
+
+/**
+ * Converts one trusted safe-runtime result into the strict SourceConnector
+ * contract. It owns no transport and grants no network authority.
+ */
+export class SafeRuntimeSourceConnector implements DetailedSafeSourceConnector {
+  readonly capability: ConnectorCapability;
+  readonly #now: () => string;
 
   constructor(
     private readonly runtime: SafeAcquisitionExecutor,
-    private readonly now: () => string = () => "2026-08-12T00:00:00.000Z",
-  ) {}
+    options: SafeRuntimeSourceConnectorOptions,
+  ) {
+    this.capability = ConnectorCapabilitySchema.parse(options.capability);
+    this.#now = options.now ?? (() => new Date().toISOString());
+  }
 
   async acquire(
     request: SourceAcquisitionRequest,
@@ -61,17 +74,26 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
   ): Promise<DetailedSafeAcquisitionResult> {
     const parsed = SourceAcquisitionRequestSchema.safeParse(request);
     if (!parsed.success) {
-      return { success: false, sourceAcquisition: {
+      return {
         success: false,
-        connectorId: "web",
-        locator: request.locator,
-        requestId: request.requestId,
-        outcome: "failed",
-        retryable: false,
-        reasonCode: "INVALID_ACQUISITION_REQUEST",
-      } };
+        sourceAcquisition: this.failure(
+          request,
+          "failed",
+          "INVALID_ACQUISITION_REQUEST",
+        ),
+      };
     }
     const validated = parsed.data;
+    if (!assessConnectorInvocation(this.capability, validated).supported) {
+      return {
+        success: false,
+        sourceAcquisition: this.failure(
+          validated,
+          "unsupported",
+          "TARGET_UNSUPPORTED",
+        ),
+      };
+    }
     const acquired = await this.runtime.execute({
       request: validated,
       credentialRequirement: this.capability.credentialRequirement,
@@ -79,24 +101,35 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
     });
     if (!acquired.success) return { success: false, sourceAcquisition: acquired };
     if (acquired.body === undefined) {
-      return { success: false, sourceAcquisition: {
+      return {
         success: false,
-        connectorId: "web",
-        locator: validated.locator,
-        requestId: validated.requestId,
-        outcome: "failed",
-        retryable: false,
-        reasonCode: "RESPONSE_BODY_REQUIRED",
-      } };
+        sourceAcquisition: this.failure(
+          validated,
+          "failed",
+          "RESPONSE_BODY_REQUIRED",
+        ),
+      };
+    }
+    if (!this.capability.supportedContentKinds.includes(
+      acquired.body.contentKind,
+    )) {
+      return {
+        success: false,
+        sourceAcquisition: this.failure(
+          validated,
+          "unsupported",
+          "CONTENT_KIND_MISMATCH",
+        ),
+      };
     }
     const sourceIdentity = createSourceIdentity(validated.locator);
     const result: SourceAcquisitionSuccess = {
       success: true,
-      connectorId: "web",
+      connectorId: this.capability.connectorId,
       locator: validated.locator,
       sourceIdentity,
       acquisitionId: `safe-acquisition:${validated.requestId}`,
-      acquiredAt: this.now(),
+      acquiredAt: this.#now(),
       content: { representation: "inline-text", text: acquired.body.text },
       rawArtifact: {
         artifactId: createRawArtifactId(sourceIdentity, acquired.body.decodedSha256),
@@ -117,5 +150,43 @@ export class SafeRuntimeFixtureConnector implements SourceConnector {
       boundedAcquisition: acquired,
       sourceAcquisition: SourceAcquisitionResultSchema.parse(result) as SourceAcquisitionSuccess,
     };
+  }
+
+  private failure(
+    request: SourceAcquisitionRequest,
+    outcome: SourceAcquisitionFailure["outcome"],
+    reasonCode: string,
+  ): SourceAcquisitionFailure {
+    return {
+      success: false,
+      connectorId: this.capability.connectorId,
+      locator: privacyMinimizedLocator(request.locator),
+      requestId: request.requestId,
+      outcome,
+      retryable: false,
+      reasonCode,
+    };
+  }
+}
+
+/** Compatibility wrapper retained for existing Milestone 04 fixtures. */
+export class SafeRuntimeFixtureConnector extends SafeRuntimeSourceConnector {
+  constructor(
+    runtime: SafeAcquisitionExecutor,
+    now: () => string = () => "2026-08-12T00:00:00.000Z",
+  ) {
+    super(runtime, {
+      now,
+      capability: ConnectorCapabilitySchema.parse({
+        connectorId: "web",
+        connectorVersion: "safe-runtime-fixture-1",
+        supportedContentKinds: ["text", "html"],
+        credentialRequirement: { kind: "none" },
+        paginationSupport: "none",
+        incrementalFetchSupport: false,
+        canonicalLocatorSupport: false,
+        timestampSupport: true,
+      }),
+    });
   }
 }

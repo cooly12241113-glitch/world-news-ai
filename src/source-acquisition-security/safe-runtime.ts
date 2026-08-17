@@ -52,6 +52,16 @@ const RETRYABLE_TRANSPORT_REASONS = new Set([
 const positiveInteger = (value: number): boolean =>
   Number.isFinite(value) && Number.isInteger(value) && value > 0;
 
+const terminalHttpFailureReason = (statusCode: number): string | undefined => {
+  if (statusCode >= 200 && statusCode <= 299) return undefined;
+  if (statusCode === 401) return "HTTP_AUTHENTICATION_REQUIRED";
+  if (statusCode === 403) return "HTTP_ACCESS_DENIED";
+  if (statusCode === 404 || statusCode === 410) {
+    return "HTTP_RESOURCE_UNAVAILABLE";
+  }
+  return "HTTP_STATUS_NOT_ACCEPTED";
+};
+
 export const validateSafeLifecyclePolicy = (policy: SafeLifecyclePolicy): void => {
   if (!Number.isInteger(policy.maxRedirects) || policy.maxRedirects < 0 ||
       policy.maxRedirects > 20 ||
@@ -401,6 +411,26 @@ export class SafeNetworkAcquisitionRuntime {
               continue;
             }
             return retry ?? createLifecycleFailure(request, reasonCode);
+          }
+
+          const terminalFailureReason = terminalHttpFailureReason(
+            responseHead.statusCode,
+          );
+          if (terminalFailureReason !== undefined) {
+            pinnedResponse?.destroy();
+            this.#recordAudit(audit, {
+              connectorId: request.connectorId,
+              scheme: approved.scheme,
+              hostname: approved.originalHostname,
+              port: approved.effectivePort,
+              attemptNumber,
+              redirectHop,
+              outcome: "failed",
+              reasonCode: terminalFailureReason,
+              encodedBytes: 0,
+              decodedBytes: 0,
+            });
+            return createLifecycleFailure(request, terminalFailureReason);
           }
 
           const body = pinnedResponse === undefined

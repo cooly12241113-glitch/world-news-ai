@@ -29,6 +29,10 @@ Architecture.
   accepted, and final complete
 - Milestone 02 Interactive Briefing baseline implemented, audit complete,
   browser accepted, and final complete (67 test files, 652 tests)
+- Milestone 03 Personalized Intelligence baseline implemented, reviewed,
+  browser accepted, and final complete
+- Milestone 04 Secure Acquisition Foundation implemented, independently
+  reviewed, and complete (99 test files, 1,168 tests)
 - Milestone 01 intelligence foundation baseline complete
 
 ## Domain
@@ -97,6 +101,10 @@ the existing ingestion bridge. Persistence is optional. A requested
 persistence denial or storage failure does not erase a successfully created
 SourceDocument, but the combined result is explicitly a persistence-stage
 partial failure rather than an ambiguous success.
+
+Milestone 04 supplies the secure acquisition foundation but no live Web or RSS
+connector. Sprint 17.3A aligns the future connector contract and injection seam;
+actual live HTML and feed acquisition remain deferred to Sprint 17.3B/17.3C.
 
 See [ADR-005](docs/architecture/ADR-005-adaptive-source-ingestion.md) and
 [Sprint-05](docs/sprints/Sprint-05.md).
@@ -228,7 +236,7 @@ See [ADR-012](docs/architecture/ADR-012-briefing-script-domain.md),
 [Briefing Script Architecture](docs/architecture/Briefing-Script-Architecture.md),
 and [Sprint-12](docs/sprints/Sprint-12.md).
 
-Current persistence schema version: **2**. Sprint 14.1 adds an in-memory,
+Current persistence schema version: **3**. Sprint 14.1 adds an in-memory,
 UI-independent BriefingSession boundary and no persistence migration. Fixture
 follow-up/replanning and Web integration remain planned.
 

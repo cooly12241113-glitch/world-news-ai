@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Implemented Sprint 17.3A contract/composition gating without adding a live
+  connector: `rss` may use the strict Web locator, safe-runtime connector
+  capability is configurable, terminal HTTP success is 2xx-only, and the
+  production orchestrator accepts a trusted detailed-safe connector while
+  retaining fixture/runtime compatibility.
+- Added bounded 401/403/404/410/other non-2xx mapping and tests proving rejected
+  response bodies never reach decoding, raw persistence, or ingestion.
 - Patched the Milestone 04 production network bypass: ingestion is now
   materialized-content-only, URL-only pipeline requests fail closed, and the
   supported URL path composes the existing safe acquisition runtime, connector
